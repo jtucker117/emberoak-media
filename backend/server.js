@@ -108,6 +108,37 @@ function saveGalleryStore() {
   fs.renameSync(tmp, GALLERY_SETTINGS_PATH);
 }
 
+// ---- portfolio categories (studio-editable) --------------------------------
+// Categories used to be hardcoded in the site source, so adding one meant a code
+// change and a rebuild. They live here now; the site reads them at load.
+const CATEGORIES_PATH = process.env.CATEGORIES_PATH || '/data/categories.json';
+const DEFAULT_CATEGORIES = [
+  { key: 'newborn', label: 'Newborn' },
+  { key: 'family', label: 'Family' },
+  { key: 'events', label: 'Events' },
+  { key: 'cinematic', label: 'Cinematic' },
+  { key: 'drone', label: 'Drone' },
+  { key: 'video', label: 'Video / Reels' },
+  { key: 'social', label: 'Social Reels' },
+];
+let CATEGORIES = null;
+try {
+  const parsed = JSON.parse(fs.readFileSync(CATEGORIES_PATH, 'utf8'));
+  if (Array.isArray(parsed) && parsed.length) CATEGORIES = parsed;
+} catch (e) {
+  if (e.code !== 'ENOENT') console.warn('[warn] could not read categories:', e.message);
+}
+if (!CATEGORIES) CATEGORIES = DEFAULT_CATEGORIES.slice();
+function saveCategories() {
+  fs.mkdirSync(path.dirname(CATEGORIES_PATH), { recursive: true });
+  const tmp = `${CATEGORIES_PATH}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(CATEGORIES, null, 2), { mode: 0o600 });
+  fs.renameSync(tmp, CATEGORIES_PATH);
+}
+// 'hero' and 'about' are the homepage cover and About photo, not portfolio
+// categories — a studio must not be able to create or delete them by name.
+const RESERVED_CATEGORIES = ['hero', 'about'];
+
 // ---- embedded video links (YouTube / Vimeo) -------------------------------
 // Video is the one media type that does NOT belong in Cloudinary here: the free
 // plan caps a video at 100 MB, and even under that a single film would drain the
@@ -384,6 +415,74 @@ app.post('/api/retag', auth, async (req, res) => {
     res.json({ ok: true, tagged });
   } catch (e) {
     res.status(500).json({ error: 'Retag failed', detail: String(e.message || e) });
+  }
+});
+
+// ---- categories: public list, studio-only add/rename/delete ----
+app.get('/api/categories', (_req, res) => res.json({ items: CATEGORIES }));
+
+app.post('/api/categories', auth, (req, res) => {
+  const label = String((req.body && req.body.label) || '').trim();
+  if (!label) return res.status(400).json({ error: 'Give the category a name' });
+  // derive a safe key from the label so the studio never has to think about slugs
+  let key = String((req.body && req.body.key) || label).toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 24);
+  if (!key || !SAFE.test(key)) return res.status(400).json({ error: 'Use letters or numbers in the name' });
+  if (RESERVED_CATEGORIES.indexOf(key) !== -1) return res.status(400).json({ error: `"${key}" is reserved` });
+  if (CATEGORIES.some(c => c.key === key)) return res.status(409).json({ error: 'That category already exists' });
+  if (CATEGORIES.length >= 20) return res.status(400).json({ error: 'That is the maximum number of categories' });
+  if (!credStoreWritable())
+    return res.status(503).json({ error: 'Categories need storage. Add a Railway Volume mounted at /data.' });
+  try {
+    CATEGORIES.push({ key, label: label.slice(0, 40) });
+    saveCategories();
+    res.json({ ok: true, items: CATEGORIES });
+  } catch (e) {
+    CATEGORIES = CATEGORIES.filter(c => c.key !== key);
+    res.status(500).json({ error: 'Could not save', detail: String(e.message || e) });
+  }
+});
+
+app.post('/api/categories/rename', auth, (req, res) => {
+  const { key, label } = req.body || {};
+  const c = CATEGORIES.find(x => x.key === String(key || ''));
+  if (!c) return res.status(404).json({ error: 'No such category' });
+  const l = String(label || '').trim();
+  if (!l) return res.status(400).json({ error: 'Give the category a name' });
+  if (!credStoreWritable()) return res.status(503).json({ error: 'Categories need storage. Add a Railway Volume mounted at /data.' });
+  // only the display label changes — the key is baked into every asset's tags
+  c.label = l.slice(0, 40);
+  try { saveCategories(); res.json({ ok: true, items: CATEGORIES }); }
+  catch (e) { res.status(500).json({ error: 'Could not save', detail: String(e.message || e) }); }
+});
+
+app.post('/api/categories/delete', auth, async (req, res) => {
+  const key = String((req.body && req.body.key) || '');
+  if (!CATEGORIES.some(c => c.key === key)) return res.status(404).json({ error: 'No such category' });
+  if (CATEGORIES.length <= 1) return res.status(400).json({ error: 'Keep at least one category' });
+  if (!credStoreWritable()) return res.status(503).json({ error: 'Categories need storage. Add a Railway Volume mounted at /data.' });
+  // Refuse while it still holds media. Removing the category would leave those
+  // files in Cloudinary but invisible everywhere — storage you pay for and cannot
+  // see. Make the studio empty it first, deliberately.
+  try {
+    const prefix = `${req.client.folder}/${key}/`;
+    let count = 0;
+    for (const rt of ['image', 'video']) {
+      const r = await cloudinary.api.resources({ type: 'upload', resource_type: rt, prefix, max_results: 500 }).catch(() => ({ resources: [] }));
+      count += (r.resources || []).length;
+    }
+    const vids = VIDEOS.filter(v => v.category === key).length;
+    if (count || vids) {
+      return res.status(409).json({
+        error: `"${key}" still has ${count} file(s)${vids ? ` and ${vids} video link(s)` : ''}. Delete those first, then remove the category.`,
+        count, videos: vids,
+      });
+    }
+    CATEGORIES = CATEGORIES.filter(c => c.key !== key);
+    saveCategories();
+    res.json({ ok: true, items: CATEGORIES });
+  } catch (e) {
+    res.status(500).json({ error: 'Could not delete', detail: String(e.message || e) });
   }
 });
 

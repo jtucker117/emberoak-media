@@ -396,7 +396,7 @@
 class Component extends DCLogic {
   state = { page: 'home', cat: 'all', lb: null, contactSent: false, cloud: {}, covers: {}, coverIds: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '',
             profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '', deliveries: [],
-            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {}, delivSettings: {}, saveMsg: '', videos: [], vidBusy: false, openSec: {}, heroIdx: 0 };
+            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {}, delivSettings: {}, saveMsg: '', videos: [], vidBusy: false, openSec: {}, heroIdx: 0, cats: null, catBusy: false };
 
   // ── CLOUDINARY CONFIG ── replace these two with your account values ──
   CLOUD_NAME = 'wrjc0nyq';
@@ -426,6 +426,7 @@ class Component extends DCLogic {
     if (this.backendMode()) { try { tok = localStorage.getItem('eo_token'); const n = localStorage.getItem('eo_client'); if (tok) { this.setState({ token: tok, clientName: n || '' }); this.loadProfile(tok); this.loadDeliveries(); } } catch (_) {} }
     if (this.cloudReady()) this.loadCloud(tok);
     this.loadVideos();
+    this.loadCategories();
     try {
       const q = new URLSearchParams(location.search).get('gallery');
       if (q && this.backendMode()) { this.setState({ page: 'client', deliveryCode: q }); this.openGallery(q, ''); }
@@ -602,6 +603,61 @@ class Component extends DCLogic {
       if (n < 2) return;
       this.setState(st => ({ heroIdx: ((st.heroIdx || 0) + 1) % n }));
     }, 7000);
+  }
+
+  // Categories are data now, not code. Falls back to the built-in list so the
+  // site still renders if the API is unreachable.
+  catList() {
+    return (this.state.cats && this.state.cats.length) ? this.state.cats : [
+      { key: 'newborn', label: 'Newborn' }, { key: 'family', label: 'Family' },
+      { key: 'events', label: 'Events' }, { key: 'cinematic', label: 'Cinematic' },
+      { key: 'drone', label: 'Drone' },
+      { key: 'video', label: 'Video / Reels' }, { key: 'social', label: 'Social Reels' },
+    ];
+  }
+  catKeys() { return this.catList().map(c => c.key); }
+  catLabels() { const m = {}; this.catList().forEach(c => { m[c.key] = c.label; }); return m; }
+
+  async loadCategories() {
+    if (!this.backendMode()) return;
+    try {
+      const r = await fetch(this.apiBase() + '/api/categories');
+      const d = await r.json();
+      if (r.ok && d.items && d.items.length) { this.setState({ cats: d.items }); this.loadCloud(); }
+    } catch (e) {}
+  }
+
+  async addCategory(label) {
+    if (!label) { alert('Name the category first.'); return; }
+    this.setState({ catBusy: true });
+    try {
+      const r = await fetch(this.apiBase() + '/api/categories', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ label }) });
+      if (r.status === 401) { this.sessionExpired(); this.setState({ catBusy: false }); return; }
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Could not add that category'); this.setState({ catBusy: false }); return; }
+      this.setState({ cats: d.items, catBusy: false });
+      this.loadCloud();
+    } catch (e) { alert('Failed: ' + e.message); this.setState({ catBusy: false }); }
+  }
+
+  async renameCategory(key, label) {
+    try {
+      const r = await fetch(this.apiBase() + '/api/categories/rename', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ key, label }) });
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Could not rename'); return; }
+      this.setState({ cats: d.items });
+    } catch (e) { alert('Failed: ' + e.message); }
+  }
+
+  async deleteCategory(key, label) {
+    if (!confirm('Remove the \u201c' + label + '\u201d category?\n\nIt must be empty first. Photos and video links are never deleted by this.')) return;
+    try {
+      const r = await fetch(this.apiBase() + '/api/categories/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ key }) });
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Could not remove that category'); return; }
+      this.setState({ cats: d.items });
+      this.loadCloud();
+    } catch (e) { alert('Failed: ' + e.message); }
   }
 
   async loadVideos() {
@@ -1077,7 +1133,38 @@ class Component extends DCLogic {
             h('div', { style: { color: '#9c9084' } }, v.provider + ' \u00b7 ' + v.category)))))
         : h('div', { style: { fontSize: 12.5, color: '#9c9084', marginTop: 10 } }, 'No videos linked yet.'));
 
+    const catMgr = h('div', { style: { ...card, background: '#f1ebdf' } },
+      h('button', { onClick: () => this.toggleSec('__cats'),
+        style: { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' } },
+        h('span', { style: { color: '#9e5423', fontSize: 13, transform: st.openSec['__cats'] ? 'rotate(90deg)' : 'none', transition: 'transform .15s', display: 'inline-block' } }, '\u25b6'),
+        h('span', null,
+          h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 20, margin: 0 } }, 'Manage categories'),
+          h('div', { style: { fontSize: 12, color: '#9c9084' } }, cats.length + ' categories'))),
+      !st.openSec['__cats'] ? null : h('div', { style: { marginTop: 12 } },
+        h('form', { onSubmit: (e) => { e.preventDefault(); const f = e.target; this.addCategory(f.cname.value.trim()); f.cname.value = ''; },
+          style: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end', paddingBottom: 12, borderBottom: '1px dashed rgba(154,173,139,.45)' } },
+          h('label', { style: { flex: '1 1 220px', fontSize: 12, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 5 } }, 'New category',
+            h('input', { name: 'cname', placeholder: 'e.g. Concerts', style: { padding: '10px 12px', border: '1px solid rgba(154,173,139,.5)', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', background: '#fff', width: '100%' } })),
+          h('button', { type: 'submit', disabled: st.catBusy,
+            style: { padding: '10px 18px', background: st.catBusy ? '#c89b78' : '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: st.catBusy ? 'default' : 'pointer', fontFamily: 'inherit' } },
+            st.catBusy ? 'Adding\u2026' : '+ Add category')),
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 } },
+          cats.map(c => {
+            const n = (cloud[c.key] || []).length + (st.videos || []).filter(v => v.category === c.key).length;
+            return h('div', { key: c.key, style: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 10, padding: '8px 10px' } },
+              h('input', { defaultValue: c.label, key: 'cl-' + c.key + '-' + c.label,
+                onBlur: (e) => { const l = e.target.value.trim(); if (l && l !== c.label) this.renameCategory(c.key, l); },
+                style: { flex: '1 1 160px', minWidth: 0, padding: '8px 10px', border: '1px solid rgba(154,173,139,.45)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', background: '#faf7f0' } }),
+              h('span', { style: { fontSize: 11.5, color: '#9c9084', whiteSpace: 'nowrap' } }, n + (n === 1 ? ' item' : ' items')),
+              h('button', { onClick: () => this.deleteCategory(c.key, c.label), disabled: n > 0,
+                title: n > 0 ? 'Empty this category first' : 'Remove this category',
+                style: { padding: '7px 12px', background: 'none', border: '1px solid rgba(178,59,46,.45)', borderRadius: 999, color: n > 0 ? '#c9b9a8' : '#b23b2e', fontSize: 12, fontWeight: 700, cursor: n > 0 ? 'not-allowed' : 'pointer', fontFamily: 'inherit' } }, 'Remove'));
+          })),
+        h('p', { style: { fontSize: 11.5, color: '#8a7a68', lineHeight: 1.6, marginTop: 10 } },
+          'Renaming only changes the label shown on the site \u2014 existing photos stay put. A category must be empty before it can be removed, so nothing is ever orphaned in storage.')));
+
     const work = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+      catMgr,
       h('div', { style: { fontSize: 12.5, color: '#9c9084', lineHeight: 1.6 } }, 'Tap a category to open it.'),
       specials.map(s => sectionOf(s.key, s.label)),
       cats.map(c => sectionOf(c.key, c.label)),
@@ -1159,8 +1246,8 @@ class Component extends DCLogic {
   async loadCloudFromApi(tok) {
     const token = tok || this.state.token;
     if (!token) return;
-    const keys = ['newborn', 'family', 'events', 'cinematic', 'drone', 'video', 'social', 'hero', 'about'];
-    const labels = { newborn: 'Newborn', family: 'Family', events: 'Events', cinematic: 'Cinematic', drone: 'Drone', video: 'Video / Reels', social: 'Social Reels' };
+    const keys = this.catKeys().concat(['hero', 'about']);
+    const labels = this.catLabels();
     const out = {}, covers = {}, coverIds = {};
     await Promise.all(keys.map(async k => {
       out[k] = [];
@@ -1190,8 +1277,8 @@ class Component extends DCLogic {
   async loadCloud(tok) {
     const token = tok || this.state.token;
     if (this.backendMode() && token) { await this.loadCloudFromApi(token); return; }
-    const keys = ['newborn', 'family', 'events', 'cinematic', 'drone', 'video', 'social', 'hero', 'about'];
-    const labels = { newborn: 'Newborn', family: 'Family', events: 'Events', cinematic: 'Cinematic', drone: 'Drone', video: 'Video / Reels', social: 'Social Reels' };
+    const keys = this.catKeys().concat(['hero', 'about']);
+    const labels = this.catLabels();
     const out = {};
     const covers = {};
     const coverIds = {};   // category -> publicId of the featured asset (drives the ★ state)
@@ -1304,12 +1391,7 @@ class Component extends DCLogic {
   renderVals() {
     const p = this.state.page;
     const cat = this.state.cat;
-    const cats = [
-      { key: 'newborn', label: 'Newborn' }, { key: 'family', label: 'Family' },
-      { key: 'events', label: 'Events' }, { key: 'cinematic', label: 'Cinematic' },
-      { key: 'drone', label: 'Drone' },
-      { key: 'video', label: 'Video / Reels' }, { key: 'social', label: 'Social Reels' },
-    ];
+    const cats = this.catList();
 
     const navLink = (page, label) => ({
       label, go: this.go(page),
