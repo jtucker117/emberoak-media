@@ -396,7 +396,7 @@
 class Component extends DCLogic {
   state = { page: 'home', cat: 'all', lb: null, contactSent: false, cloud: {}, covers: {}, coverIds: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '',
             profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '', deliveries: [],
-            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {}, delivSettings: {}, saveMsg: '', videos: [], vidBusy: false };
+            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {}, delivSettings: {}, saveMsg: '', videos: [], vidBusy: false, openSec: {} };
 
   // ── CLOUDINARY CONFIG ── replace these two with your account values ──
   CLOUD_NAME = 'wrjc0nyq';
@@ -596,6 +596,19 @@ class Component extends DCLogic {
       this.setState({ vidBusy: false });
       this.loadVideos();
     } catch (e) { alert('Failed: ' + e.message); this.setState({ vidBusy: false }); }
+  }
+
+  async updateVideo(id, patch) {
+    try {
+      const r = await fetch(this.apiBase() + '/api/videos/update', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify(Object.assign({ id }, patch)) });
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Could not save'); return; }
+      this.loadVideos();
+    } catch (e) { alert('Failed: ' + e.message); }
+  }
+
+  toggleSec(key) {
+    this.setState(st => ({ openSec: Object.assign({}, st.openSec, { [key]: !st.openSec[key] }) }));
   }
 
   async removeVideo(id, title) {
@@ -914,7 +927,7 @@ class Component extends DCLogic {
       style: { padding: '10px 20px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, letterSpacing: '.04em',
         background: st.adminTab === id ? '#9e5423' : 'transparent', color: st.adminTab === id ? '#fff' : '#6f6357' } }, label);
     const tabs = h('div', { style: { display: 'flex', gap: 6, background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 999, padding: 6, alignSelf: 'flex-start', flexWrap: 'wrap' } },
-      tab('work', 'My Work'), tab('deliveries', 'Client Deliveries'), tab('account', 'Account'));
+      tab('work', 'My Work'), tab('videos', 'Videos'), tab('deliveries', 'Client Deliveries'), tab('account', 'Account'));
 
     const progressEl = (active) => (active && st.upTotal) ? h('div', { style: { margin: '12px 0 2px' } },
       h('div', { style: { fontSize: 12.5, color: '#6f6357', marginBottom: 5, fontWeight: 600 } },
@@ -925,11 +938,15 @@ class Component extends DCLogic {
     const sectionOf = (key, label) => {
       const items = cloud[key] || [];
       const busy = this.state.busy === key;
+      const openS = !!st.openSec[key];
       return h('div', { key, style: card },
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: items.length ? 14 : 0, flexWrap: 'wrap' } },
-          h('div', null,
-            h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 22, margin: 0 } }, label),
-            h('div', { style: { fontSize: 12, color: '#9c9084' } }, items.length + ' live')),
+          h('button', { onClick: () => this.toggleSec(key), title: openS ? 'Collapse' : 'Expand',
+            style: { background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 10 } },
+            h('span', { style: { color: '#9e5423', fontSize: 13, transform: openS ? 'rotate(90deg)' : 'none', transition: 'transform .15s', display: 'inline-block' } }, '\u25b6'),
+            h('span', null,
+              h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 22, margin: 0 } }, label),
+              h('div', { style: { fontSize: 12, color: '#9c9084' } }, items.length + ' live'))),
           this.backendMode()
             ? h('label', { style: { padding: '10px 18px', background: busy ? '#c89b78' : '#9e5423', color: '#fff', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: busy ? 'default' : 'pointer', whiteSpace: 'nowrap' } },
                 busy ? 'Uploading…' : '+ Upload',
@@ -937,7 +954,7 @@ class Component extends DCLogic {
                   onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.backendUpload(key, fs); } }))
             : h('button', { onClick: () => this.openUploader(key), style: { padding: '10px 18px', background: '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', whiteSpace: 'nowrap' } }, '+ Upload')),
         progressEl(busy),
-        items.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(104px,1fr))', gap: 10 } },
+        !openS ? null : items.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(104px,1fr))', gap: 10 } },
           items.map((it, i) => {
             const isCover = !!(st.coverIds && st.coverIds[key] && st.coverIds[key] === it.publicId);
             return h('div', { key: i, style: { position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: '#eee6d8', boxShadow: isCover ? '0 0 0 3px #f0b429' : 'none' } },
@@ -1031,17 +1048,15 @@ class Component extends DCLogic {
             h('div', { style: { color: '#9c9084' } }, v.provider + ' \u00b7 ' + v.category)))))
         : h('div', { style: { fontSize: 12.5, color: '#9c9084', marginTop: 10 } }, 'No videos linked yet.'));
 
-    const work = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
-      videoCard,
-      h('div', { style: { ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: '#f1ebdf' } },
-        h('div', { style: { flex: '1 1 260px', fontSize: 12.5, color: '#6f6357', lineHeight: 1.6 } },
-          h('strong', null, 'Photos missing from the site?'),
-          ' Files uploaded before this account was tagged can be invisible to the gallery. This re-tags them in place — it never deletes anything.'),
-        h('button', { onClick: () => this.retagAll(), disabled: retagBusy,
-          style: { padding: '10px 18px', background: retagBusy ? '#c89b78' : '#5a4d43', color: '#fff', border: 'none', borderRadius: 999, fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: retagBusy ? 'default' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' } },
-          retagBusy ? 'Repairing…' : 'Repair missing photos')),
+    const work = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+      h('div', { style: { fontSize: 12.5, color: '#9c9084', lineHeight: 1.6 } }, 'Tap a category to open it.'),
       specials.map(s => sectionOf(s.key, s.label)),
-      cats.map(c => sectionOf(c.key, c.label)));
+      cats.map(c => sectionOf(c.key, c.label)),
+      h('div', { style: { textAlign: 'right', marginTop: 2 } },
+        h('button', { onClick: () => this.retagAll(), disabled: retagBusy,
+          title: 'Re-tags files uploaded before this account was tagged, so the gallery can see them. Never deletes anything.',
+          style: { padding: '8px 14px', background: 'none', border: '1px solid rgba(154,173,139,.6)', borderRadius: 999, color: '#6f6357', fontSize: 12, fontWeight: 700, cursor: retagBusy ? 'default' : 'pointer', fontFamily: 'inherit' } },
+          retagBusy ? 'Repairing\u2026' : 'Photos missing? Repair')));
 
     const btnSm = { padding: '8px 14px', background: 'none', border: '1px solid rgba(154,173,139,.6)', borderRadius: 999, color: '#5a4d43', fontSize: 12, fontWeight: 700, letterSpacing: '.03em', cursor: 'pointer', fontFamily: 'inherit' };
     const btnDanger = { ...btnSm, border: '1px solid rgba(178,59,46,.45)', color: '#b23b2e' };
@@ -1106,7 +1121,7 @@ class Component extends DCLogic {
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, marginTop: 26, textAlign: 'left' } },
       header,
       tabs,
-      st.adminTab === 'account' ? account : (st.adminTab === 'deliveries' ? deliveriesPanel : work));
+      st.adminTab === 'account' ? account : (st.adminTab === 'videos' ? videoCard : (st.adminTab === 'deliveries' ? deliveriesPanel : work)));
   }
 
   // Signed-in admin reads the authenticated API: it is the live Cloudinary state.

@@ -136,6 +136,31 @@ function parseVideoUrl(u) {
   if (m) return { provider: 'vimeo', videoId: m[1] };
   return null;
 }
+// oEmbed gives the real title (and Vimeo's thumbnail) with no API key.
+async function fetchOEmbed(provider, videoId) {
+  const url = provider === 'vimeo'
+    ? `https://vimeo.com/api/oembed.json?url=https://vimeo.com/${videoId}`
+    : `https://www.youtube.com/oembed?format=json&url=https://www.youtube.com/watch?v=${videoId}`;
+  try {
+    const r = await fetch(url);
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (e) { return null; }
+}
+
+// Videos added before titles were resolved show their raw id. Fill those in once,
+// at boot, rather than making every page load pay for it.
+async function backfillVideoTitles() {
+  const missing = VIDEOS.filter(v => !v.title);
+  if (!missing.length) return;
+  for (const v of missing) {
+    const j = await fetchOEmbed(v.provider, v.videoId);
+    if (j && j.title) v.title = String(j.title).slice(0, 120);
+    if (j && j.thumbnail_url && !v.thumb) v.thumb = j.thumbnail_url;
+  }
+  try { saveVideos(); console.log(`[info] backfilled ${missing.length} video title(s)`); } catch (e) {}
+}
+
 const embedUrlFor = (v) => v.provider === 'vimeo'
   ? `https://player.vimeo.com/video/${v.videoId}`
   : `https://www.youtube-nocookie.com/embed/${v.videoId}`;   // no-cookie: fewer trackers on the client's site
@@ -385,12 +410,11 @@ app.post('/api/videos', auth, async (req, res) => {
     ? `https://i.ytimg.com/vi/${parsed.videoId}/hqdefault.jpg`   // hqdefault always exists; maxres often 404s
     : '';
   let name = String(title || '').slice(0, 120);
-  if (parsed.provider === 'vimeo') {
-    // Vimeo thumbnails aren't derivable from the id — ask oEmbed once, at add time
-    try {
-      const r = await fetch(`https://vimeo.com/api/oembed.json?url=https://vimeo.com/${parsed.videoId}`);
-      if (r.ok) { const j = await r.json(); thumb = j.thumbnail_url || ''; if (!name) name = j.title || ''; }
-    } catch (e) {}
+  // ask oEmbed for the real title (and Vimeo's thumbnail, which isn't derivable)
+  const meta = await fetchOEmbed(parsed.provider, parsed.videoId);
+  if (meta) {
+    if (!name && meta.title) name = String(meta.title).slice(0, 120);
+    if (!thumb && meta.thumbnail_url) thumb = meta.thumbnail_url;
   }
   const item = { id, provider: parsed.provider, videoId: parsed.videoId, url: String(url).trim(), title: name, category: cat, thumb, addedAt: new Date().toISOString() };
   try {
@@ -401,6 +425,20 @@ app.post('/api/videos', auth, async (req, res) => {
     VIDEOS = VIDEOS.filter(v => v.id !== id);
     res.status(500).json({ error: 'Could not save that link', detail: String(e.message || e) });
   }
+});
+
+app.post('/api/videos/update', auth, (req, res) => {
+  const { id, title, category } = req.body || {};
+  const v = VIDEOS.find(x => x.id === String(id || ''));
+  if (!v) return res.status(404).json({ error: 'No such video' });
+  if (category != null) {
+    const cat = String(category);
+    if (!SAFE.test(cat)) return res.status(400).json({ error: 'Bad category' });
+    v.category = cat;
+  }
+  if (title != null) v.title = String(title).slice(0, 120);
+  try { saveVideos(); res.json({ ok: true, item: { ...v, embedUrl: embedUrlFor(v) } }); }
+  catch (e) { res.status(500).json({ error: 'Could not save', detail: String(e.message || e) }); }
 });
 
 app.post('/api/videos/delete', auth, (req, res) => {
@@ -647,5 +685,6 @@ async function sweepExpired() {
 }
 setInterval(sweepExpired, 60 * 60 * 1000);
 sweepExpired();
+backfillVideoTitles();
 
 app.listen(PORT, () => console.log(`Ember & Oak media backend listening on ${PORT}`));
