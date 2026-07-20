@@ -357,6 +357,53 @@ app.get('/api/deliveries', auth, async (req, res) => {
   }
 });
 
+// Studio: the individual files inside one delivery gallery, for curating it.
+app.get('/api/delivery/items', auth, async (req, res) => {
+  const code = String(req.query.code || '');
+  if (!SAFE.test(code)) return res.status(400).json({ error: 'Bad gallery code' });
+  const folder = `${DROOT}/${code}`;
+  try {
+    const [imgs, vids] = await Promise.all([
+      cloudinary.api.resources({ type: 'upload', resource_type: 'image', prefix: `${folder}/`, max_results: 500 }).catch(() => ({ resources: [] })),
+      cloudinary.api.resources({ type: 'upload', resource_type: 'video', prefix: `${folder}/`, max_results: 500 }).catch(() => ({ resources: [] })),
+    ]);
+    const map = (r, isVideo) => ({
+      publicId: r.public_id,
+      resourceType: isVideo ? 'video' : 'image',
+      isVideo,
+      filename: String(r.public_id).split('/').pop() + '.' + r.format,
+      bytes: r.bytes || 0,
+      thumb: isVideo
+        ? cloudinary.url(r.public_id, { resource_type: 'video', transformation: [{ width: 320, height: 320, crop: 'fill', quality: 'auto', start_offset: '0' }], format: 'jpg' })
+        : cloudinary.url(r.public_id, { transformation: [{ width: 320, height: 320, crop: 'fill', quality: 'auto', fetch_format: 'auto' }] }),
+    });
+    const items = [
+      ...(imgs.resources || []).map(r => map(r, false)),
+      ...(vids.resources || []).map(r => map(r, true)),
+    ];
+    res.json({ items });
+  } catch (e) {
+    res.status(500).json({ error: 'Could not list that gallery', detail: String(e.message || e) });
+  }
+});
+
+// Studio: remove ONE file from a delivery gallery (guarded to that gallery's folder).
+app.post('/api/delivery/item/delete', auth, async (req, res) => {
+  const { code, publicId, resourceType } = req.body || {};
+  if (!SAFE.test(String(code || ''))) return res.status(400).json({ error: 'Bad gallery code' });
+  if (!publicId) return res.status(400).json({ error: 'Missing publicId' });
+  if (!String(publicId).startsWith(`${DROOT}/${code}/`))
+    return res.status(403).json({ error: 'That file is not in this gallery' });
+  try {
+    const rt = resourceType === 'video' ? 'video' : 'image';
+    const out = await cloudinary.uploader.destroy(publicId, { resource_type: rt, invalidate: true });
+    if (out.result !== 'ok' && out.result !== 'not found') return res.status(400).json({ error: out.result });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Delete failed', detail: String(e.message || e) });
+  }
+});
+
 // Studio: permanently delete a whole delivery gallery (every original in it).
 app.post('/api/delivery/delete', auth, async (req, res) => {
   const code = String((req.body && req.body.code) || '');

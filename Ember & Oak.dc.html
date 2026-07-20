@@ -392,7 +392,7 @@
 class Component extends DCLogic {
   state = { page: 'home', cat: 'all', lb: null, contactSent: false, cloud: {}, covers: {}, coverIds: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '',
             profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '', deliveries: [],
-            upTotal: 0, upDone: 0, gv: null, slideshow: false };
+            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {} };
 
   // ── CLOUDINARY CONFIG ── replace these two with your account values ──
   CLOUD_NAME = 'wrjc0nyq';
@@ -571,6 +571,39 @@ class Component extends DCLogic {
     var origin = '';
     try { origin = location.origin; } catch (_) {}
     return origin + '/?gallery=' + code;
+  }
+
+  // expand one gallery to curate its contents
+  toggleDelivItems(code) {
+    if (this.state.openDeliv === code) { this.setState({ openDeliv: '' }); return; }
+    this.setState({ openDeliv: code });
+    this.loadDelivItems(code);
+  }
+
+  async loadDelivItems(code) {
+    try {
+      const r = await fetch(this.apiBase() + '/api/delivery/items?code=' + encodeURIComponent(code), { headers: { Authorization: 'Bearer ' + this.state.token } });
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Could not open that gallery'); return; }
+      this.setState(st => ({ delivItems: Object.assign({}, st.delivItems, { [code]: d.items || [] }) }));
+    } catch (e) { alert('Failed: ' + e.message); }
+  }
+
+  async deleteDelivItem(code, it) {
+    if (!confirm('Remove ' + (it.filename || 'this file') + ' from “' + code + '”?\n\nThis deletes the original permanently.')) return;
+    try {
+      const r = await fetch(this.apiBase() + '/api/delivery/item/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ code, publicId: it.publicId, resourceType: it.resourceType }) });
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Could not remove that file'); return; }
+    } catch (e) { alert('Failed: ' + e.message); return; }
+    await this.loadDelivItems(code);
+    this.loadDeliveries();
+  }
+
+  async addToDelivery(code, files) {
+    await this.deliveryUpload(code, files, '');
+    await this.loadDelivItems(code);
+    this.loadDeliveries();
   }
 
   async deleteDelivery(code, count) {
@@ -887,6 +920,9 @@ class Component extends DCLogic {
         list.map(g => {
           const link = this.deliveryLink(g.code);
           const dbusy = st.busy === ('deliv-' + g.code);
+          const open_ = st.openDeliv === g.code;
+          const items_ = st.delivItems[g.code];
+          const addBusy = open_ && st.busy === 'delivery';
           return h('div', { key: g.code, style: { border: '1px solid rgba(154,173,139,.35)', borderRadius: 12, padding: '12px 14px', background: '#fff', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' } },
             h('div', { style: { flex: '1 1 250px', minWidth: 0 } },
               h('div', { style: { fontWeight: 700, fontSize: 14.5 } }, g.title,
@@ -895,8 +931,25 @@ class Component extends DCLogic {
                 g.count + (g.count === 1 ? ' file' : ' files') + (g.expires ? ' · auto-deletes ' + new Date(g.expires).toLocaleDateString() : '')),
               h('a', { href: link, target: '_blank', rel: 'noopener', style: { fontSize: 12, wordBreak: 'break-all' } }, link)),
             h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+              h('button', { onClick: () => this.toggleDelivItems(g.code), style: open_ ? { ...btnSm, background: '#5a4d43', color: '#fff', border: '1px solid #5a4d43' } : btnSm },
+                open_ ? 'Hide photos' : 'Manage photos'),
               h('button', { onClick: () => { try { navigator.clipboard.writeText(link); alert('Link copied to your clipboard.'); } catch (_) { prompt('Copy this link:', link); } }, style: btnSm }, 'Copy link'),
-              h('button', { onClick: () => this.deleteDelivery(g.code, g.count), disabled: dbusy, style: btnDanger }, dbusy ? 'Deleting…' : 'Delete')));
+              h('button', { onClick: () => this.deleteDelivery(g.code, g.count), disabled: dbusy, style: btnDanger }, dbusy ? 'Deleting…' : 'Delete')),
+            open_ ? h('div', { style: { flexBasis: '100%', borderTop: '1px solid rgba(154,173,139,.3)', marginTop: 4, paddingTop: 12 } },
+              h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 10 } },
+                h('div', { style: { fontSize: 12.5, color: '#6f6357' } }, items_ === undefined ? 'Loading…' : (items_.length + (items_.length === 1 ? ' file' : ' files') + ' in this gallery')),
+                h('label', { style: { padding: '9px 16px', background: addBusy ? '#c89b78' : '#9e5423', color: '#fff', borderRadius: 999, fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: addBusy ? 'default' : 'pointer', whiteSpace: 'nowrap' } },
+                  addBusy ? 'Uploading…' : '+ Add photos',
+                  h('input', { type: 'file', multiple: true, accept: 'image/*,video/*', disabled: addBusy, style: { display: 'none' },
+                    onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.addToDelivery(g.code, fs); } }))),
+              progressEl(addBusy),
+              (items_ && items_.length) ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(92px,1fr))', gap: 8 } },
+                items_.map((it, k) => h('div', { key: k, style: { position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', background: '#eee6d8' } },
+                  h('img', { src: it.thumb, alt: it.filename, title: it.filename, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }),
+                  it.isVideo ? h('div', { style: { position: 'absolute', top: 4, left: 4, background: 'rgba(30,22,17,.6)', color: '#fff', fontSize: 9, padding: '1px 5px', borderRadius: 4 } }, 'video') : null,
+                  h('button', { title: 'Remove ' + it.filename, onClick: () => this.deleteDelivItem(g.code, it),
+                    style: { position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'rgba(178,59,46,.92)', color: '#fff', fontSize: 15, lineHeight: '24px', cursor: 'pointer', padding: 0 } }, '×'))))
+                : (items_ !== undefined ? h('div', { style: { fontSize: 12.5, color: '#9c9084' } }, 'This gallery is empty — add photos above.') : null)) : null);
         }))
         : h('div', { style: { fontSize: 13, color: '#9c9084', lineHeight: 1.6 } }, 'No client galleries yet. Enter a code above, upload the full-res originals, then share the link that appears here.'));
 
