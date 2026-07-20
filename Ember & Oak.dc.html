@@ -396,7 +396,7 @@
 class Component extends DCLogic {
   state = { page: 'home', cat: 'all', lb: null, contactSent: false, cloud: {}, covers: {}, coverIds: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '',
             profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '', deliveries: [],
-            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {}, delivSettings: {}, saveMsg: '', videos: [], vidBusy: false, openSec: {} };
+            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {}, delivSettings: {}, saveMsg: '', videos: [], vidBusy: false, openSec: {}, heroIdx: 0 };
 
   // ── CLOUDINARY CONFIG ── replace these two with your account values ──
   CLOUD_NAME = 'wrjc0nyq';
@@ -591,6 +591,17 @@ class Component extends DCLogic {
     } catch (e) { alert('Failed: ' + e.message); }
     this.setState({ busy: '' });
     this.loadCloud();
+  }
+
+  // Cover photos cross-fade when there is more than one. Slow on purpose: this sits
+  // behind the headline, so it should read as ambient, not as a carousel.
+  startHeroShow() {
+    if (this._heroTimer || !this.heroImages || this.heroImages.length < 2) return;
+    this._heroTimer = setInterval(() => {
+      const n = (this.heroImages || []).length;
+      if (n < 2) return;
+      this.setState(st => ({ heroIdx: ((st.heroIdx || 0) + 1) % n }));
+    }, 7000);
   }
 
   async loadVideos() {
@@ -1164,7 +1175,11 @@ class Component extends DCLogic {
         const cov = items.find(it => (it.tags || []).indexOf(coverTag) !== -1);
         if (cov) { covers[k] = cov.thumb; coverIds[k] = cov.publicId; }
         if (items.length) {
-          if (k === 'hero') this.heroFromCloud = items[items.length - 1].full;
+          if (k === 'hero') {
+            this.heroImages = items.map(it => it.full).filter(Boolean);
+            this.heroFromCloud = this.heroImages[this.heroImages.length - 1] || '';
+            this.startHeroShow();
+          }
           if (k === 'about') this.aboutFromCloud = items[items.length - 1].full;
         }
       } catch (e) {}
@@ -1192,9 +1207,14 @@ class Component extends DCLogic {
           if (k === 'hero' || k === 'about') {
             const list = (data.resources || []);
             if (list.length) {
-              const last = list[list.length - 1];
-              const url = 'https://res.cloudinary.com/' + this.CLOUD_NAME + '/image/upload/w_' + (k === 'hero' ? 2000 : 1200) + ',c_fill,q_auto,f_auto/' + last.public_id + '.' + last.format;
-              if (k === 'hero') this.heroFromCloud = url; else this.aboutFromCloud = url;
+              const urlOf = (r) => 'https://res.cloudinary.com/' + this.CLOUD_NAME + '/image/upload/w_' + (k === 'hero' ? 2000 : 1200) + ',c_fill,q_auto,f_auto/' + r.public_id + '.' + r.format;
+              if (k === 'hero') {
+                this.heroImages = list.map(urlOf);
+                this.heroFromCloud = this.heroImages[this.heroImages.length - 1] || '';
+                this.startHeroShow();
+              } else {
+                this.aboutFromCloud = urlOf(list[list.length - 1]);
+              }
             }
             out[k] = list; return;
           }
@@ -1396,7 +1416,17 @@ class Component extends DCLogic {
       clientName: this.state.clientName, loginErr: this.state.loginErr,
       loginEl: this.renderLogin(), managerEl: this.renderManager(cats, cloud),
       doLogout: (e) => { if (e) e.preventDefault(); this.logout(); },
-      heroImgEl: heroSrc ? React.createElement('img', { src: heroSrc, alt: 'Ember & Oak cover', style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } }) : null,
+      heroImgEl: (() => {
+        // an explicit HERO_IMAGE always wins; otherwise fade through the uploads
+        const imgs = this.HERO_IMAGE ? [this.HERO_IMAGE] : ((this.heroImages && this.heroImages.length) ? this.heroImages : (heroSrc ? [heroSrc] : []));
+        if (!imgs.length) return null;
+        const cur = (this.state.heroIdx || 0) % imgs.length;
+        return React.createElement('div', { style: { position: 'absolute', inset: 0 } },
+          imgs.map((src, i) => React.createElement('img', {
+            key: i, src, alt: i === cur ? 'Ember & Oak cover' : '', 'aria-hidden': i === cur ? null : 'true',
+            style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover',
+                     opacity: i === cur ? 1 : 0, transition: 'opacity 2.4s ease-in-out' } })));
+      })(),
       uploadHero: (e) => { if (e) e.preventDefault(); this.openUploader('hero'); },
       aboutImgEl: aboutSrc ? React.createElement('img', { src: aboutSrc, alt: 'About Ember & Oak', style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } }) : null,
       uploadAbout: (e) => { if (e) e.preventDefault(); this.openUploader('about'); },
