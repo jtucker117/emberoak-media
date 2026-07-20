@@ -812,7 +812,10 @@ app.post('/api/gallery/open', async (req, res) => {
     const nameOf = (pid) => pid.split('/').pop();
     // Proofing watermark: a tiled-ish diagonal caption over the preview only.
     // Kept to letters/numbers/spaces so it can't break the transformation URL.
-    const wmText = String((CLIENTS[0] && CLIENTS[0].name) || 'PROOF').replace(/[^A-Za-z0-9 ]+/g, ' ').trim().slice(0, 40) || 'PROOF';
+    // strip characters that could break the transformation URL, then collapse the
+    // gaps they leave behind — 'Ember & Oak' became 'Ember   Oak' without this
+    const wmText = String((CLIENTS[0] && CLIENTS[0].name) || 'PROOF')
+      .replace(/[^A-Za-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40) || 'PROOF';
     // Relative sizing: the text layer is scaled to ~88% of the image width, so it
     // reads the same on a 600px thumbnail and an 1800px preview. A fixed font_size
     // looked tiny on the large preview and oversized on thumbnails.
