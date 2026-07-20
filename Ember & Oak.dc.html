@@ -445,6 +445,18 @@ class Component extends DCLogic {
       this.loadCloud(d.token);
     } catch (e) { this.setState({ loginErr: 'Could not reach the server', busy: '' }); }
   }
+  // Any authenticated call can come back 401 once the token expires. Without this
+  // the page still looks signed in and every action fails with its own vague
+  // message, which reads like a broken feature rather than an ended session.
+  sessionExpired() {
+    if (this._expiredNotified) return true;
+    this._expiredNotified = true;
+    this.logout();
+    alert('Your sign-in has expired. Please sign in again.');
+    setTimeout(() => { this._expiredNotified = false; }, 3000);
+    return true;
+  }
+
   logout() { try { localStorage.removeItem('eo_token'); localStorage.removeItem('eo_client'); } catch (_) {} this.setState({ token: null, clientName: '', profile: null, adminTab: 'work', pwErr: '', pwOk: '' }); }
 
   // profile header + whether this deployment can persist a password change
@@ -537,7 +549,8 @@ class Component extends DCLogic {
     try {
       const s = await fetch(this.apiBase() + '/api/sign-upload', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ category }) });
       const sig = await s.json();
-      if (!s.ok) { alert(sig.error || 'Upload not authorized — try logging in again.'); this.setState({ busy: '' }); return; }
+      if (s.status === 401) { this.sessionExpired(); this.setState({ busy: '' }); return; }
+      if (!s.ok) { alert(sig.error || 'Upload not authorized.'); this.setState({ busy: '' }); return; }
       const errors = await this.uploadFiles(sig, files);
       this.uploadSummary(files.length, errors);
     } catch (e) { alert('Upload failed: ' + e.message); }
@@ -551,6 +564,7 @@ class Component extends DCLogic {
     const clear = !!(this.state.coverIds && this.state.coverIds[category] === publicId);
     try {
       const r = await fetch(this.apiBase() + '/api/feature', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ category, publicId, resourceType, clear }) });
+      if (r.status === 401) return this.sessionExpired();
       const text = await r.text();
       let d = {}; try { d = JSON.parse(text); } catch (_) {}
       // surface the real reason instead of a generic message — a bare "could not"
@@ -742,6 +756,7 @@ class Component extends DCLogic {
     try {
       const s = await fetch(this.apiBase() + '/api/sign-delivery', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ code, expires: expires || '' }) });
       const sig = await s.json();
+      if (s.status === 401) { this.sessionExpired(); this.setState({ busy: '' }); return; }
       if (!s.ok) { alert(sig.error || 'Not authorized'); this.setState({ busy: '' }); return; }
       const errors = await this.uploadFiles(sig, files);
       this.uploadSummary(files.length, errors,
@@ -803,6 +818,7 @@ class Component extends DCLogic {
     if (!confirm('Delete this permanently?')) return;
     try {
       const r = await fetch(this.apiBase() + '/api/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ publicId, resourceType }) });
+      if (r.status === 401) return this.sessionExpired();
       const d = await r.json();
       if (!r.ok) { alert(d.error || 'Delete failed'); return; }
       const next = {};
@@ -1139,6 +1155,7 @@ class Component extends DCLogic {
       out[k] = [];
       try {
         const r = await fetch(this.apiBase() + '/api/list?category=' + encodeURIComponent(k), { headers: { Authorization: 'Bearer ' + token } });
+        if (r.status === 401) { this.sessionExpired(); return; }
         if (!r.ok) return;
         const d = await r.json();
         const items = (d.items || []).map(it => Object.assign({}, it, { label: labels[k] }));

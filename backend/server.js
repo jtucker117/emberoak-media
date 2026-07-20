@@ -215,7 +215,10 @@ app.post('/api/login', async (req, res) => {
   // a stored (self-service changed) hash wins; otherwise fall back to CLIENTS_JSON
   const ok = await verifyPassword(client, password);
   if (!ok) return res.status(401).json({ error: 'Invalid login' });
-  const token = jwt.sign({ slug: client.slug, folder: folderOf(client) }, SECRET, { expiresIn: '12h' });
+  // 12h meant a studio that signed in at night was locked out by lunchtime, with
+  // the UI still looking signed in. A week is plenty for a single-owner admin,
+  // and Sign out revokes it immediately on that device.
+  const token = jwt.sign({ slug: client.slug, folder: folderOf(client) }, SECRET, { expiresIn: '7d' });
   res.json({ token, client: { slug: client.slug, name: client.name || client.slug } });
 });
 
