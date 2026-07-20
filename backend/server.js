@@ -90,6 +90,24 @@ function saveOverrides() {
   fs.writeFileSync(tmp, JSON.stringify(OVERRIDES, null, 2), { mode: 0o600 });
   fs.renameSync(tmp, CREDENTIALS_PATH); // atomic: never leave a half-written file
 }
+// ---- per-gallery settings the studio can edit without a redeploy ----------
+// Same persistence rules as credentials: needs a real mounted volume, otherwise
+// a PIN set here would quietly disappear on the next deploy.
+const GALLERY_SETTINGS_PATH = process.env.GALLERY_SETTINGS_PATH || '/data/galleries.json';
+let GSTORE = {};  // code -> { pin, title, updatedAt }
+try {
+  GSTORE = JSON.parse(fs.readFileSync(GALLERY_SETTINGS_PATH, 'utf8')) || {};
+  console.log(`[info] loaded settings for ${Object.keys(GSTORE).length} gallery(ies)`);
+} catch (e) {
+  if (e.code !== 'ENOENT') console.warn('[warn] could not read gallery settings:', e.message);
+}
+function saveGalleryStore() {
+  fs.mkdirSync(path.dirname(GALLERY_SETTINGS_PATH), { recursive: true });
+  const tmp = `${GALLERY_SETTINGS_PATH}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(GSTORE, null, 2), { mode: 0o600 });
+  fs.renameSync(tmp, GALLERY_SETTINGS_PATH);
+}
+
 // the hash actually in force for a client — stored override wins over CLIENTS_JSON
 async function verifyPassword(client, password) {
   if (!client || !password) return false;
@@ -113,6 +131,9 @@ const OPEN_DELIVERIES = String(ALLOW_OPEN_DELIVERIES) === 'true';
 // If ALLOW_OPEN_DELIVERIES, any folder <DROOT>/<code> is reachable by its code (no pin).
 function resolveGallery(code) {
   if (!code || !SAFE.test(code)) return null;
+  // a PIN/title set from Studio Admin outranks the env config
+  const st = GSTORE[code];
+  if (st) return { code, title: st.title || code, pin: st.pin || null, folder: `${DROOT}/${code}`, expires: st.expires || null };
   const g = GALLERIES.find(x => x.code === code);
   if (g) return { code, title: g.title || code, pin: g.pin || null, folder: (g.folder || `${DROOT}/${code}`).replace(/^\/+|\/+$/g, ''), expires: g.expires || null };
   if (OPEN_DELIVERIES) return { code, title: code, pin: null, folder: `${DROOT}/${code}`, expires: null };
@@ -348,8 +369,9 @@ app.get('/api/deliveries', auth, async (req, res) => {
       }
     }
     const items = Object.values(byCode).map(g => {
-      const cfg = GALLERIES.find(x => x.code === g.code);
-      return { ...g, title: (cfg && cfg.title) || g.code, hasPin: !!(cfg && cfg.pin) };
+      const cfg = GALLERIES.find(x => x.code === g.code) || {};
+      const st = GSTORE[g.code] || {};
+      return { ...g, title: st.title || cfg.title || g.code, hasPin: !!(st.pin || cfg.pin) };
     }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.json({ items });
   } catch (e) {
@@ -401,6 +423,39 @@ app.post('/api/delivery/item/delete', auth, async (req, res) => {
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: 'Delete failed', detail: String(e.message || e) });
+  }
+});
+
+// Studio: read/write a gallery's access code and display title.
+app.get('/api/delivery/settings', auth, (req, res) => {
+  const code = String(req.query.code || '');
+  if (!SAFE.test(code)) return res.status(400).json({ error: 'Bad gallery code' });
+  const st = GSTORE[code] || {};
+  const cfg = GALLERIES.find(x => x.code === code) || {};
+  res.json({
+    code,
+    pin: st.pin || cfg.pin || '',
+    title: st.title || cfg.title || '',
+    canSave: credStoreWritable(),
+    fromEnv: !GSTORE[code] && !!cfg.code,
+  });
+});
+
+app.post('/api/delivery/settings', auth, (req, res) => {
+  const { code, pin, title } = req.body || {};
+  if (!SAFE.test(String(code || ''))) return res.status(400).json({ error: 'Bad gallery code' });
+  const p = String(pin == null ? '' : pin).trim();
+  if (p && !/^[A-Za-z0-9-]{4,32}$/.test(p))
+    return res.status(400).json({ error: 'Access code must be 4-32 letters, numbers or dashes' });
+  if (!credStoreWritable())
+    return res.status(503).json({ error: 'Gallery settings need storage. Add a Railway Volume mounted at /data, then try again.' });
+  try {
+    GSTORE[code] = { pin: p, title: String(title || '').slice(0, 120), updatedAt: new Date().toISOString() };
+    if (!p && !GSTORE[code].title) delete GSTORE[code];
+    saveGalleryStore();
+    res.json({ ok: true, pin: p });
+  } catch (e) {
+    res.status(500).json({ error: 'Could not save gallery settings', detail: String(e.message || e) });
   }
 });
 

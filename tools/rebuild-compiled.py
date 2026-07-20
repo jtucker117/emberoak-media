@@ -22,7 +22,17 @@ import argparse, io, json, subprocess, sys
 
 SRC = 'Ember & Oak.dc.html'
 OUT = 'backend/public/index.html'
-LINE = 381                      # 0-indexed: the inner-document string
+INNER_PREFIX = '"<!DOCTYPE html>\\n'   # the inner-document string literal starts with this
+
+
+def inner_line_index(lines):
+    """Locate the inner-document line instead of hardcoding it — adding anything to
+    the outer shell's <head> (favicons, meta tags) shifts its position."""
+    hits = [i for i, l in enumerate(lines) if l.startswith(INNER_PREFIX)]
+    if len(hits) != 1:
+        raise SystemExit(f'expected exactly 1 inner-document line, found {len(hits)}')
+    return hits[0]
+
 MARK = '<script type="text/x-dc" data-dc-script'
 
 # The one encoding that round-trips the original byte-for-byte. The '</' escaping is
@@ -80,6 +90,7 @@ def main():
     args = ap.parse_args()
 
     lines = io.open(OUT, encoding='utf-8').read().split('\n')
+    LINE = inner_line_index(lines)
     inner = json.loads(lines[LINE])
 
     old_src = subprocess.check_output(['git', 'show', f'{args.old}:{SRC}']).decode('utf-8')

@@ -392,7 +392,7 @@
 class Component extends DCLogic {
   state = { page: 'home', cat: 'all', lb: null, contactSent: false, cloud: {}, covers: {}, coverIds: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '',
             profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '', deliveries: [],
-            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {} };
+            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {}, delivSettings: {}, saveMsg: '' };
 
   // ── CLOUDINARY CONFIG ── replace these two with your account values ──
   CLOUD_NAME = 'wrjc0nyq';
@@ -578,6 +578,7 @@ class Component extends DCLogic {
     if (this.state.openDeliv === code) { this.setState({ openDeliv: '' }); return; }
     this.setState({ openDeliv: code });
     this.loadDelivItems(code);
+    this.loadDelivSettings(code);
   }
 
   async loadDelivItems(code) {
@@ -587,6 +588,55 @@ class Component extends DCLogic {
       if (!r.ok) { alert(d.error || 'Could not open that gallery'); return; }
       this.setState(st => ({ delivItems: Object.assign({}, st.delivItems, { [code]: d.items || [] }) }));
     } catch (e) { alert('Failed: ' + e.message); }
+  }
+
+  async loadDelivSettings(code) {
+    try {
+      const r = await fetch(this.apiBase() + '/api/delivery/settings?code=' + encodeURIComponent(code), { headers: { Authorization: 'Bearer ' + this.state.token } });
+      const d = await r.json();
+      if (r.ok) this.setState(st => ({ delivSettings: Object.assign({}, st.delivSettings, { [code]: d }) }));
+    } catch (e) {}
+  }
+
+  async saveDelivSettings(code, pin) {
+    try {
+      const r = await fetch(this.apiBase() + '/api/delivery/settings', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ code, pin }) });
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Could not save the access code'); return; }
+      alert(pin ? ('Access code set. Your client will need to enter “' + pin + '” to open this gallery.') : 'Access code removed — the link now opens without a code.');
+      this.loadDelivSettings(code);
+      this.loadDeliveries();
+    } catch (e) { alert('Failed: ' + e.message); }
+  }
+
+  // ---- iPhone/iPad: hand files to the OS share sheet so they can go to Photos ----
+  canSharePhotos() {
+    try { return !!(navigator && navigator.share && navigator.canShare); } catch (_) { return false; }
+  }
+
+  async saveToPhotos(items) {
+    if (!this.canSharePhotos()) { alert('This browser can\u2019t save straight to Photos. Use the download button instead \u2014 on iPhone, tap the photo, then Share \u2192 Save Image.'); return; }
+    this.setState({ saveMsg: 'Preparing 0 of ' + items.length + '\u2026' });
+    const files = [];
+    try {
+      for (let i = 0; i < items.length; i++) {
+        const it = items[i];
+        const r = await fetch(it.download);
+        if (r.ok) {
+          const b = await r.blob();
+          files.push(new File([b], it.filename || ('photo-' + (i + 1) + '.jpg'), { type: b.type || 'image/jpeg' }));
+        }
+        this.setState({ saveMsg: 'Preparing ' + (i + 1) + ' of ' + items.length + '\u2026' });
+      }
+      this.setState({ saveMsg: '' });
+      if (!files.length) { alert('Could not fetch those photos.'); return; }
+      if (!navigator.canShare({ files })) { alert('This device won\u2019t accept that many files at once. Try a few at a time, or use Download all (ZIP).'); return; }
+      await navigator.share({ files });
+    } catch (e) {
+      this.setState({ saveMsg: '' });
+      if (e && (e.name === 'AbortError' || e.name === 'NotAllowedError')) return;  // user cancelled the sheet
+      alert('Could not open the share sheet: ' + (e.message || e) + '\n\nUse Download all (ZIP) instead.');
+    }
   }
 
   async deleteDelivItem(code, it) {
@@ -719,6 +769,9 @@ class Component extends DCLogic {
           h('button', { onClick: () => this.toggleSlideshow(),
             style: { padding: '11px 20px', background: 'none', border: '1px solid rgba(154,173,139,.6)', borderRadius: 999, color: '#5a4d43', fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } },
             this.state.slideshow ? '\u23f8 Pause slideshow' : '\u25b6 Play slideshow'),
+          this.canSharePhotos() ? h('button', { onClick: () => this.saveToPhotos(g.items), disabled: !!this.state.saveMsg,
+            style: { padding: '11px 20px', background: '#9aad8b', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } },
+            this.state.saveMsg || '\u2b07 Save all to Photos') : null,
           h('span', { style: { fontSize: 13, color: '#9c9084' } }, 'Tap a photo to view it large, or \u2b07 to download the full-resolution file.')),
         h('button', { onClick: () => this.setState({ gallery: null, deliveryCode: '' }), style: { marginTop: 6, background: 'none', border: 'none', color: '#9e5423', fontWeight: 700, cursor: 'pointer', fontSize: 13 } }, '← Open a different gallery'),
         this.renderViewer(g));
@@ -756,7 +809,9 @@ class Component extends DCLogic {
         h('span', null, (i + 1) + ' of ' + g.items.length),
         h('span', { style: { opacity: .7, wordBreak: 'break-all' } }, it.filename),
         h('a', { href: it.download, download: it.filename,
-          style: { background: '#9e5423', color: '#fff', padding: '9px 18px', borderRadius: 999, fontWeight: 700, textDecoration: 'none' } }, '\u2b07 Download full-res')));
+          style: { background: '#9e5423', color: '#fff', padding: '9px 18px', borderRadius: 999, fontWeight: 700, textDecoration: 'none' } }, '\u2b07 Download full-res'),
+        this.canSharePhotos() ? h('button', { onClick: (e) => { e.stopPropagation(); this.saveToPhotos([it]); },
+          style: { background: '#9aad8b', color: '#fff', padding: '9px 18px', borderRadius: 999, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 } }, 'Save to Photos') : null));
   }
 
   renderLogin() {
@@ -923,6 +978,7 @@ class Component extends DCLogic {
           const open_ = st.openDeliv === g.code;
           const items_ = st.delivItems[g.code];
           const addBusy = open_ && st.busy === 'delivery';
+          const set_ = st.delivSettings[g.code];
           return h('div', { key: g.code, style: { border: '1px solid rgba(154,173,139,.35)', borderRadius: 12, padding: '12px 14px', background: '#fff', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' } },
             h('div', { style: { flex: '1 1 250px', minWidth: 0 } },
               h('div', { style: { fontWeight: 700, fontSize: 14.5 } }, g.title,
@@ -942,6 +998,17 @@ class Component extends DCLogic {
                   addBusy ? 'Uploading…' : '+ Add photos',
                   h('input', { type: 'file', multiple: true, accept: 'image/*,video/*', disabled: addBusy, style: { display: 'none' },
                     onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.addToDelivery(g.code, fs); } }))),
+              h('div', { style: { display: 'flex', gap: 8, alignItems: 'flex-end', flexWrap: 'wrap', marginBottom: 12, paddingBottom: 12, borderBottom: '1px dashed rgba(154,173,139,.4)' } },
+                h('label', { style: { flex: '0 1 220px', fontSize: 12, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 5 } }, 'Access code (optional)',
+                  h('input', { defaultValue: (set_ && set_.pin) || '', placeholder: 'e.g. 4821 \u2014 blank = no code', key: 'pin-' + g.code + '-' + ((set_ && set_.pin) || ''),
+                    onChange: (e) => { this._pinDraft = this._pinDraft || {}; this._pinDraft[g.code] = e.target.value.trim(); },
+                    style: { padding: '10px 12px', border: '1px solid rgba(154,173,139,.5)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', background: '#fff', width: '100%' } })),
+                h('button', { onClick: () => this.saveDelivSettings(g.code, (this._pinDraft && this._pinDraft[g.code] !== undefined) ? this._pinDraft[g.code] : ((set_ && set_.pin) || '')),
+                  disabled: !!(set_ && set_.canSave === false), style: btnSm }, 'Save code'),
+                h('div', { style: { fontSize: 11.5, color: '#9c9084', flex: '1 1 200px', lineHeight: 1.5 } },
+                  (set_ && set_.canSave === false)
+                    ? 'Needs a Railway Volume at /data before codes can be saved.'
+                    : ((set_ && set_.pin) ? 'Clients must enter this code to open the gallery.' : 'Anyone with the link can open this gallery.'))),
               progressEl(addBusy),
               (items_ && items_.length) ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(92px,1fr))', gap: 8 } },
                 items_.map((it, k) => h('div', { key: k, style: { position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', background: '#eee6d8' } },
