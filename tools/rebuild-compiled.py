@@ -18,7 +18,7 @@ is still complete before any new content is trusted.
 Run a syntax check afterwards (macOS, no Node required):
     osascript -l JavaScript /tmp/component.js
 """
-import argparse, io, json, subprocess, sys
+import argparse, difflib, io, json, subprocess, sys
 
 SRC = 'Ember & Oak.dc.html'
 OUT = 'backend/public/index.html'
@@ -73,6 +73,41 @@ TEMPLATE_DROP = (
     '        </div>\n')
 
 
+def template_patches(old_tpl, new_tpl):
+    """Edits made to the TEMPLATE half of the source (everything before the component
+    script) must be carried into the compiled prefix too — the compiled template is
+    not regenerated, because the compiler inlines fonts there. Derive them as a diff
+    so ordinary markup edits propagate without hand-written anchors."""
+    o, n = old_tpl.split('\n'), new_tpl.split('\n')
+    patches = []
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, o, n).get_opcodes():
+        if tag == 'equal':
+            continue
+        if tag == 'insert':
+            if i1 == 0:
+                raise SystemExit('template insert at file start is not supported')
+            anchor = o[i1 - 1]
+            patches.append((anchor + '\n', anchor + '\n' + '\n'.join(n[j1:j2]) + '\n'))
+        elif tag == 'delete':
+            patches.append(('\n'.join(o[i1:i2]) + '\n', ''))
+        else:
+            patches.append(('\n'.join(o[i1:i2]), '\n'.join(n[j1:j2])))
+    return patches
+
+
+def apply_template_patches(prefix, patches):
+    for old, new in patches:
+        c = prefix.count(old)
+        if c != 1:
+            # the compiler rewrites some attributes (onClick -> sc-camel-on-click),
+            # so a miss is reported rather than silently dropped
+            print(f'  ! template patch skipped (matched {c}x): {old.strip()[:70]!r}')
+            continue
+        prefix = prefix.replace(old, new)
+        print(f'  + template patch applied: {new.strip()[:70]!r}')
+    return prefix
+
+
 def transform(region):
     out = region
     for a, b in DIVERGENCES:
@@ -105,6 +140,8 @@ def main():
     prefix = inner[:inner.index(MARK)]
     if prefix.count(TEMPLATE_DROP) == 1:
         prefix = prefix.replace(TEMPLATE_DROP, '')
+    prefix = apply_template_patches(
+        prefix, template_patches(old_src[:old_src.index(MARK)], new_src[:new_src.index(MARK)]))
     inner_new = prefix + transform(new_src[new_src.index(MARK):])
 
     lines[LINE] = encode(inner_new)

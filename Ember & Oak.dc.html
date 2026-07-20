@@ -220,6 +220,7 @@
           <div><span style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9e5423;font-weight:700;margin-bottom:3px">Email</span><a href="mailto:jordan@emberandoak.media">jordan@emberandoak.media</a></div>
           <div><span style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9e5423;font-weight:700;margin-bottom:3px">Instagram</span><a href="https://instagram.com/emberandoakmedia" target="_blank">@emberandoakmedia</a></div>
           <div><span style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9e5423;font-weight:700;margin-bottom:3px">Facebook</span><a href="https://www.facebook.com/emberandoakmedia/" target="_blank">/emberandoakmedia</a></div>
+          <div><span style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9e5423;font-weight:700;margin-bottom:3px">YouTube</span><a href="https://www.youtube.com/@EmberandOak" target="_blank">@EmberandOak</a></div>
           <div><span style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#9e5423;font-weight:700;margin-bottom:3px">Service Area</span>Houston · The Woodlands · Montgomery · Magnolia</div>
         </div>
       </div>
@@ -362,6 +363,7 @@
           <a href="mailto:jordan@emberandoak.media" style="color:#e8ddd0" style-hover="color:#fff">jordan@emberandoak.media</a>
           <a href="https://instagram.com/emberandoakmedia" target="_blank" style="color:#e8ddd0" style-hover="color:#fff">@emberandoakmedia</a>
           <a href="https://www.facebook.com/emberandoakmedia/" target="_blank" style="color:#e8ddd0" style-hover="color:#fff">Facebook</a>
+          <a href="https://www.youtube.com/@EmberandOak" target="_blank" style="color:#e8ddd0" style-hover="color:#fff">YouTube</a>
         </div>
       </div>
       <div>
@@ -392,7 +394,7 @@
 class Component extends DCLogic {
   state = { page: 'home', cat: 'all', lb: null, contactSent: false, cloud: {}, covers: {}, coverIds: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '',
             profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '', deliveries: [],
-            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {}, delivSettings: {}, saveMsg: '' };
+            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {}, delivSettings: {}, saveMsg: '', videos: [], vidBusy: false };
 
   // ── CLOUDINARY CONFIG ── replace these two with your account values ──
   CLOUD_NAME = 'wrjc0nyq';
@@ -420,6 +422,7 @@ class Component extends DCLogic {
   componentDidMount() {
     if (this.backendMode()) { try { const t = localStorage.getItem('eo_token'); const n = localStorage.getItem('eo_client'); if (t) { this.setState({ token: t, clientName: n || '' }); this.loadProfile(t); this.loadDeliveries(); } } catch (_) {} }
     if (this.cloudReady()) this.loadCloud();
+    this.loadVideos();
     try {
       const q = new URLSearchParams(location.search).get('gallery');
       if (q && this.backendMode()) { this.setState({ page: 'client', deliveryCode: q }); this.openGallery(q, ''); }
@@ -570,6 +573,37 @@ class Component extends DCLogic {
     } catch (e) { alert('Failed: ' + e.message); }
     this.setState({ busy: '' });
     this.loadCloud();
+  }
+
+  async loadVideos() {
+    if (!this.backendMode()) return;
+    try {
+      const r = await fetch(this.apiBase() + '/api/videos');
+      const d = await r.json();
+      if (r.ok) this.setState({ videos: d.items || [] });
+    } catch (e) {}
+  }
+
+  async addVideo(url, category) {
+    if (!url) { alert('Paste a YouTube or Vimeo link first.'); return; }
+    this.setState({ vidBusy: true });
+    try {
+      const r = await fetch(this.apiBase() + '/api/videos', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ url, category }) });
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Could not add that video'); this.setState({ vidBusy: false }); return; }
+      this.setState({ vidBusy: false });
+      this.loadVideos();
+    } catch (e) { alert('Failed: ' + e.message); this.setState({ vidBusy: false }); }
+  }
+
+  async removeVideo(id, title) {
+    if (!confirm('Remove ' + (title || 'this video') + ' from the portfolio?\n\nThe video itself stays on YouTube/Vimeo — this only removes the link.')) return;
+    try {
+      const r = await fetch(this.apiBase() + '/api/videos/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ id }) });
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Could not remove it'); return; }
+      this.loadVideos();
+    } catch (e) { alert('Failed: ' + e.message); }
   }
 
   async loadDeliveries() {
@@ -969,7 +1003,34 @@ class Component extends DCLogic {
           st.pwBusy ? 'Saving…' : 'Update password')));
 
     const retagBusy = st.busy === 'retag';
+    const vidCats = cats.map(c => ({ key: c.key, label: c.label }));
+    const videoCard = h('div', { style: card },
+      h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 22, margin: '0 0 4px' } }, 'Video links (YouTube / Vimeo)'),
+      h('p', { style: { fontSize: 12.5, color: '#6f6357', margin: '0 0 12px', lineHeight: 1.6 } },
+        'For films too big to upload. Paste the link to a single video \u2014 it appears in the portfolio and plays inline, with no storage or bandwidth cost to this site.'),
+      h('form', { onSubmit: (e) => { e.preventDefault(); const f = e.target; this.addVideo(f.vurl.value.trim(), f.vcat.value); f.vurl.value = ''; },
+        style: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' } },
+        h('label', { style: { flex: '1 1 260px', fontSize: 12, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 5 } }, 'Video link',
+          h('input', { name: 'vurl', placeholder: 'https://youtu.be/\u2026', style: { padding: '11px 13px', border: '1px solid rgba(154,173,139,.5)', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', background: '#fff', width: '100%' } })),
+        h('label', { style: { flex: '0 1 170px', fontSize: 12, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 5 } }, 'Category',
+          h('select', { name: 'vcat', defaultValue: 'video', style: { padding: '11px 13px', border: '1px solid rgba(154,173,139,.5)', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', background: '#fff', width: '100%' } },
+            vidCats.map(c => h('option', { key: c.key, value: c.key }, c.label)))),
+        h('button', { type: 'submit', disabled: st.vidBusy,
+          style: { padding: '11px 20px', background: st.vidBusy ? '#c89b78' : '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: st.vidBusy ? 'default' : 'pointer', fontFamily: 'inherit' } },
+          st.vidBusy ? 'Adding\u2026' : '+ Add video')),
+      (st.videos && st.videos.length) ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 10, marginTop: 14 } },
+        st.videos.map(v => h('div', { key: v.id, style: { position: 'relative', borderRadius: 10, overflow: 'hidden', background: '#eee6d8', border: '1px solid rgba(154,173,139,.3)' } },
+          h('div', { style: { position: 'relative', aspectRatio: '16/9', background: '#1e1611' } },
+            v.thumb ? h('img', { src: v.thumb, alt: v.title || '', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }) : null,
+            h('button', { title: 'Remove', onClick: () => this.removeVideo(v.id, v.title),
+              style: { position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'rgba(178,59,46,.92)', color: '#fff', fontSize: 15, lineHeight: '24px', cursor: 'pointer', padding: 0 } }, '\u00d7')),
+          h('div', { style: { padding: '7px 9px', fontSize: 11.5, color: '#5a4d43' } },
+            h('div', { style: { fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, v.title || v.videoId),
+            h('div', { style: { color: '#9c9084' } }, v.provider + ' \u00b7 ' + v.category)))))
+        : h('div', { style: { fontSize: 12.5, color: '#9c9084', marginTop: 10 } }, 'No videos linked yet.'));
+
     const work = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+      videoCard,
       h('div', { style: { ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: '#f1ebdf' } },
         h('div', { style: { flex: '1 1 260px', fontSize: 12.5, color: '#6f6357', lineHeight: 1.6 } },
           h('strong', null, 'Photos missing from the site?'),
@@ -1221,11 +1282,15 @@ class Component extends DCLogic {
     const aboutSrc = this.ABOUT_IMAGE || this.aboutFromCloud || '';
     const cloudFlat = [];
     cats.forEach(c => (cloud[c.key] || []).forEach(im => cloudFlat.push({ cat: c.key, label: im.label, src: im.thumb, full: im.full, isVideo: !!im.isVideo })));
+    // embedded YouTube/Vimeo films sit alongside uploaded media in the same grid
+    (this.state.videos || []).forEach(v => cloudFlat.push({
+      cat: v.category, label: v.title || 'Film', src: v.thumb, full: v.embedUrl, isVideo: true, isEmbed: true,
+    }));
     const useCloud = cloudFlat.length > 0;
     const items = useCloud ? cloudFlat.map((it, i) => ({ ...it, h: heightsC[i % heightsC.length] })) : this.allItems();
     const filteredRaw = cat === 'all' ? items : items.filter(i => i.cat === cat);
     const filtered = filteredRaw.map((it, idx) => ({
-      label: it.label, src: it.src, hasImg: !!it.src, full: it.full, isVideo: !!it.isVideo,
+      label: it.label, src: it.src, hasImg: !!it.src, full: it.full, isVideo: !!it.isVideo, isEmbed: !!it.isEmbed,
       imgEl: it.src ? React.createElement('div', { style: { position: 'absolute', inset: 0 } },
         React.createElement('img', { src: it.src, alt: it.label, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } }),
         it.isVideo ? React.createElement('div', { style: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 56, height: 56, borderRadius: '50%', background: 'rgba(30,22,17,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
@@ -1299,7 +1364,9 @@ class Component extends DCLogic {
       clientEl: this.renderClientAccess(),
       lightboxOpen, currentLabel, currentSrc,
       currentImgEl: currentSrc ? (
-        (lightboxOpen && filteredRaw[lb] && filteredRaw[lb].isVideo)
+        (lightboxOpen && filteredRaw[lb] && filteredRaw[lb].isEmbed)
+          ? React.createElement('iframe', { src: currentSrc + '?autoplay=1&rel=0', title: currentLabel, allow: 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share', allowFullScreen: true, frameBorder: '0', style: { position: 'absolute', inset: 0, width: '100%', height: '100%', border: 0, background: '#1e1611' } })
+        : (lightboxOpen && filteredRaw[lb] && filteredRaw[lb].isVideo)
           ? React.createElement('video', { src: currentSrc, controls: true, autoPlay: true, playsInline: true, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#1e1611' } })
           : React.createElement('img', { src: currentSrc, alt: currentLabel, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'contain', background: '#1e1611' } })
       ) : null,

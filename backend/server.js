@@ -108,6 +108,38 @@ function saveGalleryStore() {
   fs.renameSync(tmp, GALLERY_SETTINGS_PATH);
 }
 
+// ---- embedded video links (YouTube / Vimeo) -------------------------------
+// Video is the one media type that does NOT belong in Cloudinary here: the free
+// plan caps a video at 100 MB, and even under that a single film would drain the
+// monthly bandwidth quota and take the photos down with it. So long-form video is
+// embedded from a host built for streaming, and we only store the link.
+const VIDEOS_PATH = process.env.VIDEOS_PATH || '/data/videos.json';
+let VIDEOS = [];   // [{ id, provider, videoId, url, title, category, thumb, addedAt }]
+try {
+  VIDEOS = JSON.parse(fs.readFileSync(VIDEOS_PATH, 'utf8')) || [];
+  console.log(`[info] loaded ${VIDEOS.length} embedded video link(s)`);
+} catch (e) {
+  if (e.code !== 'ENOENT') console.warn('[warn] could not read video links:', e.message);
+}
+function saveVideos() {
+  fs.mkdirSync(path.dirname(VIDEOS_PATH), { recursive: true });
+  const tmp = `${VIDEOS_PATH}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(VIDEOS, null, 2), { mode: 0o600 });
+  fs.renameSync(tmp, VIDEOS_PATH);
+}
+// accepts watch?v=, youtu.be/, /embed/, /shorts/, /live/, and vimeo.com/<id>
+function parseVideoUrl(u) {
+  const s = String(u || '').trim();
+  let m = s.match(/(?:youtube\.com\/(?:watch\?(?:[^#]*&)?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+  if (m) return { provider: 'youtube', videoId: m[1] };
+  m = s.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+  if (m) return { provider: 'vimeo', videoId: m[1] };
+  return null;
+}
+const embedUrlFor = (v) => v.provider === 'vimeo'
+  ? `https://player.vimeo.com/video/${v.videoId}`
+  : `https://www.youtube-nocookie.com/embed/${v.videoId}`;   // no-cookie: fewer trackers on the client's site
+
 // the hash actually in force for a client — stored override wins over CLIENTS_JSON
 async function verifyPassword(client, password) {
   if (!client || !password) return false;
@@ -325,6 +357,59 @@ app.post('/api/retag', auth, async (req, res) => {
   } catch (e) {
     res.status(500).json({ error: 'Retag failed', detail: String(e.message || e) });
   }
+});
+
+// ---- embedded videos: public list, studio-only add/remove ----
+app.get('/api/videos', (_req, res) => {
+  res.json({ items: VIDEOS.map(v => ({ ...v, embedUrl: embedUrlFor(v) })) });
+});
+
+app.post('/api/videos', auth, async (req, res) => {
+  const { url, category, title } = req.body || {};
+  const parsed = parseVideoUrl(url);
+  if (!parsed) {
+    // a channel/handle link is the most likely mistake — say so instead of "invalid"
+    const isChannel = /youtube\.com\/(@|c\/|channel\/|user\/)/i.test(String(url || ''));
+    return res.status(400).json({ error: isChannel
+      ? 'That is a channel link. Open the individual video on YouTube, then Share \u2192 Copy link and paste that.'
+      : 'Paste a YouTube or Vimeo video link (e.g. https://youtu.be/abc123)' });
+  }
+  const cat = String(category || 'video');
+  if (!SAFE.test(cat)) return res.status(400).json({ error: 'Bad category' });
+  if (!credStoreWritable())
+    return res.status(503).json({ error: 'Video links need storage. Add a Railway Volume mounted at /data, then try again.' });
+  const id = `${parsed.provider}:${parsed.videoId}`;
+  if (VIDEOS.some(v => v.id === id)) return res.status(409).json({ error: 'That video is already in the portfolio' });
+
+  let thumb = parsed.provider === 'youtube'
+    ? `https://i.ytimg.com/vi/${parsed.videoId}/hqdefault.jpg`   // hqdefault always exists; maxres often 404s
+    : '';
+  let name = String(title || '').slice(0, 120);
+  if (parsed.provider === 'vimeo') {
+    // Vimeo thumbnails aren't derivable from the id — ask oEmbed once, at add time
+    try {
+      const r = await fetch(`https://vimeo.com/api/oembed.json?url=https://vimeo.com/${parsed.videoId}`);
+      if (r.ok) { const j = await r.json(); thumb = j.thumbnail_url || ''; if (!name) name = j.title || ''; }
+    } catch (e) {}
+  }
+  const item = { id, provider: parsed.provider, videoId: parsed.videoId, url: String(url).trim(), title: name, category: cat, thumb, addedAt: new Date().toISOString() };
+  try {
+    VIDEOS.push(item);
+    saveVideos();
+    res.json({ ok: true, item: { ...item, embedUrl: embedUrlFor(item) } });
+  } catch (e) {
+    VIDEOS = VIDEOS.filter(v => v.id !== id);
+    res.status(500).json({ error: 'Could not save that link', detail: String(e.message || e) });
+  }
+});
+
+app.post('/api/videos/delete', auth, (req, res) => {
+  const id = String((req.body && req.body.id) || '');
+  const before = VIDEOS.length;
+  VIDEOS = VIDEOS.filter(v => v.id !== id);
+  if (VIDEOS.length === before) return res.status(404).json({ error: 'No such video' });
+  try { saveVideos(); res.json({ ok: true }); }
+  catch (e) { res.status(500).json({ error: 'Could not save', detail: String(e.message || e) }); }
 });
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, clients: CLIENTS.length, credentialStore: credStoreWritable() ? 'writable' : 'unavailable' }));
