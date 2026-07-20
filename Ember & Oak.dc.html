@@ -1280,7 +1280,11 @@ class Component extends DCLogic {
     const coversM = this.state.covers || {};
     const catCards = cats.map(c => {
       const list = cloud[c.key] || [];
-      const cover = coversM[c.key] || (list[0] && list[0].thumb) || '';
+      // A category can be entirely embedded video (YouTube/Vimeo), which has no
+      // Cloudinary asset and therefore no cover tag — fall back to the first
+      // embedded thumbnail so the card isn't an empty placeholder.
+      const embedThumb = (this.state.videos || []).filter(v => v.category === c.key && v.thumb).map(v => v.thumb)[0] || '';
+      const cover = coversM[c.key] || (list[0] && list[0].thumb) || embedThumb || '';
       return {
         label: c.label,
         coverEl: cover ? React.createElement('img', { src: cover, alt: c.label, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } }) : null,
