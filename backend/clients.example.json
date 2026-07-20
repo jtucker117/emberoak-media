@@ -1,0 +1,14 @@
+[
+  {
+    "slug": "smith-family",
+    "name": "The Smith Family",
+    "folder": "smith-family",
+    "passwordHash": "$2a$10$REPLACE_WITH_OUTPUT_OF_npm_run_hash"
+  },
+  {
+    "slug": "acme-brand",
+    "name": "Acme Brand Co.",
+    "folder": "acme-brand",
+    "passwordHash": "$2a$10$REPLACE_WITH_OUTPUT_OF_npm_run_hash"
+  }
+]
