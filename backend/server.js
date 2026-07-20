@@ -189,9 +189,13 @@ app.post('/api/sign-upload', auth, (req, res) => {
   const folder = `${req.client.folder}/${category}`;
   const timestamp = Math.round(Date.now() / 1000);
   // sign exactly the params the browser will send; tag with slug+category for listing
-  const params = { folder, tags: `${req.client.slug},${category},${req.client.slug}__${category}`, timestamp };
+  // use_filename keeps the studio's original name; unique_filename appends a short
+  // suffix so two files called IMG_1001.jpg can't overwrite each other.
+  const params = { folder, tags: `${req.client.slug},${category},${req.client.slug}__${category}`, timestamp,
+    unique_filename: 'true', use_filename: 'true' };
   const signature = cloudinary.utils.api_sign_request(params, CLOUDINARY_API_SECRET);
-  res.json({ cloudName: CLOUDINARY_CLOUD_NAME, apiKey: CLOUDINARY_API_KEY, timestamp, signature, folder, tags: params.tags });
+  res.json({ cloudName: CLOUDINARY_CLOUD_NAME, apiKey: CLOUDINARY_API_KEY, timestamp, signature, folder, tags: params.tags,
+    useFilename: 'true', uniqueFilename: 'true' });
 });
 
 // ---- list (scoped to the client's folder) ----
@@ -315,12 +319,13 @@ app.post('/api/sign-delivery', auth, (req, res) => {
   if (!SAFE.test(code)) return res.status(400).json({ error: 'Bad gallery code' });
   const folder = `${DROOT}/${code}`;
   const timestamp = Math.round(Date.now() / 1000);
-  const params = { folder, tags: `delivery,${code}`, timestamp };
+  const params = { folder, tags: `delivery,${code}`, timestamp, unique_filename: 'true', use_filename: 'true' };
   // optional auto-expiry: stored as context on every asset; the sweep deletes past it
   const expires = req.body && req.body.expires ? String(req.body.expires) : '';
   if (expires && !isNaN(new Date(expires).getTime())) params.context = `expires=${new Date(expires).toISOString()}`;
   const signature = cloudinary.utils.api_sign_request(params, CLOUDINARY_API_SECRET);
-  res.json({ cloudName: CLOUDINARY_CLOUD_NAME, apiKey: CLOUDINARY_API_KEY, timestamp, signature, folder, tags: params.tags, context: params.context || '' });
+  res.json({ cloudName: CLOUDINARY_CLOUD_NAME, apiKey: CLOUDINARY_API_KEY, timestamp, signature, folder, tags: params.tags, context: params.context || '',
+    useFilename: 'true', uniqueFilename: 'true' });
 });
 
 // Studio: list every delivery gallery that exists, with counts + share codes.
@@ -390,6 +395,11 @@ app.post('/api/gallery/open', async (req, res) => {
       filename: nameOf(r.public_id) + '.' + r.format,
       // preview keeps bandwidth low; download link forces the FULL-RES original
       thumb: cloudinary.url(r.public_id, { resource_type: isVideo ? 'video' : 'image', transformation: [{ width: 600, crop: 'limit', quality: 'auto', fetch_format: isVideo ? undefined : 'auto' }], format: isVideo ? 'jpg' : undefined, start_offset: isVideo ? '0' : undefined }),
+      // viewer/slideshow uses a large preview, NOT the original — full-res originals
+      // would burn the bandwidth quota just from browsing.
+      preview: isVideo
+        ? cloudinary.url(r.public_id, { resource_type: 'video', transformation: [{ quality: 'auto' }], format: 'mp4' })
+        : cloudinary.url(r.public_id, { transformation: [{ width: 1800, crop: 'limit', quality: 'auto', fetch_format: 'auto' }] }),
       download: cloudinary.url(r.public_id, { resource_type: isVideo ? 'video' : 'image', flags: 'attachment' }),
     });
     const items = [

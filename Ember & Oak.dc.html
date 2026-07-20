@@ -391,7 +391,8 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = { page: 'home', cat: 'all', lb: null, contactSent: false, cloud: {}, covers: {}, coverIds: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '',
-            profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '', deliveries: [] };
+            profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '', deliveries: [],
+            upTotal: 0, upDone: 0, gv: null, slideshow: false };
 
   // ── CLOUDINARY CONFIG ── replace these two with your account values ──
   CLOUD_NAME = 'wrjc0nyq';
@@ -469,6 +470,46 @@ class Component extends DCLogic {
     } catch (e) { this.setState({ pwErr: 'Could not reach the server', pwBusy: false }); return false; }
   }
 
+  // One place that actually CHECKS each upload. The old loop ignored the response
+  // and aborted the whole batch on the first thrown error, so rejected files (e.g.
+  // over Cloudinary's size cap) vanished with no message at all.
+  async uploadFiles(sig, files) {
+    const errors = [];
+    this.setState({ upTotal: files.length, upDone: 0 });
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const fd = new FormData();
+      fd.append('file', file); fd.append('api_key', sig.apiKey); fd.append('timestamp', sig.timestamp);
+      fd.append('signature', sig.signature); fd.append('folder', sig.folder); fd.append('tags', sig.tags);
+      if (sig.context) fd.append('context', sig.context);
+      if (sig.useFilename) fd.append('use_filename', sig.useFilename);
+      if (sig.uniqueFilename) fd.append('unique_filename', sig.uniqueFilename);
+      try {
+        const r = await fetch('https://api.cloudinary.com/v1_1/' + sig.cloudName + '/auto/upload', { method: 'POST', body: fd });
+        if (!r.ok) {
+          let msg = 'HTTP ' + r.status;
+          try { const j = await r.json(); if (j && j.error && j.error.message) msg = j.error.message; } catch (_) {}
+          errors.push((file.name || 'file ' + (i + 1)) + ' \u2014 ' + msg);
+        }
+      } catch (e) {
+        errors.push((file.name || 'file ' + (i + 1)) + ' \u2014 ' + (e.message || 'network error'));
+      }
+      this.setState({ upDone: i + 1 });
+    }
+    this.setState({ upTotal: 0, upDone: 0 });
+    return errors;
+  }
+
+  uploadSummary(total, errors, extra) {
+    const ok = total - errors.length;
+    if (!errors.length) { alert(ok + ' file' + (ok === 1 ? '' : 's') + ' uploaded.' + (extra || '')); return; }
+    const tooBig = errors.some(e => /larger|too large|maximum|size/i.test(e));
+    alert(ok + ' of ' + total + ' uploaded \u2014 ' + errors.length + ' failed:\n\n'
+      + errors.slice(0, 8).join('\n') + (errors.length > 8 ? '\n\u2026and ' + (errors.length - 8) + ' more' : '')
+      + (tooBig ? '\n\nCloudinary free plan caps images at 10 MB each. Larger originals need a paid plan, or downsize them first.' : '')
+      + (extra || ''));
+  }
+
   async backendUpload(category, files) {
     if (!files || !files.length) return;
     this.setState({ busy: category });
@@ -476,12 +517,8 @@ class Component extends DCLogic {
       const s = await fetch(this.apiBase() + '/api/sign-upload', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ category }) });
       const sig = await s.json();
       if (!s.ok) { alert(sig.error || 'Upload not authorized — try logging in again.'); this.setState({ busy: '' }); return; }
-      for (const file of files) {
-        const fd = new FormData();
-        fd.append('file', file); fd.append('api_key', sig.apiKey); fd.append('timestamp', sig.timestamp);
-        fd.append('signature', sig.signature); fd.append('folder', sig.folder); fd.append('tags', sig.tags);
-        await fetch('https://api.cloudinary.com/v1_1/' + sig.cloudName + '/auto/upload', { method: 'POST', body: fd });
-      }
+      const errors = await this.uploadFiles(sig, files);
+      this.uploadSummary(files.length, errors);
     } catch (e) { alert('Upload failed: ' + e.message); }
     this.setState({ busy: '' });
     this.loadCloud();
@@ -558,14 +595,10 @@ class Component extends DCLogic {
       const s = await fetch(this.apiBase() + '/api/sign-delivery', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ code, expires: expires || '' }) });
       const sig = await s.json();
       if (!s.ok) { alert(sig.error || 'Not authorized'); this.setState({ busy: '' }); return; }
-      for (const file of files) {
-        const fd = new FormData();
-        fd.append('file', file); fd.append('api_key', sig.apiKey); fd.append('timestamp', sig.timestamp);
-        fd.append('signature', sig.signature); fd.append('folder', sig.folder); fd.append('tags', sig.tags);
-        if (sig.context) fd.append('context', sig.context);
-        await fetch('https://api.cloudinary.com/v1_1/' + sig.cloudName + '/auto/upload', { method: 'POST', body: fd });
-      }
-      alert('Uploaded to gallery “' + code + '”.' + (expires ? '\nAuto-deletes on ' + expires + '.' : '') + '\nShare this link with your client:\n' + location.origin + location.pathname + '?gallery=' + encodeURIComponent(code));
+      const errors = await this.uploadFiles(sig, files);
+      this.uploadSummary(files.length, errors,
+        '\n\nGallery: ' + code + (expires ? ' \u00b7 auto-deletes ' + expires : '')
+        + '\nShare link: ' + this.deliveryLink(code));
     } catch (e) { alert('Upload failed: ' + e.message); }
     this.setState({ busy: '' });
   }
@@ -580,6 +613,29 @@ class Component extends DCLogic {
       if (!r.ok) { this.setState({ galleryErr: d.error || 'Could not open gallery', galleryBusy: false }); return; }
       this.setState({ gallery: { ...d, code: code.trim(), pin: pin || '' }, galleryBusy: false });
     } catch (e) { this.setState({ galleryErr: 'Could not reach the server', galleryBusy: false }); }
+  }
+
+  // full-screen viewer for a delivery gallery, with optional auto-advance
+  openViewer(i) { this.setState({ gv: i }); }
+  closeViewer() { this.stopSlideshow(); this.setState({ gv: null }); }
+  stepViewer(d) {
+    const g = this.state.gallery; if (!g || !g.items.length) return;
+    this.setState(st => ({ gv: ((st.gv + d) % g.items.length + g.items.length) % g.items.length }));
+  }
+  stopSlideshow() {
+    if (this._slideTimer) { clearInterval(this._slideTimer); this._slideTimer = null; }
+    if (this.state.slideshow) this.setState({ slideshow: false });
+  }
+  toggleSlideshow() {
+    if (this._slideTimer) { this.stopSlideshow(); return; }
+    const g = this.state.gallery; if (!g || !g.items.length) return;
+    if (this.state.gv === null) this.setState({ gv: 0 });
+    this._slideTimer = setInterval(() => {
+      // guard: if the viewer got closed another way, stop cleanly
+      if (this.state.gv === null || !this.state.gallery) { this.stopSlideshow(); return; }
+      this.stepViewer(1);
+    }, 4000);
+    this.setState({ slideshow: true });
   }
 
   async downloadAllZip() {
@@ -618,13 +674,21 @@ class Component extends DCLogic {
             style: { padding: '13px 24px', background: '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer' } },
             this.state.galleryBusy ? 'Preparing ZIP…' : '⬇ Download all (ZIP)')),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 12 } },
-          g.items.map((it, i) => h('a', { key: i, href: it.download, download: it.filename, title: 'Download ' + it.filename,
-            style: { position: 'relative', display: 'block', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: '#eee6d8' } },
-            h('img', { src: it.thumb, style: { width: '100%', height: '100%', objectFit: 'cover' } }),
+          g.items.map((it, i) => h('div', { key: i,
+            style: { position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: '#eee6d8' } },
+            h('button', { onClick: () => this.openViewer(i), title: 'View larger',
+              style: { position: 'absolute', inset: 0, padding: 0, border: 'none', background: 'none', cursor: 'zoom-in', width: '100%', height: '100%' } },
+              h('img', { src: it.thumb, alt: it.filename, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } })),
             it.isVideo ? h('div', { style: { position: 'absolute', top: 6, left: 6, background: 'rgba(30,22,17,.6)', color: '#fff', fontSize: 10, padding: '1px 6px', borderRadius: 4 } }, 'video') : null,
-            h('div', { style: { position: 'absolute', bottom: 6, right: 6, width: 30, height: 30, borderRadius: '50%', background: 'rgba(30,22,17,.62)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15 } }, '⬇')))),
-        h('p', { style: { marginTop: 20, fontSize: 13, color: '#9c9084' } }, 'Tap any photo to download the full-resolution file, or use “Download all”. '),
-        h('button', { onClick: () => this.setState({ gallery: null, deliveryCode: '' }), style: { marginTop: 6, background: 'none', border: 'none', color: '#9e5423', fontWeight: 700, cursor: 'pointer', fontSize: 13 } }, '← Open a different gallery'));
+            h('a', { href: it.download, download: it.filename, title: 'Download ' + it.filename,
+              style: { position: 'absolute', bottom: 6, right: 6, width: 32, height: 32, borderRadius: '50%', background: 'rgba(30,22,17,.68)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, textDecoration: 'none' } }, '\u2b07')))),
+        h('div', { style: { marginTop: 18, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' } },
+          h('button', { onClick: () => this.toggleSlideshow(),
+            style: { padding: '11px 20px', background: 'none', border: '1px solid rgba(154,173,139,.6)', borderRadius: 999, color: '#5a4d43', fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } },
+            this.state.slideshow ? '\u23f8 Pause slideshow' : '\u25b6 Play slideshow'),
+          h('span', { style: { fontSize: 13, color: '#9c9084' } }, 'Tap a photo to view it large, or \u2b07 to download the full-resolution file.')),
+        h('button', { onClick: () => this.setState({ gallery: null, deliveryCode: '' }), style: { marginTop: 6, background: 'none', border: 'none', color: '#9e5423', fontWeight: 700, cursor: 'pointer', fontSize: 13 } }, '← Open a different gallery'),
+        this.renderViewer(g));
     }
     return h('form', { onSubmit: (e) => { e.preventDefault(); this.openGallery(e.target.code.value, e.target.pin.value); },
       style: { background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 16, padding: 32, boxShadow: '0 8px 30px rgba(60,47,39,.06)', display: 'flex', flexDirection: 'column', gap: 16, textAlign: 'left' } },
@@ -632,6 +696,34 @@ class Component extends DCLogic {
       h('label', { style: { fontSize: 13, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 6 } }, 'Access code (if provided)', h('input', { name: 'pin', placeholder: 'optional', style: inp })),
       this.state.galleryErr ? h('div', { style: { color: '#b23b2e', fontSize: 13 } }, this.state.galleryErr) : null,
       h('button', { type: 'submit', disabled: this.state.galleryBusy, style: { marginTop: 4, padding: 14, background: '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 700, letterSpacing: '.05em', cursor: 'pointer' } }, this.state.galleryBusy ? 'Opening…' : 'View My Gallery'));
+  }
+
+  renderViewer(g) {
+    const h = React.createElement;
+    const i = this.state.gv;
+    if (i === null || !g || !g.items[i]) return null;
+    const it = g.items[i];
+    const nav = (label, d) => h('button', { onClick: (e) => { e.stopPropagation(); this.stepViewer(d); }, 'aria-label': label,
+      style: { background: 'rgba(255,255,255,.14)', border: 'none', color: '#fff', fontSize: 26, width: 50, height: 50, borderRadius: '50%', cursor: 'pointer', flexShrink: 0 } }, label);
+    return h('div', { onClick: () => this.closeViewer(),
+      style: { position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(24,18,14,.94)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 14, padding: 18 } },
+      h('div', { style: { position: 'absolute', top: 16, right: 18, display: 'flex', gap: 10, alignItems: 'center' } },
+        h('button', { onClick: (e) => { e.stopPropagation(); this.toggleSlideshow(); },
+          style: { background: 'rgba(255,255,255,.14)', border: 'none', color: '#fff', fontSize: 13, fontWeight: 700, padding: '9px 16px', borderRadius: 999, cursor: 'pointer', fontFamily: 'inherit' } },
+          this.state.slideshow ? '\u23f8 Pause' : '\u25b6 Slideshow'),
+        h('button', { onClick: (e) => { e.stopPropagation(); this.closeViewer(); }, 'aria-label': 'Close',
+          style: { background: 'none', border: 'none', color: '#fff', fontSize: 34, lineHeight: 1, cursor: 'pointer' } }, '\u00d7')),
+      h('div', { onClick: (e) => e.stopPropagation(), style: { display: 'flex', alignItems: 'center', gap: 14, width: '100%', maxWidth: 1200, justifyContent: 'center' } },
+        nav('\u2039', -1),
+        it.isVideo
+          ? h('video', { src: it.preview || it.download, controls: true, autoPlay: true, playsInline: true, style: { maxWidth: '100%', maxHeight: '76vh', borderRadius: 10, background: '#000' } })
+          : h('img', { src: it.preview || it.thumb, alt: it.filename, style: { maxWidth: '100%', maxHeight: '76vh', objectFit: 'contain', borderRadius: 10 } }),
+        nav('\u203a', 1)),
+      h('div', { onClick: (e) => e.stopPropagation(), style: { color: '#f4ece2', fontSize: 13, display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' } },
+        h('span', null, (i + 1) + ' of ' + g.items.length),
+        h('span', { style: { opacity: .7, wordBreak: 'break-all' } }, it.filename),
+        h('a', { href: it.download, download: it.filename,
+          style: { background: '#9e5423', color: '#fff', padding: '9px 18px', borderRadius: 999, fontWeight: 700, textDecoration: 'none' } }, '\u2b07 Download full-res')));
   }
 
   renderLogin() {
@@ -682,6 +774,12 @@ class Component extends DCLogic {
     const tabs = h('div', { style: { display: 'flex', gap: 6, background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 999, padding: 6, alignSelf: 'flex-start', flexWrap: 'wrap' } },
       tab('work', 'My Work'), tab('deliveries', 'Client Deliveries'), tab('account', 'Account'));
 
+    const progressEl = (active) => (active && st.upTotal) ? h('div', { style: { margin: '12px 0 2px' } },
+      h('div', { style: { fontSize: 12.5, color: '#6f6357', marginBottom: 5, fontWeight: 600 } },
+        'Uploading ' + st.upDone + ' of ' + st.upTotal + '\u2026 (keep this tab open)'),
+      h('div', { style: { height: 7, background: 'rgba(154,173,139,.25)', borderRadius: 999, overflow: 'hidden' } },
+        h('div', { style: { height: '100%', width: Math.round((st.upDone / st.upTotal) * 100) + '%', background: '#9e5423', transition: 'width .2s' } }))) : null;
+
     const sectionOf = (key, label) => {
       const items = cloud[key] || [];
       const busy = this.state.busy === key;
@@ -696,6 +794,7 @@ class Component extends DCLogic {
                 h('input', { type: 'file', multiple: true, accept: 'image/*,video/*', disabled: busy, style: { display: 'none' },
                   onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.backendUpload(key, fs); } }))
             : h('button', { onClick: () => this.openUploader(key), style: { padding: '10px 18px', background: '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', whiteSpace: 'nowrap' } }, '+ Upload')),
+        progressEl(busy),
         items.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(104px,1fr))', gap: 10 } },
           items.map((it, i) => {
             const isCover = !!(st.coverIds && st.coverIds[key] && st.coverIds[key] === it.publicId);
@@ -731,6 +830,7 @@ class Component extends DCLogic {
           busyD ? 'Uploading…' : '+ Upload full-res',
           h('input', { type: 'file', multiple: true, accept: 'image/*,video/*', disabled: busyD, style: { display: 'none' },
             onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.deliveryUpload(this.state.deliveryCode, fs, this.state.deliveryExpires).then(() => this.loadDeliveries()); } }))),
+      progressEl(busyD),
       this.state.deliveryCode ? h('div', { style: { fontSize: 12, color: '#8a7a68', marginTop: 10, wordBreak: 'break-all' } }, 'Share link: ', h('code', null, this.deliveryLink(this.state.deliveryCode)), this.state.deliveryExpires ? ' · auto-deletes ' + this.state.deliveryExpires : '') : null);
     // ---- account tab --------------------------------------------------------
     const inp = { padding: '11px 13px', border: '1px solid rgba(154,173,139,.5)', borderRadius: 9, fontSize: 15, fontFamily: 'inherit', background: '#faf7f0', width: '100%' };
