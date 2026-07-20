@@ -391,7 +391,7 @@
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900}}">
 class Component extends DCLogic {
   state = { page: 'home', cat: 'all', lb: null, contactSent: false, cloud: {}, covers: {}, coverIds: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '',
-            profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '' };
+            profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '', deliveries: [] };
 
   // ── CLOUDINARY CONFIG ── replace these two with your account values ──
   CLOUD_NAME = 'wrjc0nyq';
@@ -417,7 +417,7 @@ class Component extends DCLogic {
   tagFor(k) { return this.SITE_SLUG ? this.SITE_SLUG + '__' + k : k; }
 
   componentDidMount() {
-    if (this.backendMode()) { try { const t = localStorage.getItem('eo_token'); const n = localStorage.getItem('eo_client'); if (t) { this.setState({ token: t, clientName: n || '' }); this.loadProfile(t); } } catch (_) {} }
+    if (this.backendMode()) { try { const t = localStorage.getItem('eo_token'); const n = localStorage.getItem('eo_client'); if (t) { this.setState({ token: t, clientName: n || '' }); this.loadProfile(t); this.loadDeliveries(); } } catch (_) {} }
     if (this.cloudReady()) this.loadCloud();
     try {
       const q = new URLSearchParams(location.search).get('gallery');
@@ -434,6 +434,7 @@ class Component extends DCLogic {
       try { localStorage.setItem('eo_token', d.token); localStorage.setItem('eo_client', d.client.name); } catch (_) {}
       this.setState({ token: d.token, clientName: d.client.name, busy: '' });
       this.loadProfile();
+      this.loadDeliveries();
     } catch (e) { this.setState({ loginErr: 'Could not reach the server', busy: '' }); }
   }
   logout() { try { localStorage.removeItem('eo_token'); localStorage.removeItem('eo_client'); } catch (_) {} this.setState({ token: null, clientName: '', profile: null, adminTab: 'work', pwErr: '', pwOk: '' }); }
@@ -486,14 +487,65 @@ class Component extends DCLogic {
     this.loadCloud();
   }
 
+  // ★ toggles: tapping the current cover clears it, tapping another one moves it.
   async backendFeature(category, publicId, resourceType) {
     if (!this.backendMode() || !this.state.token) { alert('Featuring a photo is saved for everyone through your backend — sign in on this page (with your API set up) to choose covers. Until then the newest upload shows.'); return; }
+    const clear = !!(this.state.coverIds && this.state.coverIds[category] === publicId);
     try {
-      const r = await fetch(this.apiBase() + '/api/feature', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ category, publicId, resourceType }) });
-      const d = await r.json();
-      if (!r.ok) { alert(d.error || 'Could not set featured'); return; }
+      const r = await fetch(this.apiBase() + '/api/feature', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ category, publicId, resourceType, clear }) });
+      const text = await r.text();
+      let d = {}; try { d = JSON.parse(text); } catch (_) {}
+      // surface the real reason instead of a generic message — a bare "could not"
+      // tells you nothing when it fails
+      if (!r.ok) { alert((d.error || 'Could not set featured') + ' (HTTP ' + r.status + ')' + (d.detail ? '\n' + d.detail : (text && !d.error ? '\n' + text.slice(0, 200) : ''))); return; }
+      // optimistic: reflect it immediately, since Cloudinary's list CDN lags a minute
+      const next = Object.assign({}, this.state.coverIds);
+      if (clear) delete next[category]; else next[category] = publicId;
+      this.setState({ coverIds: next });
       this.loadCloud();
     } catch (e) { alert('Failed: ' + e.message); }
+  }
+
+  // Re-tag legacy assets so the gallery can see them (uploads made before the
+  // slug-qualified tag existed carry only the bare category tag).
+  async retagAll() {
+    this.setState({ busy: 'retag' });
+    try {
+      const r = await fetch(this.apiBase() + '/api/retag', { method: 'POST', headers: { Authorization: 'Bearer ' + this.state.token } });
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Repair failed'); this.setState({ busy: '' }); return; }
+      const n = Object.values(d.tagged || {}).reduce((a, b) => a + b, 0);
+      alert(n ? ('Repaired ' + n + ' file(s). They may take a minute to appear.') : 'Nothing needed repairing.');
+    } catch (e) { alert('Failed: ' + e.message); }
+    this.setState({ busy: '' });
+    this.loadCloud();
+  }
+
+  async loadDeliveries() {
+    if (!this.backendMode() || !this.state.token) return;
+    try {
+      const r = await fetch(this.apiBase() + '/api/deliveries', { headers: { Authorization: 'Bearer ' + this.state.token } });
+      const d = await r.json();
+      if (r.ok) this.setState({ deliveries: d.items || [] });
+    } catch (e) {}
+  }
+
+  deliveryLink(code) {
+    var origin = '';
+    try { origin = location.origin; } catch (_) {}
+    return origin + '/?gallery=' + code;
+  }
+
+  async deleteDelivery(code, count) {
+    if (!confirm('Delete the gallery “' + code + '” and all ' + count + ' file(s) in it?\n\nThis cannot be undone, and the client’s link will stop working.')) return;
+    this.setState({ busy: 'deliv-' + code });
+    try {
+      const r = await fetch(this.apiBase() + '/api/delivery/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ code }) });
+      const d = await r.json();
+      if (!r.ok) alert(d.error || 'Could not delete that gallery');
+    } catch (e) { alert('Failed: ' + e.message); }
+    this.setState({ busy: '' });
+    this.loadDeliveries();
   }
 
   // Owner: upload full-res originals into a delivery gallery (deliveries/<code>)
@@ -624,7 +676,7 @@ class Component extends DCLogic {
       h('button', { onClick: () => this.logout(), style: { padding: '9px 18px', background: 'none', border: '1px solid rgba(154,173,139,.6)', borderRadius: 999, color: '#5a4d43', fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } }, 'Sign out'));
 
     // ---- tabs ---------------------------------------------------------------
-    const tab = (id, label) => h('button', { key: id, onClick: () => this.setState({ adminTab: id }),
+    const tab = (id, label) => h('button', { key: id, onClick: () => { this.setState({ adminTab: id }); if (id === 'deliveries') this.loadDeliveries(); },
       style: { padding: '10px 20px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, letterSpacing: '.04em',
         background: st.adminTab === id ? '#9e5423' : 'transparent', color: st.adminTab === id ? '#fff' : '#6f6357' } }, label);
     const tabs = h('div', { style: { display: 'flex', gap: 6, background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 999, padding: 6, alignSelf: 'flex-start', flexWrap: 'wrap' } },
@@ -678,8 +730,8 @@ class Component extends DCLogic {
         h('label', { style: { padding: '11px 20px', background: busyD ? '#c89b78' : '#9e5423', color: '#fff', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: busyD ? 'default' : 'pointer', whiteSpace: 'nowrap' } },
           busyD ? 'Uploading…' : '+ Upload full-res',
           h('input', { type: 'file', multiple: true, accept: 'image/*,video/*', disabled: busyD, style: { display: 'none' },
-            onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.deliveryUpload(this.state.deliveryCode, fs, this.state.deliveryExpires); } }))),
-      this.state.deliveryCode ? h('div', { style: { fontSize: 12, color: '#8a7a68', marginTop: 10, wordBreak: 'break-all' } }, 'Share link: ', h('code', null, '?gallery=' + this.state.deliveryCode), this.state.deliveryExpires ? ' · auto-deletes ' + this.state.deliveryExpires : '') : null);
+            onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.deliveryUpload(this.state.deliveryCode, fs, this.state.deliveryExpires).then(() => this.loadDeliveries()); } }))),
+      this.state.deliveryCode ? h('div', { style: { fontSize: 12, color: '#8a7a68', marginTop: 10, wordBreak: 'break-all' } }, 'Share link: ', h('code', null, this.deliveryLink(this.state.deliveryCode)), this.state.deliveryExpires ? ' · auto-deletes ' + this.state.deliveryExpires : '') : null);
     // ---- account tab --------------------------------------------------------
     const inp = { padding: '11px 13px', border: '1px solid rgba(154,173,139,.5)', borderRadius: 9, fontSize: 15, fontFamily: 'inherit', background: '#faf7f0', width: '100%' };
     const field = (label, nm, auto) => h('label', { key: nm, style: { fontSize: 13, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 6 } }, label,
@@ -710,14 +762,50 @@ class Component extends DCLogic {
           style: { padding: 13, background: (st.pwBusy || noStore) ? '#c9b9a8' : '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13.5, fontWeight: 700, letterSpacing: '.05em', cursor: (st.pwBusy || noStore) ? 'default' : 'pointer', fontFamily: 'inherit' } },
           st.pwBusy ? 'Saving…' : 'Update password')));
 
+    const retagBusy = st.busy === 'retag';
     const work = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+      h('div', { style: { ...card, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', background: '#f1ebdf' } },
+        h('div', { style: { flex: '1 1 260px', fontSize: 12.5, color: '#6f6357', lineHeight: 1.6 } },
+          h('strong', null, 'Photos missing from the site?'),
+          ' Files uploaded before this account was tagged can be invisible to the gallery. This re-tags them in place — it never deletes anything.'),
+        h('button', { onClick: () => this.retagAll(), disabled: retagBusy,
+          style: { padding: '10px 18px', background: retagBusy ? '#c89b78' : '#5a4d43', color: '#fff', border: 'none', borderRadius: 999, fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: retagBusy ? 'default' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' } },
+          retagBusy ? 'Repairing…' : 'Repair missing photos')),
       specials.map(s => sectionOf(s.key, s.label)),
       cats.map(c => sectionOf(c.key, c.label)));
+
+    const btnSm = { padding: '8px 14px', background: 'none', border: '1px solid rgba(154,173,139,.6)', borderRadius: 999, color: '#5a4d43', fontSize: 12, fontWeight: 700, letterSpacing: '.03em', cursor: 'pointer', fontFamily: 'inherit' };
+    const btnDanger = { ...btnSm, border: '1px solid rgba(178,59,46,.45)', color: '#b23b2e' };
+    const list = st.deliveries || [];
+    const delivList = h('div', { style: card },
+      h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: list.length ? 13 : 0 } },
+        h('div', null,
+          h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 22, margin: 0 } }, 'Posted galleries'),
+          h('div', { style: { fontSize: 12, color: '#9c9084' } }, list.length + (list.length === 1 ? ' gallery' : ' galleries'))),
+        h('button', { onClick: () => this.loadDeliveries(), style: btnSm }, 'Refresh')),
+      list.length ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
+        list.map(g => {
+          const link = this.deliveryLink(g.code);
+          const dbusy = st.busy === ('deliv-' + g.code);
+          return h('div', { key: g.code, style: { border: '1px solid rgba(154,173,139,.35)', borderRadius: 12, padding: '12px 14px', background: '#fff', display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' } },
+            h('div', { style: { flex: '1 1 250px', minWidth: 0 } },
+              h('div', { style: { fontWeight: 700, fontSize: 14.5 } }, g.title,
+                g.hasPin ? h('span', { style: { marginLeft: 8, fontSize: 10, letterSpacing: '.06em', color: '#8a6d3b', background: 'rgba(240,180,41,.16)', borderRadius: 999, padding: '2px 8px' } }, 'PIN') : null),
+              h('div', { style: { fontSize: 12, color: '#9c9084', margin: '3px 0 4px' } },
+                g.count + (g.count === 1 ? ' file' : ' files') + (g.expires ? ' · auto-deletes ' + new Date(g.expires).toLocaleDateString() : '')),
+              h('a', { href: link, target: '_blank', rel: 'noopener', style: { fontSize: 12, wordBreak: 'break-all' } }, link)),
+            h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
+              h('button', { onClick: () => { try { navigator.clipboard.writeText(link); alert('Link copied to your clipboard.'); } catch (_) { prompt('Copy this link:', link); } }, style: btnSm }, 'Copy link'),
+              h('button', { onClick: () => this.deleteDelivery(g.code, g.count), disabled: dbusy, style: btnDanger }, dbusy ? 'Deleting…' : 'Delete')));
+        }))
+        : h('div', { style: { fontSize: 13, color: '#9c9084', lineHeight: 1.6 } }, 'No client galleries yet. Enter a code above, upload the full-res originals, then share the link that appears here.'));
+
+    const deliveriesPanel = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } }, deliveries, delivList);
 
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, marginTop: 26, textAlign: 'left' } },
       header,
       tabs,
-      st.adminTab === 'account' ? account : (st.adminTab === 'deliveries' ? deliveries : work));
+      st.adminTab === 'account' ? account : (st.adminTab === 'deliveries' ? deliveriesPanel : work));
   }
 
   async loadCloud() {

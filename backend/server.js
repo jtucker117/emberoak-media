@@ -245,22 +245,59 @@ app.post('/api/delete', auth, async (req, res) => {
 
 // ---- set the featured/cover asset for a category (folder-scoped) ----
 app.post('/api/feature', auth, async (req, res) => {
-  const { publicId, category, resourceType } = req.body || {};
-  if (!publicId || !category) return res.status(400).json({ error: 'Missing publicId or category' });
+  const { publicId, category, resourceType, clear } = req.body || {};
+  if (!category) return res.status(400).json({ error: 'Missing category' });
   if (!SAFE.test(category)) return res.status(400).json({ error: 'Bad category' });
-  if (!String(publicId).startsWith(`${req.client.folder}/`))
-    return res.status(403).json({ error: 'Not allowed for this client' });
-  const rt = resourceType === 'video' ? 'video' : 'image';
+  if (!clear) {
+    if (!publicId) return res.status(400).json({ error: 'Missing publicId' });
+    if (!String(publicId).startsWith(`${req.client.folder}/`))
+      return res.status(403).json({ error: 'Not allowed for this client' });
+  }
   const coverTag = `${req.client.slug}__${category}_cover`;
   try {
-    // remove the cover tag from any asset that currently has it, then set it on the chosen one
-    const cur = await cloudinary.api.resources_by_tag(coverTag, { resource_type: rt, max_results: 100 }).catch(() => ({ resources: [] }));
-    const ids = (cur.resources || []).map(r => r.public_id).filter(id => id !== publicId);
-    if (ids.length) await cloudinary.uploader.remove_tag(coverTag, ids, { resource_type: rt }).catch(() => {});
+    // Clear the cover tag from BOTH resource types — the old code only cleared the
+    // type being set, so switching an image cover while a video held the tag left
+    // two covers and the wrong one could win.
+    for (const rt of ['image', 'video']) {
+      const cur = await cloudinary.api.resources_by_tag(coverTag, { resource_type: rt, max_results: 100 }).catch(() => ({ resources: [] }));
+      const ids = (cur.resources || []).map(r => r.public_id).filter(id => id !== publicId);
+      if (ids.length) await cloudinary.uploader.remove_tag(coverTag, ids, { resource_type: rt }).catch(() => {});
+    }
+    if (clear) {
+      // toggling the current cover off: strip it from the chosen asset too
+      const rt = resourceType === 'video' ? 'video' : 'image';
+      if (publicId) await cloudinary.uploader.remove_tag(coverTag, [publicId], { resource_type: rt }).catch(() => {});
+      return res.json({ ok: true, cleared: true });
+    }
+    const rt = resourceType === 'video' ? 'video' : 'image';
     await cloudinary.uploader.add_tag(coverTag, [publicId], { resource_type: rt });
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: 'Feature failed', detail: String(e.message || e) });
+  }
+});
+
+// ---- repair: give every asset in the studio's folder the tag the site lists by ----
+// Assets uploaded before SITE_SLUG was set only carry the bare category tag, so the
+// gallery cannot see them. This re-tags them in place; it never deletes anything.
+app.post('/api/retag', auth, async (req, res) => {
+  const slug = req.client.slug, folder = req.client.folder;
+  const tagged = {};
+  try {
+    for (const rt of ['image', 'video']) {
+      const r = await cloudinary.api.resources({ type: 'upload', resource_type: rt, prefix: `${folder}/`, max_results: 500 })
+        .catch(() => ({ resources: [] }));
+      for (const a of (r.resources || [])) {
+        const parts = String(a.public_id).split('/');   // <folder>/<category>/<name>
+        const category = parts.length >= 3 ? parts[1] : '';
+        if (!category || !SAFE.test(category)) continue;
+        await cloudinary.uploader.add_tag(`${slug}__${category}`, [a.public_id], { resource_type: rt }).catch(() => {});
+        tagged[category] = (tagged[category] || 0) + 1;
+      }
+    }
+    res.json({ ok: true, tagged });
+  } catch (e) {
+    res.status(500).json({ error: 'Retag failed', detail: String(e.message || e) });
   }
 });
 
@@ -284,6 +321,47 @@ app.post('/api/sign-delivery', auth, (req, res) => {
   if (expires && !isNaN(new Date(expires).getTime())) params.context = `expires=${new Date(expires).toISOString()}`;
   const signature = cloudinary.utils.api_sign_request(params, CLOUDINARY_API_SECRET);
   res.json({ cloudName: CLOUDINARY_CLOUD_NAME, apiKey: CLOUDINARY_API_KEY, timestamp, signature, folder, tags: params.tags, context: params.context || '' });
+});
+
+// Studio: list every delivery gallery that exists, with counts + share codes.
+app.get('/api/deliveries', auth, async (req, res) => {
+  const byCode = {};
+  try {
+    for (const rt of ['image', 'video']) {
+      const r = await cloudinary.api.resources({ type: 'upload', resource_type: rt, prefix: `${DROOT}/`, max_results: 500, context: true })
+        .catch(() => ({ resources: [] }));
+      for (const a of (r.resources || [])) {
+        const parts = String(a.public_id).split('/');   // <DROOT>/<code>/<name>
+        const code = parts.length >= 3 ? parts[1] : '';
+        if (!code || !SAFE.test(code)) continue;
+        if (!byCode[code]) byCode[code] = { code, count: 0, createdAt: a.created_at, expires: null };
+        const g = byCode[code];
+        g.count++;
+        if (a.created_at && a.created_at < g.createdAt) g.createdAt = a.created_at;
+        const exp = a.context && a.context.custom && a.context.custom.expires;
+        if (exp) g.expires = exp;
+      }
+    }
+    const items = Object.values(byCode).map(g => {
+      const cfg = GALLERIES.find(x => x.code === g.code);
+      return { ...g, title: (cfg && cfg.title) || g.code, hasPin: !!(cfg && cfg.pin) };
+    }).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    res.json({ items });
+  } catch (e) {
+    res.status(500).json({ error: 'Could not list deliveries', detail: String(e.message || e) });
+  }
+});
+
+// Studio: permanently delete a whole delivery gallery (every original in it).
+app.post('/api/delivery/delete', auth, async (req, res) => {
+  const code = String((req.body && req.body.code) || '');
+  if (!SAFE.test(code)) return res.status(400).json({ error: 'Bad gallery code' });
+  try {
+    await deleteFolder(`${DROOT}/${code}`);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Delete failed', detail: String(e.message || e) });
+  }
 });
 
 // Client opens a delivery gallery by code (+ pin if the gallery has one).
