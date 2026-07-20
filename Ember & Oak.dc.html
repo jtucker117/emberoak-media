@@ -476,8 +476,22 @@ class Component extends DCLogic {
   async uploadFiles(sig, files) {
     const errors = [];
     this.setState({ upTotal: files.length, upDone: 0 });
+    // Pre-flight the size. Oversized files die at the network layer with a bare
+    // 'Failed to fetch' and no status, so checking here gives a real reason instead.
+    const MAX_IMAGE = 10 * 1024 * 1024;
+    const MAX_VIDEO = 100 * 1024 * 1024;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      const isVid = /^video\//.test(file.type || '');
+      const cap = isVid ? MAX_VIDEO : MAX_IMAGE;
+      if (file.size > cap) {
+        errors.push((file.name || 'file ' + (i + 1)) + ' \u2014 '
+          + (file.size / 1048576).toFixed(1) + ' MB is over the '
+          + (cap / 1048576) + ' MB ' + (isVid ? 'video' : 'image')
+          + ' limit on the current Cloudinary plan');
+        this.setState({ upDone: i + 1 });
+        continue;
+      }
       const fd = new FormData();
       fd.append('file', file); fd.append('api_key', sig.apiKey); fd.append('timestamp', sig.timestamp);
       fd.append('signature', sig.signature); fd.append('folder', sig.folder); fd.append('tags', sig.tags);
@@ -503,10 +517,10 @@ class Component extends DCLogic {
   uploadSummary(total, errors, extra) {
     const ok = total - errors.length;
     if (!errors.length) { alert(ok + ' file' + (ok === 1 ? '' : 's') + ' uploaded.' + (extra || '')); return; }
-    const tooBig = errors.some(e => /larger|too large|maximum|size/i.test(e));
+    const tooBig = errors.some(e => /larger|too large|maximum|size|is over the|Failed to fetch/i.test(e));
     alert(ok + ' of ' + total + ' uploaded \u2014 ' + errors.length + ' failed:\n\n'
       + errors.slice(0, 8).join('\n') + (errors.length > 8 ? '\n\u2026and ' + (errors.length - 8) + ' more' : '')
-      + (tooBig ? '\n\nCloudinary free plan caps images at 10 MB each. Larger originals need a paid plan, or downsize them first.' : '')
+      + (tooBig ? '\n\nThe current Cloudinary plan allows images up to 10 MB and video up to 100 MB. Larger files need a paid plan, or compress/downsize them first.' : '')
       + (extra || ''));
   }
 
@@ -734,11 +748,15 @@ class Component extends DCLogic {
   }
 
   async backendDelete(publicId, resourceType) {
-    if (!publicId || !confirm('Delete this permanently?')) return;
+    if (!publicId) { alert('That tile has no file id — reload the page and try again.'); return; }
+    if (!confirm('Delete this permanently?')) return;
     try {
       const r = await fetch(this.apiBase() + '/api/delete', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ publicId, resourceType }) });
       const d = await r.json();
       if (!r.ok) { alert(d.error || 'Delete failed'); return; }
+      const next = {};
+      Object.keys(this.state.cloud || {}).forEach(k => { next[k] = (this.state.cloud[k] || []).filter(x => x.publicId !== publicId); });
+      this.setState({ cloud: next });
       this.loadCloud();
     } catch (e) { alert('Delete failed: ' + e.message); }
   }
@@ -1028,7 +1046,35 @@ class Component extends DCLogic {
       st.adminTab === 'account' ? account : (st.adminTab === 'deliveries' ? deliveriesPanel : work));
   }
 
+  // Signed-in admin reads the authenticated API: it is the live Cloudinary state.
+  // The public /list/<tag>.json endpoint is CDN-cached, so after a delete or an
+  // upload the admin would keep showing stale tiles for minutes.
+  async loadCloudFromApi() {
+    const keys = ['newborn', 'family', 'cinematic', 'drone', 'video', 'social', 'hero', 'about'];
+    const labels = { newborn: 'Newborn', family: 'Family', cinematic: 'Cinematic', drone: 'Drone', video: 'Video / Reels', social: 'Social Reels' };
+    const out = {}, covers = {}, coverIds = {};
+    await Promise.all(keys.map(async k => {
+      out[k] = [];
+      try {
+        const r = await fetch(this.apiBase() + '/api/list?category=' + encodeURIComponent(k), { headers: { Authorization: 'Bearer ' + this.state.token } });
+        if (!r.ok) return;
+        const d = await r.json();
+        const items = (d.items || []).map(it => Object.assign({}, it, { label: labels[k] }));
+        out[k] = items;
+        const coverTag = this.tagFor(k) + '_cover';
+        const cov = items.find(it => (it.tags || []).indexOf(coverTag) !== -1);
+        if (cov) { covers[k] = cov.thumb; coverIds[k] = cov.publicId; }
+        if (items.length) {
+          if (k === 'hero') this.heroFromCloud = items[items.length - 1].full;
+          if (k === 'about') this.aboutFromCloud = items[items.length - 1].full;
+        }
+      } catch (e) {}
+    }));
+    this.setState({ cloud: out, covers, coverIds, listBlocked: false });
+  }
+
   async loadCloud() {
+    if (this.backendMode() && this.state.token) { await this.loadCloudFromApi(); return; }
     const keys = ['newborn', 'family', 'cinematic', 'drone', 'video', 'social', 'hero', 'about'];
     const labels = { newborn: 'Newborn', family: 'Family', cinematic: 'Cinematic', drone: 'Drone', video: 'Video / Reels', social: 'Social Reels' };
     const out = {};

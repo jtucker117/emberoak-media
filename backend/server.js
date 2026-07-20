@@ -226,8 +226,8 @@ app.get('/api/list', auth, async (req, res) => {
   const prefix = category ? `${req.client.folder}/${category}` : `${req.client.folder}/`;
   try {
     const [imgs, vids] = await Promise.all([
-      cloudinary.api.resources({ type: 'upload', resource_type: 'image', prefix, max_results: 500 }).catch(() => ({ resources: [] })),
-      cloudinary.api.resources({ type: 'upload', resource_type: 'video', prefix, max_results: 500 }).catch(() => ({ resources: [] })),
+      cloudinary.api.resources({ type: 'upload', resource_type: 'image', prefix, max_results: 500, tags: true }).catch(() => ({ resources: [] })),
+      cloudinary.api.resources({ type: 'upload', resource_type: 'video', prefix, max_results: 500, tags: true }).catch(() => ({ resources: [] })),
     ]);
     const map = (r, isVideo) => ({
       publicId: r.public_id,
@@ -240,6 +240,7 @@ app.get('/api/list', auth, async (req, res) => {
         ? cloudinary.url(r.public_id, { resource_type: 'video', transformation: [{ quality: 'auto' }], format: 'mp4' })
         : cloudinary.url(r.public_id, { transformation: [{ width: 1600, quality: 'auto', fetch_format: 'auto' }] }),
       createdAt: r.created_at,
+      tags: r.tags || [],
     });
     const items = [
       ...(imgs.resources || []).map(r => map(r, false)),
