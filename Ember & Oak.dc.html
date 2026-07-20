@@ -101,6 +101,7 @@
         </div>
       </section>
 
+      <sc-if value="{{ hasTestimonials }}" hint-placeholder-val="{{ false }}">
       <section style="background:#f1ebdf;margin-top:60px;padding:80px 28px">
         <div style="max-width:1080px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:34px">
           <sc-for list="{{ testimonials }}" as="t" hint-placeholder-count="2">
@@ -112,6 +113,7 @@
           </sc-for>
         </div>
       </section>
+      </sc-if>
 
       <section style="background:linear-gradient(150deg,#9e5423,#7d3f18);color:#fdf8f0;padding:78px 28px;text-align:center">
         <h2 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(30px,4.5vw,46px);margin:0 0 14px">Let's tell your story.</h2>
@@ -1308,10 +1310,10 @@ class Component extends DCLogic {
         icon: React.createElement('svg', { width: 26, height: 26, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' }, React.createElement('rect', { x: 4, y: 2, width: 16, height: 20, rx: 3 }), React.createElement('path', { d: 'm10 8 5 3-5 3V8Z' })) },
     ];
 
-    const testimonials = [
-      { quote: 'Jordan captured our newborn days so tenderly — I cry happy tears every time I look at them. Pure magic.', name: 'The Alvarez Family' },
-      { quote: 'The drone film of our wedding gave us chills. Ember & Oak sees things the way we wish we could remember them.', name: 'Marcus & Lena' },
-    ];
+    // Real client quotes only. Add entries here as they come in — the section
+    // hides itself entirely while this is empty, so the page never shows
+    // invented praise.
+    const testimonials = [];
 
     const values = [
       { title: 'Warm & Unhurried', desc: 'No rushing, no stiff poses — just space for real moments to happen naturally.' },
@@ -1356,7 +1358,7 @@ class Component extends DCLogic {
       aboutImgEl: aboutSrc ? React.createElement('img', { src: aboutSrc, alt: 'About Ember & Oak', style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } }) : null,
       uploadAbout: (e) => { if (e) e.preventDefault(); this.openUploader('about'); },
       uploadCats: cats.map(c => ({ label: c.label, count: (cloud[c.key] || []).length, upload: (e) => { if (e) e.preventDefault(); this.openUploader(c.key); } })),
-      cats: catCards, filterTabs, filtered, services, testimonials, values, packages,
+      cats: catCards, filterTabs, filtered, services, testimonials, hasTestimonials: testimonials.length > 0, values, packages,
       camIcon: this.cam(44),
       contactSent: this.state.contactSent, showForm: !this.state.contactSent,
       submitContact: (e) => { if (e) e.preventDefault(); this.setState({ contactSent: true }); },
