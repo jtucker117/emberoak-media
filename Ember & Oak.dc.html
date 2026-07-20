@@ -422,8 +422,9 @@ class Component extends DCLogic {
   tagFor(k) { return this.SITE_SLUG ? this.SITE_SLUG + '__' + k : k; }
 
   componentDidMount() {
-    if (this.backendMode()) { try { const t = localStorage.getItem('eo_token'); const n = localStorage.getItem('eo_client'); if (t) { this.setState({ token: t, clientName: n || '' }); this.loadProfile(t); this.loadDeliveries(); } } catch (_) {} }
-    if (this.cloudReady()) this.loadCloud();
+    let tok = null;
+    if (this.backendMode()) { try { tok = localStorage.getItem('eo_token'); const n = localStorage.getItem('eo_client'); if (tok) { this.setState({ token: tok, clientName: n || '' }); this.loadProfile(tok); this.loadDeliveries(); } } catch (_) {} }
+    if (this.cloudReady()) this.loadCloud(tok);
     this.loadVideos();
     try {
       const q = new URLSearchParams(location.search).get('gallery');
@@ -441,6 +442,7 @@ class Component extends DCLogic {
       this.setState({ token: d.token, clientName: d.client.name, busy: '' });
       this.loadProfile();
       this.loadDeliveries();
+      this.loadCloud(d.token);
     } catch (e) { this.setState({ loginErr: 'Could not reach the server', busy: '' }); }
   }
   logout() { try { localStorage.removeItem('eo_token'); localStorage.removeItem('eo_client'); } catch (_) {} this.setState({ token: null, clientName: '', profile: null, adminTab: 'work', pwErr: '', pwOk: '' }); }
@@ -1127,14 +1129,16 @@ class Component extends DCLogic {
   // Signed-in admin reads the authenticated API: it is the live Cloudinary state.
   // The public /list/<tag>.json endpoint is CDN-cached, so after a delete or an
   // upload the admin would keep showing stale tiles for minutes.
-  async loadCloudFromApi() {
-    const keys = ['newborn', 'family', 'cinematic', 'drone', 'video', 'social', 'hero', 'about'];
-    const labels = { newborn: 'Newborn', family: 'Family', cinematic: 'Cinematic', drone: 'Drone', video: 'Video / Reels', social: 'Social Reels' };
+  async loadCloudFromApi(tok) {
+    const token = tok || this.state.token;
+    if (!token) return;
+    const keys = ['newborn', 'family', 'events', 'cinematic', 'drone', 'video', 'social', 'hero', 'about'];
+    const labels = { newborn: 'Newborn', family: 'Family', events: 'Events', cinematic: 'Cinematic', drone: 'Drone', video: 'Video / Reels', social: 'Social Reels' };
     const out = {}, covers = {}, coverIds = {};
     await Promise.all(keys.map(async k => {
       out[k] = [];
       try {
-        const r = await fetch(this.apiBase() + '/api/list?category=' + encodeURIComponent(k), { headers: { Authorization: 'Bearer ' + this.state.token } });
+        const r = await fetch(this.apiBase() + '/api/list?category=' + encodeURIComponent(k), { headers: { Authorization: 'Bearer ' + token } });
         if (!r.ok) return;
         const d = await r.json();
         const items = (d.items || []).map(it => Object.assign({}, it, { label: labels[k] }));
@@ -1151,10 +1155,11 @@ class Component extends DCLogic {
     this.setState({ cloud: out, covers, coverIds, listBlocked: false });
   }
 
-  async loadCloud() {
-    if (this.backendMode() && this.state.token) { await this.loadCloudFromApi(); return; }
-    const keys = ['newborn', 'family', 'cinematic', 'drone', 'video', 'social', 'hero', 'about'];
-    const labels = { newborn: 'Newborn', family: 'Family', cinematic: 'Cinematic', drone: 'Drone', video: 'Video / Reels', social: 'Social Reels' };
+  async loadCloud(tok) {
+    const token = tok || this.state.token;
+    if (this.backendMode() && token) { await this.loadCloudFromApi(token); return; }
+    const keys = ['newborn', 'family', 'events', 'cinematic', 'drone', 'video', 'social', 'hero', 'about'];
+    const labels = { newborn: 'Newborn', family: 'Family', events: 'Events', cinematic: 'Cinematic', drone: 'Drone', video: 'Video / Reels', social: 'Social Reels' };
     const out = {};
     const covers = {};
     const coverIds = {};   // category -> publicId of the featured asset (drives the ★ state)
@@ -1244,6 +1249,7 @@ class Component extends DCLogic {
     const base = [
       ['newborn', 'Sleeping Newborn', 340, ''], ['newborn', 'First Days at Home', 260, ''], ['newborn', 'Tiny Details', 400, ''],
       ['family', 'Golden Hour Family', 300, ''], ['family', 'In the Backyard', 360, ''], ['family', 'Generations', 280, ''],
+      ['events', 'Concert Night', 360, ''], ['events', 'Live on Stage', 300, ''], ['events', 'Crowd & Lights', 400, ''],
       ['cinematic', 'Cinematic Portrait', 420, ''], ['cinematic', 'Editorial Light', 320, ''], ['cinematic', 'Moody & Warm', 300, ''],
       ['drone', 'Aerial Estate', 380, ''], ['drone', 'Coastline from Above', 260, ''], ['drone', 'Sweeping Landscape', 340, ''],
       ['video', 'Highlight Film', 340, ''], ['video', 'Wedding Trailer', 260, ''], ['video', 'Brand Story', 400, ''],
@@ -1263,7 +1269,8 @@ class Component extends DCLogic {
     const cat = this.state.cat;
     const cats = [
       { key: 'newborn', label: 'Newborn' }, { key: 'family', label: 'Family' },
-      { key: 'cinematic', label: 'Cinematic' }, { key: 'drone', label: 'Drone' },
+      { key: 'events', label: 'Events' }, { key: 'cinematic', label: 'Cinematic' },
+      { key: 'drone', label: 'Drone' },
       { key: 'video', label: 'Video / Reels' }, { key: 'social', label: 'Social Reels' },
     ];
 
