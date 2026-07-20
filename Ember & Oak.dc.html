@@ -8,6 +8,8 @@
 <body>
 <x-dc>
 <helmet data-dc-atomics="">
+<title>Ember &amp; Oak — Photography &amp; Film | Houston</title>
+<meta name="description" content="Ember &amp; Oak is a Houston-area photography and film studio — newborn, family, cinematic portraiture, and aerial work.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=Mulish:wght@300;400;500;600;700&amp;family=Parisienne&amp;display=swap" rel="stylesheet">
@@ -404,7 +406,7 @@ class Component extends DCLogic {
   USE_BACKEND = false;
   API_BASE = '';
   // Which client folder this deployed site displays. Leave '' for single-account.
-  SITE_SLUG = '';
+  SITE_SLUG = 'emberoak';
   // ── COVER PHOTO ── paste a full image URL here to hard-set it, or leave ''
   //    and upload one from Studio Admin → "Cover Photo".
   HERO_IMAGE = '';
@@ -684,7 +686,7 @@ class Component extends DCLogic {
     const w = window.cloudinary.createUploadWidget({
       cloudName: this.CLOUD_NAME, uploadPreset: this.UPLOAD_PRESET,
       sources: ['local', 'url', 'camera'], multiple: true,
-      tags: [cat, 'emberoak'], folder: 'emberoak/' + cat,
+      tags: [cat, 'emberoak', this.tagFor(cat)], folder: 'emberoak/' + cat,
     }, (err, res) => {
       if (res && res.event === 'close') this.loadCloud();
     });
