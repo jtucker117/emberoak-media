@@ -399,7 +399,7 @@
 class Component extends DCLogic {
   state = { page: 'home', cat: 'all', lb: null, contactSent: false, cloud: {}, covers: {}, coverIds: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '',
             profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '', deliveries: [],
-            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {}, delivSettings: {}, saveMsg: '', videos: [], vidBusy: false, openSec: {}, heroIdx: 0, cats: null, catBusy: false };
+            upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {}, delivSettings: {}, saveMsg: '', videos: [], vidBusy: false, openSec: {}, heroIdx: 0, cats: null, catBusy: false, order: {} };
 
   // ── CLOUDINARY CONFIG ── replace these two with your account values ──
   CLOUD_NAME = 'wrjc0nyq';
@@ -430,6 +430,7 @@ class Component extends DCLogic {
     if (this.cloudReady()) this.loadCloud(tok);
     this.loadVideos();
     this.loadCategories();
+    this.loadOrder();
     try {
       const q = new URLSearchParams(location.search).get('gallery');
       if (q && this.backendMode()) { this.setState({ page: 'client', deliveryCode: q }); this.openGallery(q, ''); }
@@ -676,6 +677,34 @@ class Component extends DCLogic {
       this.setState({ cats: d.items });
       this.loadCloud();
     } catch (e) { alert('Failed: ' + e.message); }
+  }
+
+  async loadOrder() {
+    if (!this.backendMode()) return;
+    try {
+      const r = await fetch(this.apiBase() + '/api/order');
+      const d = await r.json();
+      if (r.ok) this.setState({ order: d.order || {} });
+    } catch (e) {}
+  }
+
+  // Reordering by arrows rather than drag-and-drop: it works identically on a
+  // phone, needs no library, and each nudge is one saved state.
+  async moveItem(category, publicId, dir) {
+    const list = (this.state.cloud[category] || []).slice();
+    const i = list.findIndex(x => x.publicId === publicId);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= list.length) return;
+    const tmp = list[i]; list[i] = list[j]; list[j] = tmp;
+    // reflect the move immediately, then persist
+    this.setState(st => ({ cloud: Object.assign({}, st.cloud, { [category]: list }) }));
+    try {
+      const r = await fetch(this.apiBase() + '/api/order', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ category, publicIds: list.map(x => x.publicId) }) });
+      if (r.status === 401) return this.sessionExpired();
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Could not save the new order'); this.loadCloud(); return; }
+      this.setState(st => ({ order: Object.assign({}, st.order, { [category]: list.map(x => x.publicId) }) }));
+    } catch (e) { alert('Failed: ' + e.message); this.loadCloud(); }
   }
 
   async loadVideos() {
@@ -1057,13 +1086,20 @@ class Component extends DCLogic {
                   onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.backendUpload(key, fs); } }))
             : h('button', { onClick: () => this.openUploader(key), style: { padding: '10px 18px', background: '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', whiteSpace: 'nowrap' } }, '+ Upload')),
         progressEl(busy),
-        !openS ? null : items.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(104px,1fr))', gap: 10 } },
+        !openS ? null : items.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(124px,1fr))', gap: 10 } },
           items.map((it, i) => {
             const isCover = !!(st.coverIds && st.coverIds[key] && st.coverIds[key] === it.publicId);
             return h('div', { key: i, style: { position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: '#eee6d8', boxShadow: isCover ? '0 0 0 3px #f0b429' : 'none' } },
               h('img', { src: it.thumb, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }),
               it.isVideo ? h('div', { style: { position: 'absolute', top: 5, left: 5, background: 'rgba(30,22,17,.65)', color: '#fff', fontSize: 10, padding: '1px 6px', borderRadius: 4 } }, 'video') : null,
               isCover ? h('div', { style: { position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top,rgba(30,22,17,.8),transparent)', color: '#f6c667', fontSize: 10, fontWeight: 700, letterSpacing: '.07em', textAlign: 'center', padding: '10px 2px 4px' } }, 'FEATURED') : null,
+              h('div', { style: { position: 'absolute', bottom: 5, right: 5, display: 'flex', gap: 3 } },
+                h('button', { title: 'Move earlier', 'aria-label': 'Move earlier', disabled: i === 0,
+                  onClick: () => this.moveItem(key, it.publicId, -1),
+                  style: { width: 22, height: 22, borderRadius: '50%', border: 'none', background: 'rgba(30,22,17,.62)', color: i === 0 ? '#8b7f74' : '#fff', fontSize: 12, lineHeight: '22px', cursor: i === 0 ? 'default' : 'pointer', padding: 0 } }, '\u2039'),
+                h('button', { title: 'Move later', 'aria-label': 'Move later', disabled: i === items.length - 1,
+                  onClick: () => this.moveItem(key, it.publicId, 1),
+                  style: { width: 22, height: 22, borderRadius: '50%', border: 'none', background: 'rgba(30,22,17,.62)', color: i === items.length - 1 ? '#8b7f74' : '#fff', fontSize: 12, lineHeight: '22px', cursor: i === items.length - 1 ? 'default' : 'pointer', padding: 0 } }, '\u203a')),
               h('button', { title: 'Delete this file', 'aria-label': 'Delete', onClick: () => this.backendMode() ? this.backendDelete(it.publicId, it.resourceType) : alert('Delete activates once your backend is deployed. In this preview, remove photos from your Cloudinary Media Library.'),
                 style: { position: 'absolute', top: 5, right: 5, width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'rgba(178,59,46,.92)', color: '#fff', fontSize: 16, lineHeight: '26px', cursor: 'pointer', padding: 0 } }, '×'),
               (key !== 'hero' && key !== 'about' && !it.isVideo) ? h('button', { title: 'Use this photo as the homepage Cover',
@@ -1132,9 +1168,9 @@ class Component extends DCLogic {
     const videoCard = h('div', { style: card },
       h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 22, margin: '0 0 4px' } }, 'Video links (YouTube / Vimeo)'),
       h('p', { style: { fontSize: 12.5, color: '#6f6357', margin: '0 0 12px', lineHeight: 1.6 } },
-        'For films too big to upload. Paste the link to a single video \u2014 it appears in the portfolio and plays inline, with no storage or bandwidth cost to this site.'),
+        'For films too big to upload. Paste the link to a single video \u2014 it appears in the portfolio and plays inline, with no storage or bandwidth cost to this site. Titles come from YouTube/Vimeo; edit them below. \u2605 makes a video the cover image for its category.'),
       h('form', { onSubmit: (e) => { e.preventDefault(); const f = e.target; this.addVideo(f.vurl.value.trim(), f.vcat.value); f.vurl.value = ''; },
-        style: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' } },
+        style: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end', paddingBottom: 14, borderBottom: '1px solid rgba(154,173,139,.3)' } },
         h('label', { style: { flex: '1 1 260px', fontSize: 12, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 5 } }, 'Video link',
           h('input', { name: 'vurl', placeholder: 'https://youtu.be/\u2026', style: { padding: '11px 13px', border: '1px solid rgba(154,173,139,.5)', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', background: '#fff', width: '100%' } })),
         h('label', { style: { flex: '0 1 170px', fontSize: 12, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 5 } }, 'Category',
@@ -1143,46 +1179,25 @@ class Component extends DCLogic {
         h('button', { type: 'submit', disabled: st.vidBusy,
           style: { padding: '11px 20px', background: st.vidBusy ? '#c89b78' : '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: st.vidBusy ? 'default' : 'pointer', fontFamily: 'inherit' } },
           st.vidBusy ? 'Adding\u2026' : '+ Add video')),
-      (st.videos && st.videos.length) ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 10, marginTop: 14 } },
-        st.videos.map(v => h('div', { key: v.id, style: { position: 'relative', borderRadius: 10, overflow: 'hidden', background: '#eee6d8', border: '1px solid rgba(154,173,139,.3)' } },
-          h('div', { style: { position: 'relative', aspectRatio: '16/9', background: '#1e1611' } },
-            v.thumb ? h('img', { src: v.thumb, alt: v.title || '', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }) : null,
-            h('button', { title: 'Remove', onClick: () => this.removeVideo(v.id, v.title),
-              style: { position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'rgba(178,59,46,.92)', color: '#fff', fontSize: 15, lineHeight: '24px', cursor: 'pointer', padding: 0 } }, '\u00d7')),
-          h('div', { style: { padding: '7px 9px', fontSize: 11.5, color: '#5a4d43' } },
-            h('div', { style: { fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' } }, v.title || v.videoId),
-            h('div', { style: { color: '#9c9084' } }, v.provider + ' \u00b7 ' + v.category)))))
-        : h('div', { style: { fontSize: 12.5, color: '#9c9084', marginTop: 10 } }, 'No videos linked yet.'));
-
-    const catMgr = h('div', { style: { ...card, background: '#f1ebdf' } },
-      h('button', { onClick: () => this.toggleSec('__cats'),
-        style: { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' } },
-        h('span', { style: { color: '#9e5423', fontSize: 13, transform: st.openSec['__cats'] ? 'rotate(90deg)' : 'none', transition: 'transform .15s', display: 'inline-block' } }, '\u25b6'),
-        h('span', null,
-          h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 20, margin: 0 } }, 'Manage categories'),
-          h('div', { style: { fontSize: 12, color: '#9c9084' } }, cats.length + ' categories'))),
-      !st.openSec['__cats'] ? null : h('div', { style: { marginTop: 12 } },
-        h('form', { onSubmit: (e) => { e.preventDefault(); const f = e.target; this.addCategory(f.cname.value.trim()); f.cname.value = ''; },
-          style: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end', paddingBottom: 12, borderBottom: '1px dashed rgba(154,173,139,.45)' } },
-          h('label', { style: { flex: '1 1 220px', fontSize: 12, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 5 } }, 'New category',
-            h('input', { name: 'cname', placeholder: 'e.g. Concerts', style: { padding: '10px 12px', border: '1px solid rgba(154,173,139,.5)', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', background: '#fff', width: '100%' } })),
-          h('button', { type: 'submit', disabled: st.catBusy,
-            style: { padding: '10px 18px', background: st.catBusy ? '#c89b78' : '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: st.catBusy ? 'default' : 'pointer', fontFamily: 'inherit' } },
-            st.catBusy ? 'Adding\u2026' : '+ Add category')),
-        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 } },
-          cats.map(c => {
-            const n = (cloud[c.key] || []).length + (st.videos || []).filter(v => v.category === c.key).length;
-            return h('div', { key: c.key, style: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 10, padding: '8px 10px' } },
-              h('input', { defaultValue: c.label, key: 'cl-' + c.key + '-' + c.label,
-                onBlur: (e) => { const l = e.target.value.trim(); if (l && l !== c.label) this.renameCategory(c.key, l); },
-                style: { flex: '1 1 160px', minWidth: 0, padding: '8px 10px', border: '1px solid rgba(154,173,139,.45)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', background: '#faf7f0' } }),
-              h('span', { style: { fontSize: 11.5, color: '#9c9084', whiteSpace: 'nowrap' } }, n + (n === 1 ? ' item' : ' items')),
-              h('button', { onClick: () => this.deleteCategory(c.key, c.label), disabled: n > 0,
-                title: n > 0 ? 'Empty this category first' : 'Remove this category',
-                style: { padding: '7px 12px', background: 'none', border: '1px solid rgba(178,59,46,.45)', borderRadius: 999, color: n > 0 ? '#c9b9a8' : '#b23b2e', fontSize: 12, fontWeight: 700, cursor: n > 0 ? 'not-allowed' : 'pointer', fontFamily: 'inherit' } }, 'Remove'));
-          })),
-        h('p', { style: { fontSize: 11.5, color: '#8a7a68', lineHeight: 1.6, marginTop: 10 } },
-          'Renaming only changes the label shown on the site \u2014 existing photos stay put. A category must be empty before it can be removed, so nothing is ever orphaned in storage.')));
+      (st.videos && st.videos.length) ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 } },
+        st.videos.map(v => h('div', { key: v.id, style: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', padding: '8px 10px', border: '1px solid ' + (v.featured ? '#f0b429' : 'rgba(154,173,139,.3)'), borderRadius: 10, background: '#fff' } },
+          h('div', { style: { width: 88, height: 50, borderRadius: 6, overflow: 'hidden', background: '#1e1611', flexShrink: 0 } },
+            v.thumb ? h('img', { src: v.thumb, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }) : null),
+          h('button', { onClick: () => this.updateVideo(v.id, { featured: !v.featured }),
+            title: v.featured ? 'This video is the cover for its category' : 'Use as this category\u2019s cover image',
+            style: { width: 30, height: 30, borderRadius: '50%', border: 'none', flexShrink: 0, cursor: 'pointer', fontSize: 15, lineHeight: '30px', padding: 0,
+                     background: v.featured ? '#f0b429' : 'rgba(30,22,17,.55)', color: v.featured ? '#3c2f27' : '#f6c667' } }, '\u2605'),
+          h('input', { defaultValue: v.title || '', key: 't-' + v.id + '-' + (v.title || ''), placeholder: 'Title shown on the site',
+            onBlur: (e) => { const t = e.target.value.trim(); if (t !== (v.title || '')) this.updateVideo(v.id, { title: t }); },
+            style: { flex: '1 1 200px', minWidth: 0, padding: '9px 11px', border: '1px solid rgba(154,173,139,.45)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', background: '#faf7f0' } }),
+          h('select', { defaultValue: v.category, key: 'c-' + v.id + '-' + v.category,
+            onChange: (e) => this.updateVideo(v.id, { category: e.target.value }),
+            style: { flex: '0 1 150px', padding: '9px 11px', border: '1px solid rgba(154,173,139,.45)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: '#faf7f0' } },
+            vidCats.map(c => h('option', { key: c.key, value: c.key }, c.label))),
+          h('a', { href: v.url, target: '_blank', rel: 'noopener', style: { fontSize: 12, color: '#9c9084' } }, v.provider),
+          h('button', { title: 'Remove', onClick: () => this.removeVideo(v.id, v.title),
+            style: { width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(178,59,46,.92)', color: '#fff', fontSize: 16, lineHeight: '28px', cursor: 'pointer', padding: 0, flexShrink: 0 } }, '\u00d7'))))
+        : h('div', { style: { fontSize: 12.5, color: '#9c9084', marginTop: 12 } }, 'No videos linked yet.'));
 
     const work = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
       catMgr,
@@ -1364,6 +1379,21 @@ class Component extends DCLogic {
         if (rcv.ok) { const cvd = await rcv.json(); const cv = (cvd.resources || [])[0]; if (cv) { covers[k] = 'https://res.cloudinary.com/' + this.CLOUD_NAME + '/video/upload/w_800,c_fill,q_auto,so_0/' + cv.public_id + '.jpg'; coverIds[k] = cv.public_id; } }
       } catch (e) {} }
     }));
+    // the public site reads Cloudinary's CDN lists, which are date-ordered — apply
+    // the studio's chosen order here so visitors see the same sequence as the admin
+    const ord = this.state.order || {};
+    Object.keys(out).forEach(k => {
+      const want = ord[k];
+      if (!want || !want.length) return;
+      const pos = {}; want.forEach((id, i) => { pos[id] = i; });
+      out[k] = out[k].slice().sort((a, b) => {
+        const pa = pos[a.publicId], pb = pos[b.publicId];
+        if (pa == null && pb == null) return 0;
+        if (pa == null) return 1;
+        if (pb == null) return -1;
+        return pa - pb;
+      });
+    });
     this.setState({ cloud: out, covers, coverIds, listBlocked: blocked });
   }
 
@@ -1430,7 +1460,8 @@ class Component extends DCLogic {
       // A category can be entirely embedded video (YouTube/Vimeo), which has no
       // Cloudinary asset and therefore no cover tag — fall back to the first
       // embedded thumbnail so the card isn't an empty placeholder.
-      const embedThumb = (this.state.videos || []).filter(v => v.category === c.key && v.thumb).map(v => v.thumb)[0] || '';
+      const vids = (this.state.videos || []).filter(v => v.category === c.key && v.thumb);
+      const embedThumb = ((vids.filter(v => v.featured)[0] || vids[0]) || {}).thumb || '';
       const cover = coversM[c.key] || (list[0] && list[0].thumb) || embedThumb || '';
       return {
         label: c.label,

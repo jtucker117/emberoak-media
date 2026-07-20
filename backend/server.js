@@ -108,6 +108,37 @@ function saveGalleryStore() {
   fs.renameSync(tmp, GALLERY_SETTINGS_PATH);
 }
 
+// ---- manual photo order -----------------------------------------------------
+// Cloudinary lists by upload date. A studio wants to choose what leads a gallery,
+// so we keep an explicit publicId order per category; anything not listed falls in
+// after, oldest first, which means new uploads simply append.
+const ORDER_PATH = process.env.ORDER_PATH || '/data/order.json';
+let ORDER = {};   // category -> [publicId, ...]
+try {
+  ORDER = JSON.parse(fs.readFileSync(ORDER_PATH, 'utf8')) || {};
+} catch (e) {
+  if (e.code !== 'ENOENT') console.warn('[warn] could not read photo order:', e.message);
+}
+function saveOrder() {
+  fs.mkdirSync(path.dirname(ORDER_PATH), { recursive: true });
+  const tmp = `${ORDER_PATH}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(ORDER, null, 2), { mode: 0o600 });
+  fs.renameSync(tmp, ORDER_PATH);
+}
+function applyOrder(category, items) {
+  const want = ORDER[category];
+  if (!want || !want.length) return items;
+  const pos = {};
+  want.forEach((id, i) => { pos[id] = i; });
+  return items.slice().sort((a, b) => {
+    const pa = pos[a.publicId], pb = pos[b.publicId];
+    if (pa == null && pb == null) return new Date(a.createdAt) - new Date(b.createdAt);
+    if (pa == null) return 1;      // unranked (newly uploaded) sinks below ranked
+    if (pb == null) return -1;
+    return pa - pb;
+  });
+}
+
 // ---- portfolio categories (studio-editable) --------------------------------
 // Categories used to be hardcoded in the site source, so adding one meant a code
 // change and a rebuild. They live here now; the site reads them at load.
@@ -333,10 +364,10 @@ app.get('/api/list', auth, async (req, res) => {
       createdAt: r.created_at,
       tags: r.tags || [],
     });
-    const items = [
+    const items = applyOrder(category, [
       ...(imgs.resources || []).map(r => map(r, false)),
       ...(vids.resources || []).map(r => map(r, true)),
-    ].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    ].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)));
     res.json({ items });
   } catch (e) {
     res.status(500).json({ error: 'List failed', detail: String(e.message || e) });
@@ -440,6 +471,27 @@ app.post('/api/retag', auth, async (req, res) => {
     res.json({ ok: true, tagged });
   } catch (e) {
     res.status(500).json({ error: 'Retag failed', detail: String(e.message || e) });
+  }
+});
+
+// ---- photo order: public read (the site needs it), studio-only write ----
+app.get('/api/order', (_req, res) => res.json({ order: ORDER }));
+
+app.post('/api/order', auth, (req, res) => {
+  const { category, publicIds } = req.body || {};
+  const cat = String(category || '');
+  if (!SAFE.test(cat)) return res.status(400).json({ error: 'Bad category' });
+  if (!Array.isArray(publicIds)) return res.status(400).json({ error: 'publicIds must be a list' });
+  // only ids inside this studio's folder may be ordered
+  const clean = publicIds.filter(id => typeof id === 'string' && id.startsWith(`${req.client.folder}/`)).slice(0, 500);
+  if (!credStoreWritable())
+    return res.status(503).json({ error: 'Ordering needs storage. Add a Railway Volume mounted at /data.' });
+  try {
+    ORDER[cat] = clean;
+    saveOrder();
+    res.json({ ok: true, count: clean.length });
+  } catch (e) {
+    res.status(500).json({ error: 'Could not save the order', detail: String(e.message || e) });
   }
 });
 
@@ -555,9 +607,14 @@ app.post('/api/videos', auth, async (req, res) => {
 });
 
 app.post('/api/videos/update', auth, (req, res) => {
-  const { id, title, category } = req.body || {};
+  const { id, title, category, featured } = req.body || {};
   const v = VIDEOS.find(x => x.id === String(id || ''));
   if (!v) return res.status(404).json({ error: 'No such video' });
+  if (featured != null) {
+    // one cover per category: clear the flag from that category's other videos
+    if (featured) VIDEOS.forEach(x => { if (x.category === (category || v.category) && x.id !== v.id) x.featured = false; });
+    v.featured = !!featured;
+  }
   if (category != null) {
     const cat = String(category);
     if (!SAFE.test(cat)) return res.status(400).json({ error: 'Bad category' });
