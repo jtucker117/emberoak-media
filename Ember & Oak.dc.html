@@ -1199,6 +1199,36 @@ class Component extends DCLogic {
             style: { width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(178,59,46,.92)', color: '#fff', fontSize: 16, lineHeight: '28px', cursor: 'pointer', padding: 0, flexShrink: 0 } }, '\u00d7'))))
         : h('div', { style: { fontSize: 12.5, color: '#9c9084', marginTop: 12 } }, 'No videos linked yet.'));
 
+    const catMgr = h('div', { style: { ...card, background: '#f1ebdf' } },
+      h('button', { onClick: () => this.toggleSec('__cats'),
+        style: { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' } },
+        h('span', { style: { color: '#9e5423', fontSize: 13, transform: st.openSec['__cats'] ? 'rotate(90deg)' : 'none', transition: 'transform .15s', display: 'inline-block' } }, '\u25b6'),
+        h('span', null,
+          h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 20, margin: 0 } }, 'Manage categories'),
+          h('div', { style: { fontSize: 12, color: '#9c9084' } }, cats.length + ' categories'))),
+      !st.openSec['__cats'] ? null : h('div', { style: { marginTop: 12 } },
+        h('form', { onSubmit: (e) => { e.preventDefault(); const f = e.target; this.addCategory(f.cname.value.trim()); f.cname.value = ''; },
+          style: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end', paddingBottom: 12, borderBottom: '1px dashed rgba(154,173,139,.45)' } },
+          h('label', { style: { flex: '1 1 220px', fontSize: 12, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 5 } }, 'New category',
+            h('input', { name: 'cname', placeholder: 'e.g. Concerts', style: { padding: '10px 12px', border: '1px solid rgba(154,173,139,.5)', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', background: '#fff', width: '100%' } })),
+          h('button', { type: 'submit', disabled: st.catBusy,
+            style: { padding: '10px 18px', background: st.catBusy ? '#c89b78' : '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: st.catBusy ? 'default' : 'pointer', fontFamily: 'inherit' } },
+            st.catBusy ? 'Adding\u2026' : '+ Add category')),
+        h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 } },
+          cats.map(c => {
+            const n = (cloud[c.key] || []).length + (st.videos || []).filter(v => v.category === c.key).length;
+            return h('div', { key: c.key, style: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 10, padding: '8px 10px' } },
+              h('input', { defaultValue: c.label, key: 'cl-' + c.key + '-' + c.label,
+                onBlur: (e) => { const l = e.target.value.trim(); if (l && l !== c.label) this.renameCategory(c.key, l); },
+                style: { flex: '1 1 160px', minWidth: 0, padding: '8px 10px', border: '1px solid rgba(154,173,139,.45)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', background: '#faf7f0' } }),
+              h('span', { style: { fontSize: 11.5, color: '#9c9084', whiteSpace: 'nowrap' } }, n + (n === 1 ? ' item' : ' items')),
+              h('button', { onClick: () => this.deleteCategory(c.key, c.label), disabled: n > 0,
+                title: n > 0 ? 'Empty this category first' : 'Remove this category',
+                style: { padding: '7px 12px', background: 'none', border: '1px solid rgba(178,59,46,.45)', borderRadius: 999, color: n > 0 ? '#c9b9a8' : '#b23b2e', fontSize: 12, fontWeight: 700, cursor: n > 0 ? 'not-allowed' : 'pointer', fontFamily: 'inherit' } }, 'Remove'));
+          })),
+        h('p', { style: { fontSize: 11.5, color: '#8a7a68', lineHeight: 1.6, marginTop: 10 } },
+          'Renaming only changes the label shown on the site \u2014 existing photos stay put. A category must be empty before it can be removed, so nothing is ever orphaned in storage.')));
+
     const work = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
       catMgr,
       h('div', { style: { fontSize: 12.5, color: '#9c9084', lineHeight: 1.6 } }, 'Tap a category to open it.'),
