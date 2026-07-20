@@ -277,10 +277,6 @@
         {{ loginEl }}
       </sc-if>
       <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ false }}">
-        <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;background:#f1ebdf;border-radius:12px;padding:14px 20px;margin-top:8px">
-          <div style="font-size:15px;color:#5a4d43">Signed in as <strong>{{ clientName }}</strong></div>
-          <a href="#" onClick="{{ doLogout }}" style="font-size:13px;font-weight:700;letter-spacing:.04em">Sign out</a>
-        </div>
         {{ managerEl }}
         <p style="text-align:center;margin-top:24px"><a href="#" onClick="{{ goPortfolio }}" style="font-weight:600">View the live portfolio →</a></p>
       </sc-if>
@@ -394,7 +390,8 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900}}">
 class Component extends DCLogic {
-  state = { page: 'home', cat: 'all', lb: null, contactSent: false, cloud: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '' };
+  state = { page: 'home', cat: 'all', lb: null, contactSent: false, cloud: {}, covers: {}, coverIds: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '',
+            profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '' };
 
   // ── CLOUDINARY CONFIG ── replace these two with your account values ──
   CLOUD_NAME = 'wrjc0nyq';
@@ -420,7 +417,7 @@ class Component extends DCLogic {
   tagFor(k) { return this.SITE_SLUG ? this.SITE_SLUG + '__' + k : k; }
 
   componentDidMount() {
-    if (this.backendMode()) { try { const t = localStorage.getItem('eo_token'); const n = localStorage.getItem('eo_client'); if (t) this.setState({ token: t, clientName: n || '' }); } catch (_) {} }
+    if (this.backendMode()) { try { const t = localStorage.getItem('eo_token'); const n = localStorage.getItem('eo_client'); if (t) { this.setState({ token: t, clientName: n || '' }); this.loadProfile(t); } } catch (_) {} }
     if (this.cloudReady()) this.loadCloud();
     try {
       const q = new URLSearchParams(location.search).get('gallery');
@@ -436,9 +433,40 @@ class Component extends DCLogic {
       if (!r.ok) { this.setState({ loginErr: d.error || 'Invalid login', busy: '' }); return; }
       try { localStorage.setItem('eo_token', d.token); localStorage.setItem('eo_client', d.client.name); } catch (_) {}
       this.setState({ token: d.token, clientName: d.client.name, busy: '' });
+      this.loadProfile();
     } catch (e) { this.setState({ loginErr: 'Could not reach the server', busy: '' }); }
   }
-  logout() { try { localStorage.removeItem('eo_token'); localStorage.removeItem('eo_client'); } catch (_) {} this.setState({ token: null, clientName: '' }); }
+  logout() { try { localStorage.removeItem('eo_token'); localStorage.removeItem('eo_client'); } catch (_) {} this.setState({ token: null, clientName: '', profile: null, adminTab: 'work', pwErr: '', pwOk: '' }); }
+
+  // profile header + whether this deployment can persist a password change
+  async loadProfile(tok) {
+    const token = tok || this.state.token;
+    if (!this.backendMode() || !token) return;
+    try {
+      const r = await fetch(this.apiBase() + '/api/me', { headers: { Authorization: 'Bearer ' + token } });
+      if (r.status === 401) { this.logout(); return; }   // expired 12h token — don't strand the user
+      const d = await r.json();
+      if (r.ok) this.setState({ profile: d, clientName: d.name || this.state.clientName });
+    } catch (e) {}
+  }
+
+  async changePassword(currentPassword, newPassword, confirmPassword) {
+    this.setState({ pwErr: '', pwOk: '' });
+    if (newPassword !== confirmPassword) { this.setState({ pwErr: 'The two new passwords do not match.' }); return false; }
+    if ((newPassword || '').length < 10) { this.setState({ pwErr: 'Use at least 10 characters.' }); return false; }
+    this.setState({ pwBusy: true });
+    try {
+      const r = await fetch(this.apiBase() + '/api/change-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token },
+        body: JSON.stringify({ currentPassword, newPassword }) });
+      const d = await r.json();
+      if (!r.ok) { this.setState({ pwErr: d.error || 'Could not change the password', pwBusy: false }); return false; }
+      this.setState({ pwOk: 'Password updated. Use it the next time you sign in.', pwBusy: false });
+      this.loadProfile();
+      return true;
+    } catch (e) { this.setState({ pwErr: 'Could not reach the server', pwBusy: false }); return false; }
+  }
 
   async backendUpload(category, files) {
     if (!files || !files.length) return;
@@ -556,19 +584,52 @@ class Component extends DCLogic {
 
   renderLogin() {
     const h = React.createElement;
-    const inp = { padding: '11px 13px', border: '1px solid rgba(154,173,139,.5)', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', background: '#faf7f0' };
+    const inp = { padding: '12px 14px', border: '1px solid rgba(154,173,139,.5)', borderRadius: 10, fontSize: 15, fontFamily: 'inherit', background: '#faf7f0', width: '100%' };
     return h('form', { onSubmit: (e) => { e.preventDefault(); this.doLogin(e.target.slug.value.trim(), e.target.password.value); },
-      style: { maxWidth: 420, margin: '26px auto 0', background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 16, padding: 32, boxShadow: '0 8px 30px rgba(60,47,39,.06)', display: 'flex', flexDirection: 'column', gap: 14, textAlign: 'left' } },
-      h('label', { style: { fontSize: 13, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 6 } }, 'Login name', h('input', { name: 'slug', required: true, style: inp })),
-      h('label', { style: { fontSize: 13, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 6 } }, 'Password', h('input', { name: 'password', type: 'password', required: true, style: inp })),
-      this.state.loginErr ? h('div', { style: { color: '#b23b2e', fontSize: 13 } }, this.state.loginErr) : null,
+      style: { maxWidth: 420, margin: '26px auto 0', background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 18, padding: '36px 32px', boxShadow: '0 10px 34px rgba(60,47,39,.07)', display: 'flex', flexDirection: 'column', gap: 15, textAlign: 'left' } },
+      h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginBottom: 6 } },
+        h('div', { style: { width: 62, height: 62, borderRadius: '50%', background: 'linear-gradient(145deg,#9e5423,#c07a3e)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond',serif", fontSize: 26, fontWeight: 600, letterSpacing: '.04em', boxShadow: '0 6px 18px rgba(158,84,35,.28)' } }, 'E&O'),
+        h('div', { style: { fontFamily: "'Cormorant Garamond',serif", fontSize: 25, fontWeight: 600 } }, 'Studio Sign In'),
+        h('div', { style: { fontSize: 12.5, color: '#9c9084', textAlign: 'center', lineHeight: 1.5 } }, 'Manage your portfolio, covers, and client deliveries.')),
+      h('label', { style: { fontSize: 13, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 6 } }, 'Login name',
+        h('input', { name: 'slug', required: true, autoComplete: 'username', autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false, style: inp })),
+      h('label', { style: { fontSize: 13, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 6 } }, 'Password',
+        h('input', { name: 'password', type: 'password', required: true, autoComplete: 'current-password', style: inp })),
+      this.state.loginErr ? h('div', { style: { color: '#b23b2e', fontSize: 13, background: 'rgba(178,59,46,.07)', border: '1px solid rgba(178,59,46,.2)', borderRadius: 9, padding: '9px 12px' } }, this.state.loginErr) : null,
       h('button', { type: 'submit', disabled: this.state.busy === 'login', style: { marginTop: 4, padding: 14, background: '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 700, letterSpacing: '.05em', cursor: 'pointer' } }, this.state.busy === 'login' ? 'Signing in…' : 'Sign In'));
   }
 
   renderManager(cats, cloud) {
     const h = React.createElement;
+    const st = this.state;
     const card = { background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 14, padding: 22, boxShadow: '0 6px 24px rgba(60,47,39,.05)' };
     const specials = [{ key: 'hero', label: 'Cover Photo' }, { key: 'about', label: 'About Photo' }];
+
+    // ---- profile header -----------------------------------------------------
+    const name = st.clientName || (st.profile && st.profile.name) || 'Studio';
+    const initials = name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || 'E&O';
+    let photos = 0, videos = 0;
+    cats.forEach(c => (cloud[c.key] || []).forEach(it => { if (it.isVideo) videos++; else photos++; }));
+    const featuredCount = cats.filter(c => st.coverIds && st.coverIds[c.key]).length;
+    const stat = (n, l) => h('div', { key: l, style: { textAlign: 'center', minWidth: 74 } },
+      h('div', { style: { fontFamily: "'Cormorant Garamond',serif", fontSize: 26, fontWeight: 600, lineHeight: 1 } }, String(n)),
+      h('div', { style: { fontSize: 11, color: '#9c9084', letterSpacing: '.06em', textTransform: 'uppercase', marginTop: 4 } }, l));
+
+    const header = h('div', { style: { ...card, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' } },
+      h('div', { style: { width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(145deg,#9e5423,#c07a3e)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 600, flexShrink: 0, boxShadow: '0 6px 18px rgba(158,84,35,.25)' } }, initials),
+      h('div', { style: { flex: '1 1 180px', minWidth: 0 } },
+        h('div', { style: { fontFamily: "'Cormorant Garamond',serif", fontSize: 26, fontWeight: 600, lineHeight: 1.15 } }, name),
+        h('div', { style: { fontSize: 12.5, color: '#9c9084', marginTop: 3 } }, st.profile ? 'Signed in as ' + st.profile.slug : 'Signed in')),
+      h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } }, stat(photos, 'Photos'), stat(videos, 'Videos'), stat(featuredCount, 'Covers')),
+      h('button', { onClick: () => this.logout(), style: { padding: '9px 18px', background: 'none', border: '1px solid rgba(154,173,139,.6)', borderRadius: 999, color: '#5a4d43', fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } }, 'Sign out'));
+
+    // ---- tabs ---------------------------------------------------------------
+    const tab = (id, label) => h('button', { key: id, onClick: () => this.setState({ adminTab: id }),
+      style: { padding: '10px 20px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, letterSpacing: '.04em',
+        background: st.adminTab === id ? '#9e5423' : 'transparent', color: st.adminTab === id ? '#fff' : '#6f6357' } }, label);
+    const tabs = h('div', { style: { display: 'flex', gap: 6, background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 999, padding: 6, alignSelf: 'flex-start', flexWrap: 'wrap' } },
+      tab('work', 'My Work'), tab('deliveries', 'Client Deliveries'), tab('account', 'Account'));
+
     const sectionOf = (key, label) => {
       const items = cloud[key] || [];
       const busy = this.state.busy === key;
@@ -583,14 +644,23 @@ class Component extends DCLogic {
                 h('input', { type: 'file', multiple: true, accept: 'image/*,video/*', disabled: busy, style: { display: 'none' },
                   onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.backendUpload(key, fs); } }))
             : h('button', { onClick: () => this.openUploader(key), style: { padding: '10px 18px', background: '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', whiteSpace: 'nowrap' } }, '+ Upload')),
-        items.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(96px,1fr))', gap: 10 } },
-          items.map((it, i) => h('div', { key: i, style: { position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', background: '#eee6d8' } },
-            h('img', { src: it.thumb, style: { width: '100%', height: '100%', objectFit: 'cover' } }),
-            it.isVideo ? h('div', { style: { position: 'absolute', top: 4, left: 4, background: 'rgba(30,22,17,.6)', color: '#fff', fontSize: 10, padding: '1px 6px', borderRadius: 4 } }, 'video') : null,
-            h('button', { title: 'Delete', onClick: () => this.backendMode() ? this.backendDelete(it.publicId, it.resourceType) : alert('Delete activates once your backend is deployed. In this preview, remove photos from your Cloudinary Media Library.'),
-              style: { position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'rgba(178,59,46,.92)', color: '#fff', fontSize: 15, lineHeight: '24px', cursor: 'pointer', padding: 0 } }, '×'),
-            (key !== 'hero' && key !== 'about') ? h('button', { title: 'Set as featured cover', onClick: () => this.backendFeature(key, it.publicId, it.resourceType),
-              style: { position: 'absolute', bottom: 4, right: 4, width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'rgba(30,22,17,.6)', color: '#f6c667', fontSize: 13, lineHeight: '24px', cursor: 'pointer', padding: 0 } }, '★') : null))) : null);
+        items.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(104px,1fr))', gap: 10 } },
+          items.map((it, i) => {
+            const isCover = !!(st.coverIds && st.coverIds[key] && st.coverIds[key] === it.publicId);
+            return h('div', { key: i, style: { position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: '#eee6d8', boxShadow: isCover ? '0 0 0 3px #f0b429' : 'none' } },
+              h('img', { src: it.thumb, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }),
+              it.isVideo ? h('div', { style: { position: 'absolute', top: 5, left: 5, background: 'rgba(30,22,17,.65)', color: '#fff', fontSize: 10, padding: '1px 6px', borderRadius: 4 } }, 'video') : null,
+              isCover ? h('div', { style: { position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top,rgba(30,22,17,.8),transparent)', color: '#f6c667', fontSize: 10, fontWeight: 700, letterSpacing: '.07em', textAlign: 'center', padding: '10px 2px 4px' } }, 'FEATURED') : null,
+              h('button', { title: 'Delete this file', 'aria-label': 'Delete', onClick: () => this.backendMode() ? this.backendDelete(it.publicId, it.resourceType) : alert('Delete activates once your backend is deployed. In this preview, remove photos from your Cloudinary Media Library.'),
+                style: { position: 'absolute', top: 5, right: 5, width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'rgba(178,59,46,.92)', color: '#fff', fontSize: 16, lineHeight: '26px', cursor: 'pointer', padding: 0 } }, '×'),
+              (key !== 'hero' && key !== 'about') ? h('button', { title: isCover ? 'This is the featured cover' : 'Set as featured cover', 'aria-label': 'Set as featured cover',
+                onClick: () => this.backendFeature(key, it.publicId, it.resourceType),
+                style: { position: 'absolute', top: 5, left: it.isVideo ? 'auto' : 5, right: it.isVideo ? 36 : 'auto', width: 26, height: 26, borderRadius: '50%', border: 'none', background: isCover ? '#f0b429' : 'rgba(30,22,17,.6)', color: isCover ? '#3c2f27' : '#f6c667', fontSize: 14, lineHeight: '26px', cursor: 'pointer', padding: 0 } }, '★') : null);
+          }))
+          : h('div', { style: { fontSize: 13, color: '#9c9084', padding: '14px 0 2px', lineHeight: 1.6 } },
+              key === 'hero' ? 'No cover photo yet — upload one and it becomes the homepage banner.'
+              : key === 'about' ? 'No About photo yet — upload one for the About section.'
+              : 'Nothing here yet. Upload a few files, then tap ★ on the one you want as this category’s cover.'));
     };
     const busyD = this.state.busy === 'delivery';
     const deliveries = h('div', { style: { ...card, background: '#f1ebdf' } },
@@ -610,10 +680,44 @@ class Component extends DCLogic {
           h('input', { type: 'file', multiple: true, accept: 'image/*,video/*', disabled: busyD, style: { display: 'none' },
             onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.deliveryUpload(this.state.deliveryCode, fs, this.state.deliveryExpires); } }))),
       this.state.deliveryCode ? h('div', { style: { fontSize: 12, color: '#8a7a68', marginTop: 10, wordBreak: 'break-all' } }, 'Share link: ', h('code', null, '?gallery=' + this.state.deliveryCode), this.state.deliveryExpires ? ' · auto-deletes ' + this.state.deliveryExpires : '') : null);
-    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, marginTop: 26 } },
-      deliveries,
+    // ---- account tab --------------------------------------------------------
+    const inp = { padding: '11px 13px', border: '1px solid rgba(154,173,139,.5)', borderRadius: 9, fontSize: 15, fontFamily: 'inherit', background: '#faf7f0', width: '100%' };
+    const field = (label, nm, auto) => h('label', { key: nm, style: { fontSize: 13, fontWeight: 600, color: '#5a4d43', display: 'flex', flexDirection: 'column', gap: 6 } }, label,
+      h('input', { name: nm, type: 'password', required: true, autoComplete: auto, style: inp }));
+    const noStore = !!(st.profile && st.profile.canChangePassword === false);
+    const account = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
+      h('div', { style: card },
+        h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 22, margin: '0 0 12px' } }, 'Account'),
+        h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12, fontSize: 13.5 } },
+          h('div', null, h('div', { style: { fontSize: 11, color: '#9c9084', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Studio'), h('div', { style: { marginTop: 3 } }, name)),
+          h('div', null, h('div', { style: { fontSize: 11, color: '#9c9084', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Login name'), h('div', { style: { marginTop: 3 } }, (st.profile && st.profile.slug) || '—')),
+          h('div', null, h('div', { style: { fontSize: 11, color: '#9c9084', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Media folder'), h('div', { style: { marginTop: 3 } }, (st.profile && st.profile.folder) || '—')),
+          h('div', null, h('div', { style: { fontSize: 11, color: '#9c9084', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Password changed'),
+            h('div', { style: { marginTop: 3 } }, (st.profile && st.profile.passwordUpdatedAt) ? new Date(st.profile.passwordUpdatedAt).toLocaleDateString() : 'Never')))),
+      h('form', { onSubmit: (e) => { e.preventDefault(); const f = e.target; this.changePassword(f.currentPassword.value, f.newPassword.value, f.confirmPassword.value).then(ok => { if (ok) f.reset(); }); },
+        style: { ...card, display: 'flex', flexDirection: 'column', gap: 13, maxWidth: 460 } },
+        h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 22, margin: 0 } }, 'Change password'),
+        noStore
+          ? h('div', { style: { fontSize: 13, color: '#8a6d3b', background: 'rgba(240,180,41,.12)', border: '1px solid rgba(240,180,41,.4)', borderRadius: 9, padding: '10px 12px', lineHeight: 1.6 } },
+              'Password changes can’t be saved yet — this deployment has no persistent volume, so a new password would be lost on the next deploy. Add a Railway Volume mounted at /data to switch this on.')
+          : h('div', { style: { fontSize: 12.5, color: '#9c9084', lineHeight: 1.6 } }, 'At least 10 characters. You’ll use the new password the next time you sign in.'),
+        field('Current password', 'currentPassword', 'current-password'),
+        field('New password', 'newPassword', 'new-password'),
+        field('Confirm new password', 'confirmPassword', 'new-password'),
+        st.pwErr ? h('div', { style: { color: '#b23b2e', fontSize: 13, background: 'rgba(178,59,46,.07)', border: '1px solid rgba(178,59,46,.2)', borderRadius: 9, padding: '9px 12px' } }, st.pwErr) : null,
+        st.pwOk ? h('div', { style: { color: '#4b6b3a', fontSize: 13, background: 'rgba(154,173,139,.16)', border: '1px solid rgba(154,173,139,.5)', borderRadius: 9, padding: '9px 12px' } }, st.pwOk) : null,
+        h('button', { type: 'submit', disabled: st.pwBusy || noStore,
+          style: { padding: 13, background: (st.pwBusy || noStore) ? '#c9b9a8' : '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13.5, fontWeight: 700, letterSpacing: '.05em', cursor: (st.pwBusy || noStore) ? 'default' : 'pointer', fontFamily: 'inherit' } },
+          st.pwBusy ? 'Saving…' : 'Update password')));
+
+    const work = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } },
       specials.map(s => sectionOf(s.key, s.label)),
       cats.map(c => sectionOf(c.key, c.label)));
+
+    return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, marginTop: 26, textAlign: 'left' } },
+      header,
+      tabs,
+      st.adminTab === 'account' ? account : (st.adminTab === 'deliveries' ? deliveries : work));
   }
 
   async loadCloud() {
@@ -621,6 +725,7 @@ class Component extends DCLogic {
     const labels = { newborn: 'Newborn', family: 'Family', cinematic: 'Cinematic', drone: 'Drone', video: 'Video / Reels', social: 'Social Reels' };
     const out = {};
     const covers = {};
+    const coverIds = {};   // category -> publicId of the featured asset (drives the ★ state)
     let blocked = false;
     await Promise.all(keys.map(async k => {
       out[k] = [];
@@ -670,14 +775,14 @@ class Component extends DCLogic {
       // FEATURED cover for this category (asset tagged <tag>_cover), image or video
       try {
         const rc = await fetch('https://res.cloudinary.com/' + this.CLOUD_NAME + '/image/list/' + tag + '_cover.json', { cache: 'no-store' });
-        if (rc.ok) { const cd = await rc.json(); const c = (cd.resources || [])[0]; if (c) covers[k] = 'https://res.cloudinary.com/' + this.CLOUD_NAME + '/image/upload/w_800,c_fill,q_auto,f_auto/' + c.public_id + '.' + c.format; }
+        if (rc.ok) { const cd = await rc.json(); const c = (cd.resources || [])[0]; if (c) { covers[k] = 'https://res.cloudinary.com/' + this.CLOUD_NAME + '/image/upload/w_800,c_fill,q_auto,f_auto/' + c.public_id + '.' + c.format; coverIds[k] = c.public_id; } }
       } catch (e) {}
       if (!covers[k]) { try {
         const rcv = await fetch('https://res.cloudinary.com/' + this.CLOUD_NAME + '/video/list/' + tag + '_cover.json', { cache: 'no-store' });
-        if (rcv.ok) { const cvd = await rcv.json(); const cv = (cvd.resources || [])[0]; if (cv) covers[k] = 'https://res.cloudinary.com/' + this.CLOUD_NAME + '/video/upload/w_800,c_fill,q_auto,so_0/' + cv.public_id + '.jpg'; }
+        if (rcv.ok) { const cvd = await rcv.json(); const cv = (cvd.resources || [])[0]; if (cv) { covers[k] = 'https://res.cloudinary.com/' + this.CLOUD_NAME + '/video/upload/w_800,c_fill,q_auto,so_0/' + cv.public_id + '.jpg'; coverIds[k] = cv.public_id; } }
       } catch (e) {} }
     }));
-    this.setState({ cloud: out, covers, listBlocked: blocked });
+    this.setState({ cloud: out, covers, coverIds, listBlocked: blocked });
   }
 
   openUploader(cat) {

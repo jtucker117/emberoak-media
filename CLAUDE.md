@@ -23,8 +23,29 @@ build of it. Treat the `.dc.html` as the source of truth for look & behavior.
 - The build that ships has `USE_BACKEND = true` and `API_BASE = ''` (same-origin).
   The design source keeps `USE_BACKEND = false` so it previews without a backend.
 
+## The compiled build has DIVERGED from the source
+`backend/public/index.html` is not a plain compile of `Ember & Oak.dc.html`. The
+shipped build is a **backend-only production variant**: the demo/preview fallbacks
+(`this.backendMode() ? … : alert(…)`, `demoAdmin`) are stripped, `USE_BACKEND` is
+`true`, Google Fonts are inlined as `@font-face` with asset UUIDs, and template
+`onClick` is rewritten to `sc-camel-on-click`. Do not copy the source in wholesale.
+
+The compiled file is a bundler shell: **line 382 is the entire inner document as one
+JSON-escaped string**. To edit it without the original design tool:
+1. Decode: `json.loads(line_382)`.
+2. Apply the source→compiled divergences listed above (see git history for a script
+   that reproduces the current build byte-for-byte — verify it before trusting it).
+3. Re-encode with `json.dumps(s, ensure_ascii=False).replace('</', '<' + chr(92)+'u002F')` — that
+   exact form round-trips the original byte-for-byte. The `</` escaping is required
+   or the string terminates its own `<script>` tag.
+
+No Node locally? `osascript -l JavaScript` (JavaScriptCore) parses the extracted
+component script and a wrapped copy of `server.js` — a real syntax check.
+
 ## API surface (backend/server.js)
 - `POST /api/login` `{slug,password}` → `{token}` (studio owner)
+- `GET  /api/me` (auth) → profile + `canChangePassword` + `passwordUpdatedAt`
+- `POST /api/change-password` (auth) `{currentPassword,newPassword}` → `{ok}`
 - `POST /api/sign-upload` (auth) `{category}` → signed params, folder `<slug>/<category>`
 - `GET  /api/list?category=` (auth) → studio's images+videos
 - `POST /api/delete` (auth) `{publicId,resourceType}` → delete inside own folder only

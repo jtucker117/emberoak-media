@@ -18,6 +18,7 @@
 
 import express from 'express';
 import cors from 'cors';
+import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { v2 as cloudinary } from 'cloudinary';
@@ -54,6 +55,50 @@ try { CLIENTS = JSON.parse(CLIENTS_JSON || '[]'); }
 catch (e) { console.error('[error] CLIENTS_JSON is not valid JSON:', e.message); }
 
 const findClient = (slug) => CLIENTS.find(c => c.slug === slug);
+
+// ---- persistent credential store ------------------------------------------
+// CLIENTS_JSON is the seed. When a studio changes its own password we must put
+// the new hash somewhere that survives a redeploy — Railway's container disk is
+// wiped every deploy, so this needs a mounted Volume (default /data).
+// If no writable volume exists the app still runs; password *changes* are simply
+// refused with a clear message rather than silently reverting on the next deploy.
+const CREDENTIALS_PATH = process.env.CREDENTIALS_PATH || '/data/credentials.json';
+let OVERRIDES = {}; // slug -> { passwordHash, updatedAt }
+try {
+  OVERRIDES = JSON.parse(fs.readFileSync(CREDENTIALS_PATH, 'utf8')) || {};
+  console.log(`[info] loaded ${Object.keys(OVERRIDES).length} stored credential(s) from ${CREDENTIALS_PATH}`);
+} catch (e) {
+  if (e.code !== 'ENOENT') console.warn('[warn] could not read credential store:', e.message);
+}
+// Writable is not enough: the container's own disk is writable too, and a password
+// saved there would silently vanish on the next deploy. A real Railway Volume is a
+// separate mount, so it reports a different device id than "/". Anything on the same
+// device as root is treated as "no store" rather than accepted and later lost.
+function credStoreWritable() {
+  const dir = path.dirname(CREDENTIALS_PATH);
+  try {
+    const st = fs.statSync(dir);
+    if (!st.isDirectory()) return false;
+    if (st.dev === fs.statSync('/').dev) return false; // ephemeral container disk
+    fs.accessSync(dir, fs.constants.W_OK);
+    return true;
+  } catch (e) { return false; }   // ENOENT = no volume mounted
+}
+function saveOverrides() {
+  fs.mkdirSync(path.dirname(CREDENTIALS_PATH), { recursive: true });
+  const tmp = `${CREDENTIALS_PATH}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(OVERRIDES, null, 2), { mode: 0o600 });
+  fs.renameSync(tmp, CREDENTIALS_PATH); // atomic: never leave a half-written file
+}
+// the hash actually in force for a client — stored override wins over CLIENTS_JSON
+async function verifyPassword(client, password) {
+  if (!client || !password) return false;
+  const ov = OVERRIDES[client.slug];
+  if (ov && ov.passwordHash) return bcrypt.compare(String(password), ov.passwordHash);
+  if (client.passwordHash) return bcrypt.compare(String(password), client.passwordHash);
+  if (client.password) return String(password) === String(client.password);
+  return false;
+}
 // every client is confined to its own top-level folder; default to the slug
 const folderOf = (c) => (c.folder || c.slug).replace(/^\/+|\/+$/g, '');
 const SAFE = /^[a-z0-9_-]+$/i; // category / slug / gallery-code charset
@@ -89,10 +134,8 @@ app.post('/api/login', async (req, res) => {
   const { slug, password } = req.body || {};
   const client = findClient(slug);
   if (!client || !password) return res.status(401).json({ error: 'Invalid login' });
-  // accept either a bcrypt hash (passwordHash) or a plain password field (easy onboarding)
-  let ok = false;
-  if (client.passwordHash) ok = await bcrypt.compare(String(password), client.passwordHash);
-  else if (client.password) ok = String(password) === String(client.password);
+  // a stored (self-service changed) hash wins; otherwise fall back to CLIENTS_JSON
+  const ok = await verifyPassword(client, password);
   if (!ok) return res.status(401).json({ error: 'Invalid login' });
   const token = jwt.sign({ slug: client.slug, folder: folderOf(client) }, SECRET, { expiresIn: '12h' });
   res.json({ token, client: { slug: client.slug, name: client.name || client.slug } });
@@ -104,6 +147,40 @@ function auth(req, res, next) {
   try { req.client = jwt.verify(t, SECRET); next(); }
   catch (e) { res.status(401).json({ error: 'Not authenticated' }); }
 }
+
+// ---- who am I (profile header + whether password changes can persist) ----
+app.get('/api/me', auth, (req, res) => {
+  const client = findClient(req.client.slug) || {};
+  const ov = OVERRIDES[req.client.slug];
+  res.json({
+    slug: req.client.slug,
+    name: client.name || req.client.slug,
+    folder: req.client.folder,
+    canChangePassword: credStoreWritable(),
+    passwordUpdatedAt: (ov && ov.updatedAt) || null,
+  });
+});
+
+// ---- change your own password (persisted to the mounted volume) ----
+app.post('/api/change-password', auth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  const client = findClient(req.client.slug);
+  if (!client) return res.status(401).json({ error: 'Unknown account' });
+  if (!(await verifyPassword(client, currentPassword)))
+    return res.status(401).json({ error: 'Current password is incorrect' });
+  const pw = String(newPassword || '');
+  if (pw.length < 10) return res.status(400).json({ error: 'New password must be at least 10 characters' });
+  if (pw === String(currentPassword)) return res.status(400).json({ error: 'New password must be different' });
+  if (!credStoreWritable())
+    return res.status(503).json({ error: 'Password storage is not set up. Add a Railway Volume mounted at /data, then try again.' });
+  try {
+    OVERRIDES[client.slug] = { passwordHash: await bcrypt.hash(pw, 12), updatedAt: new Date().toISOString() };
+    saveOverrides();
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: 'Could not save the new password', detail: String(e.message || e) });
+  }
+});
 
 // ---- signed, folder-locked upload ----
 app.post('/api/sign-upload', auth, (req, res) => {
@@ -187,7 +264,7 @@ app.post('/api/feature', auth, async (req, res) => {
   }
 });
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, clients: CLIENTS.length }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, clients: CLIENTS.length, credentialStore: credStoreWritable() ? 'writable' : 'unavailable' }));
 
 // ============================================================================
 //  CLIENT DELIVERIES — full-resolution galleries the studio hands to a client.
