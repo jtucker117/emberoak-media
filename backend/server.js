@@ -394,6 +394,31 @@ app.post('/api/feature', auth, async (req, res) => {
   }
 });
 
+// ---- promote an existing photo to the Cover / About slot ----
+// Copies it into <folder>/hero (or /about) rather than moving or re-tagging it:
+//   - moving would pull it out of its category
+//   - tagging alone would not work, because the admin lists by folder prefix
+// The duplicate is what the homepage reads, and the original stays put.
+app.post('/api/use-as', auth, async (req, res) => {
+  const { publicId, target } = req.body || {};
+  const slot = target === 'about' ? 'about' : 'hero';
+  if (!publicId) return res.status(400).json({ error: 'Missing publicId' });
+  if (!String(publicId).startsWith(`${req.client.folder}/`))
+    return res.status(403).json({ error: 'Not allowed for this client' });
+  try {
+    const src = cloudinary.url(publicId, { secure: true });   // the stored original
+    const out = await cloudinary.uploader.upload(src, {
+      folder: `${req.client.folder}/${slot}`,
+      tags: [req.client.slug, slot, `${req.client.slug}__${slot}`],
+      use_filename: true,
+      unique_filename: true,
+    });
+    res.json({ ok: true, publicId: out.public_id, slot });
+  } catch (e) {
+    res.status(500).json({ error: `Could not set the ${slot} photo`, detail: String(e.message || e) });
+  }
+});
+
 // ---- repair: give every asset in the studio's folder the tag the site lists by ----
 // Assets uploaded before SITE_SLUG was set only carry the bare category tag, so the
 // gallery cannot see them. This re-tags them in place; it never deletes anything.

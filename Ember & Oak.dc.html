@@ -584,6 +584,21 @@ class Component extends DCLogic {
 
   // Re-tag legacy assets so the gallery can see them (uploads made before the
   // slug-qualified tag existed carry only the bare category tag).
+  // promote a portfolio photo into the Cover (or About) slot
+  async useAs(publicId, slot, label) {
+    if (!confirm('Use this photo as the ' + (slot === 'about' ? 'About photo' : 'Cover photo') + '?\n\nIt stays in ' + (label || 'its category') + ' as well.')) return;
+    this.setState({ busy: 'useas' });
+    try {
+      const r = await fetch(this.apiBase() + '/api/use-as', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ publicId, target: slot }) });
+      if (r.status === 401) { this.sessionExpired(); this.setState({ busy: '' }); return; }
+      const d = await r.json();
+      if (!r.ok) { alert(d.error || 'Could not set that photo'); this.setState({ busy: '' }); return; }
+      alert(slot === 'about' ? 'About photo updated.' : 'Added to your Cover photos. With more than one cover, the homepage fades between them.');
+    } catch (e) { alert('Failed: ' + e.message); }
+    this.setState({ busy: '' });
+    this.loadCloud();
+  }
+
   async retagAll() {
     this.setState({ busy: 'retag' });
     try {
@@ -1051,6 +1066,9 @@ class Component extends DCLogic {
               isCover ? h('div', { style: { position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top,rgba(30,22,17,.8),transparent)', color: '#f6c667', fontSize: 10, fontWeight: 700, letterSpacing: '.07em', textAlign: 'center', padding: '10px 2px 4px' } }, 'FEATURED') : null,
               h('button', { title: 'Delete this file', 'aria-label': 'Delete', onClick: () => this.backendMode() ? this.backendDelete(it.publicId, it.resourceType) : alert('Delete activates once your backend is deployed. In this preview, remove photos from your Cloudinary Media Library.'),
                 style: { position: 'absolute', top: 5, right: 5, width: 26, height: 26, borderRadius: '50%', border: 'none', background: 'rgba(178,59,46,.92)', color: '#fff', fontSize: 16, lineHeight: '26px', cursor: 'pointer', padding: 0 } }, '×'),
+              (key !== 'hero' && key !== 'about' && !it.isVideo) ? h('button', { title: 'Use this photo as the homepage Cover',
+                onClick: () => this.useAs(it.publicId, 'hero', label),
+                style: { position: 'absolute', bottom: 5, left: 5, padding: '3px 9px', borderRadius: 999, border: 'none', background: 'rgba(30,22,17,.62)', color: '#fff', fontSize: 10, fontWeight: 700, letterSpacing: '.05em', cursor: 'pointer', fontFamily: 'inherit' } }, 'COVER') : null,
               (key !== 'hero' && key !== 'about') ? h('button', { title: isCover ? 'This is the featured cover' : 'Set as featured cover', 'aria-label': 'Set as featured cover',
                 onClick: () => this.backendFeature(key, it.publicId, it.resourceType),
                 style: { position: 'absolute', top: 5, left: it.isVideo ? 'auto' : 5, right: it.isVideo ? 36 : 'auto', width: 26, height: 26, borderRadius: '50%', border: 'none', background: isCover ? '#f0b429' : 'rgba(30,22,17,.6)', color: isCover ? '#3c2f27' : '#f6c667', fontSize: 14, lineHeight: '26px', cursor: 'pointer', padding: 0 } }, '★') : null);
