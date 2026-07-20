@@ -791,12 +791,12 @@ class Component extends DCLogic {
     } catch (e) {}
   }
 
-  async saveDelivSettings(code, pin) {
+  async saveDelivSettings(code, pin, extra) {
     try {
-      const r = await fetch(this.apiBase() + '/api/delivery/settings', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify({ code, pin }) });
+      const r = await fetch(this.apiBase() + '/api/delivery/settings', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token }, body: JSON.stringify(Object.assign({ code, pin }, extra || {})) });
       const d = await r.json();
       if (!r.ok) { alert(d.error || 'Could not save the access code'); return; }
-      alert(pin ? ('Access code set. Your client will need to enter “' + pin + '” to open this gallery.') : 'Access code removed — the link now opens without a code.');
+      if (!extra) alert(pin ? ('Access code set. Your client will need to enter “' + pin + '” to open this gallery.') : 'Access code removed — the link now opens without a code.');
       this.loadDelivSettings(code);
       this.loadDeliveries();
     } catch (e) { alert('Failed: ' + e.message); }
@@ -952,7 +952,7 @@ class Component extends DCLogic {
           h('div', { style: { textAlign: 'left' } },
             h('h2', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 30, margin: 0 } }, g.title),
             h('div', { style: { fontSize: 13, color: '#9c9084' } }, g.count + ' full-resolution files')),
-          h('button', { onClick: () => this.downloadAllZip(), disabled: this.state.galleryBusy,
+          (g.downloads === false) ? null : h('button', { onClick: () => this.downloadAllZip(), disabled: this.state.galleryBusy,
             style: { padding: '13px 24px', background: '#9e5423', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer' } },
             this.state.galleryBusy ? 'Preparing ZIP…' : '⬇ Download all (ZIP)')),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 12 } },
@@ -962,16 +962,19 @@ class Component extends DCLogic {
               style: { position: 'absolute', inset: 0, padding: 0, border: 'none', background: 'none', cursor: 'zoom-in', width: '100%', height: '100%' } },
               h('img', { src: it.thumb, alt: it.filename, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } })),
             it.isVideo ? h('div', { style: { position: 'absolute', top: 6, left: 6, background: 'rgba(30,22,17,.6)', color: '#fff', fontSize: 10, padding: '1px 6px', borderRadius: 4 } }, 'video') : null,
-            h('a', { href: it.download, download: it.filename, title: 'Download ' + it.filename,
+            (g.downloads === false || !it.download) ? null : h('a', { href: it.download, download: it.filename, title: 'Download ' + it.filename,
               style: { position: 'absolute', bottom: 6, right: 6, width: 32, height: 32, borderRadius: '50%', background: 'rgba(30,22,17,.68)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, textDecoration: 'none' } }, '\u2b07')))),
         h('div', { style: { marginTop: 18, display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' } },
           h('button', { onClick: () => this.toggleSlideshow(),
             style: { padding: '11px 20px', background: 'none', border: '1px solid rgba(154,173,139,.6)', borderRadius: 999, color: '#5a4d43', fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } },
             this.state.slideshow ? '\u23f8 Pause slideshow' : '\u25b6 Play slideshow'),
-          this.canSharePhotos() ? h('button', { onClick: () => this.saveToPhotos(g.items), disabled: !!this.state.saveMsg,
+          (this.canSharePhotos() && g.downloads !== false) ? h('button', { onClick: () => this.saveToPhotos(g.items), disabled: !!this.state.saveMsg,
             style: { padding: '11px 20px', background: '#9aad8b', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } },
             this.state.saveMsg || '\u2b07 Save all to Photos') : null,
-          h('span', { style: { fontSize: 13, color: '#9c9084' } }, 'Tap a photo to view it large, or \u2b07 to download the full-resolution file.')),
+          h('span', { style: { fontSize: 13, color: '#9c9084' } },
+            g.downloads === false
+              ? 'Tap a photo to view it large. Downloads are turned off for this gallery — contact the studio for the final files.'
+              : 'Tap a photo to view it large, or \u2b07 to download the full-resolution file.')),
         h('button', { onClick: () => this.setState({ gallery: null, deliveryCode: '' }), style: { marginTop: 6, background: 'none', border: 'none', color: '#9e5423', fontWeight: 700, cursor: 'pointer', fontSize: 13 } }, '← Open a different gallery'),
         this.renderViewer(g));
     }
@@ -1007,9 +1010,9 @@ class Component extends DCLogic {
       h('div', { onClick: (e) => e.stopPropagation(), style: { color: '#f4ece2', fontSize: 13, display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap', justifyContent: 'center' } },
         h('span', null, (i + 1) + ' of ' + g.items.length),
         h('span', { style: { opacity: .7, wordBreak: 'break-all' } }, it.filename),
-        h('a', { href: it.download, download: it.filename,
+        (!it.download) ? null : h('a', { href: it.download, download: it.filename,
           style: { background: '#9e5423', color: '#fff', padding: '9px 18px', borderRadius: 999, fontWeight: 700, textDecoration: 'none' } }, '\u2b07 Download full-res'),
-        this.canSharePhotos() ? h('button', { onClick: (e) => { e.stopPropagation(); this.saveToPhotos([it]); },
+        (this.canSharePhotos() && it.download) ? h('button', { onClick: (e) => { e.stopPropagation(); this.saveToPhotos([it]); },
           style: { background: '#9aad8b', color: '#fff', padding: '9px 18px', borderRadius: 999, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 } }, 'Save to Photos') : null));
   }
 
@@ -1287,6 +1290,17 @@ class Component extends DCLogic {
                   (set_ && set_.canSave === false)
                     ? 'Needs a Railway Volume at /data before codes can be saved.'
                     : ((set_ && set_.pin) ? 'Clients must enter this code to open the gallery.' : 'Anyone with the link can open this gallery.'))),
+              h('div', { style: { display: 'flex', gap: 18, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12, paddingBottom: 12, borderBottom: '1px dashed rgba(154,173,139,.4)' } },
+                h('label', { style: { display: 'flex', gap: 7, alignItems: 'center', fontSize: 12.5, color: '#5a4d43', fontWeight: 600, cursor: 'pointer' } },
+                  h('input', { type: 'checkbox', checked: !!(set_ && set_.watermark),
+                    onChange: (e) => this.saveDelivSettings(g.code, (set_ && set_.pin) || '', { watermark: e.target.checked, downloads: !(set_ && set_.downloads === false) }) }),
+                  'Watermark previews'),
+                h('label', { style: { display: 'flex', gap: 7, alignItems: 'center', fontSize: 12.5, color: '#5a4d43', fontWeight: 600, cursor: 'pointer' } },
+                  h('input', { type: 'checkbox', checked: !(set_ && set_.downloads === false),
+                    onChange: (e) => this.saveDelivSettings(g.code, (set_ && set_.pin) || '', { downloads: e.target.checked, watermark: !!(set_ && set_.watermark) }) }),
+                  'Allow downloads'),
+                h('div', { style: { fontSize: 11.5, color: '#9c9084', flex: '1 1 220px', lineHeight: 1.5 } },
+                  'For a proofing gallery: watermark on, downloads off. The watermark covers what clients view — with downloads left on they still receive the clean original.')),
               progressEl(addBusy),
               (items_ && items_.length) ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(92px,1fr))', gap: 8 } },
                 items_.map((it, k) => h('div', { key: k, style: { position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', background: '#eee6d8' } },

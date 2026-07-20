@@ -252,7 +252,7 @@ function resolveGallery(code) {
   if (!code || !SAFE.test(code)) return null;
   // a PIN/title set from Studio Admin outranks the env config
   const st = GSTORE[code];
-  if (st) return { code, title: st.title || code, pin: st.pin || null, folder: `${DROOT}/${code}`, expires: st.expires || null };
+  if (st) return { code, title: st.title || code, pin: st.pin || null, folder: `${DROOT}/${code}`, expires: st.expires || null, watermark: !!st.watermark, downloads: st.downloads !== false };
   const g = GALLERIES.find(x => x.code === code);
   if (g) return { code, title: g.title || code, pin: g.pin || null, folder: (g.folder || `${DROOT}/${code}`).replace(/^\/+|\/+$/g, ''), expires: g.expires || null };
   if (OPEN_DELIVERIES) return { code, title: code, pin: null, folder: `${DROOT}/${code}`, expires: null };
@@ -744,13 +744,15 @@ app.get('/api/delivery/settings', auth, (req, res) => {
     code,
     pin: st.pin || cfg.pin || '',
     title: st.title || cfg.title || '',
+    watermark: !!st.watermark,
+    downloads: st.downloads !== false,     // downloads stay on unless turned off
     canSave: credStoreWritable(),
     fromEnv: !GSTORE[code] && !!cfg.code,
   });
 });
 
 app.post('/api/delivery/settings', auth, (req, res) => {
-  const { code, pin, title } = req.body || {};
+  const { code, pin, title, watermark, downloads } = req.body || {};
   if (!SAFE.test(String(code || ''))) return res.status(400).json({ error: 'Bad gallery code' });
   const p = String(pin == null ? '' : pin).trim();
   if (p && !/^[A-Za-z0-9-]{4,32}$/.test(p))
@@ -758,8 +760,17 @@ app.post('/api/delivery/settings', auth, (req, res) => {
   if (!credStoreWritable())
     return res.status(503).json({ error: 'Gallery settings need storage. Add a Railway Volume mounted at /data, then try again.' });
   try {
-    GSTORE[code] = { pin: p, title: String(title || '').slice(0, 120), updatedAt: new Date().toISOString() };
-    if (!p && !GSTORE[code].title) delete GSTORE[code];
+    const prev = GSTORE[code] || {};
+    GSTORE[code] = {
+      pin: p,
+      title: String(title == null ? (prev.title || '') : title).slice(0, 120),
+      watermark: watermark == null ? !!prev.watermark : !!watermark,
+      downloads: downloads == null ? (prev.downloads !== false) : !!downloads,
+      updatedAt: new Date().toISOString(),
+    };
+    // only drop the entry when nothing non-default is set
+    const g = GSTORE[code];
+    if (!g.pin && !g.title && !g.watermark && g.downloads) delete GSTORE[code];
     saveGalleryStore();
     res.json({ ok: true, pin: p });
   } catch (e) {
@@ -799,25 +810,33 @@ app.post('/api/gallery/open', async (req, res) => {
       return res.status(410).json({ error: 'This gallery has expired and is no longer available' });
     }
     const nameOf = (pid) => pid.split('/').pop();
+    // Proofing watermark: a tiled-ish diagonal caption over the preview only.
+    // Kept to letters/numbers/spaces so it can't break the transformation URL.
+    const wmText = String((CLIENTS[0] && CLIENTS[0].name) || 'PROOF').replace(/[^A-Za-z0-9 ]+/g, ' ').trim().slice(0, 40) || 'PROOF';
+    const wmLayer = { overlay: { font_family: 'Arial', font_size: 90, font_weight: 'bold', text: wmText },
+                      color: '#FFFFFF', opacity: 32, gravity: 'center', angle: -30 };
+    const allowDownload = g.downloads !== false;
     const map = (r, isVideo) => ({
       publicId: r.public_id,
       isVideo,
       filename: nameOf(r.public_id) + '.' + r.format,
       // preview keeps bandwidth low; download link forces the FULL-RES original
-      thumb: cloudinary.url(r.public_id, { resource_type: isVideo ? 'video' : 'image', transformation: [{ width: 600, crop: 'limit', quality: 'auto', fetch_format: isVideo ? undefined : 'auto' }], format: isVideo ? 'jpg' : undefined, start_offset: isVideo ? '0' : undefined }),
+      thumb: cloudinary.url(r.public_id, { resource_type: isVideo ? 'video' : 'image', transformation: [{ width: 600, crop: 'limit', quality: 'auto', fetch_format: isVideo ? undefined : 'auto' }].concat(g.watermark && !isVideo ? [wmLayer] : []), format: isVideo ? 'jpg' : undefined, start_offset: isVideo ? '0' : undefined }),
       // viewer/slideshow uses a large preview, NOT the original — full-res originals
       // would burn the bandwidth quota just from browsing.
       preview: isVideo
         ? cloudinary.url(r.public_id, { resource_type: 'video', transformation: [{ quality: 'auto' }], format: 'mp4' })
-        : cloudinary.url(r.public_id, { transformation: [{ width: 1800, crop: 'limit', quality: 'auto', fetch_format: 'auto' }] }),
-      download: cloudinary.url(r.public_id, { resource_type: isVideo ? 'video' : 'image', flags: 'attachment' }),
+        : cloudinary.url(r.public_id, { transformation: [{ width: 1800, crop: 'limit', quality: 'auto', fetch_format: 'auto' }].concat(g.watermark ? [wmLayer] : []) }),
+      // no download URL at all when downloads are off — hiding the button client-side
+      // would still leave the original one right-click away
+      download: allowDownload ? cloudinary.url(r.public_id, { resource_type: isVideo ? 'video' : 'image', flags: 'attachment' }) : '',
     });
     const items = [
       ...(imgs.resources || []).map(r => map(r, false)),
       ...(vids.resources || []).map(r => map(r, true)),
     ];
     if (!items.length) return res.status(404).json({ error: 'This gallery has no photos yet' });
-    res.json({ title: g.title, count: items.length, items });
+    res.json({ title: g.title, count: items.length, items, downloads: allowDownload, watermark: !!g.watermark });
   } catch (e) {
     res.status(500).json({ error: 'Could not open gallery', detail: String(e.message || e) });
   }
@@ -829,6 +848,7 @@ app.post('/api/gallery/zip', async (req, res) => {
   const g = resolveGallery(String(code || '').trim());
   if (!g) return res.status(404).json({ error: 'Gallery not found' });
   if (g.pin && String(pin || '') !== String(g.pin)) return res.status(401).json({ error: 'Wrong access code' });
+  if (g.downloads === false) return res.status(403).json({ error: 'Downloads are turned off for this gallery' });
   try {
     const url = cloudinary.utils.download_zip_url({
       resource_type: 'image',
