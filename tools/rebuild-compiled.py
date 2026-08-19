@@ -74,6 +74,27 @@ TEMPLATE_DROP = (
     '        </div>\n')
 
 
+# Mechanical rewrites the compiler applies to the TEMPLATE half. Patch anchors are
+# searched for in the COMPILED prefix, so both sides of every hunk must be pushed
+# through these before matching — otherwise an edit whose context happens to include
+# an onClick (most of this template) can never match and the run aborts.
+# Not modelled: HTML comments are stripped by the compiler, so keep hunk context
+# clear of `<!-- ... -->` lines.
+TEMPLATE_REWRITES = [
+    ('onClick=', 'sc-camel-on-click='),
+    ('onSubmit=', 'sc-camel-on-submit='),
+    ('<select ', '<sc-raw-select '),
+    ('</select>', '</sc-raw-select>'),
+    ('assets/emberoak-icon.png', 'f88a7de3-80ee-4dc3-982c-9a8e9da85cb3'),
+]
+
+
+def compiled_form(s):
+    for a, b in TEMPLATE_REWRITES:
+        s = s.replace(a, b)
+    return s
+
+
 def template_patches(old_tpl, new_tpl):
     """Edits made to the TEMPLATE half of the source (everything before the component
     script) must be carried into the compiled prefix too — the compiled template is
@@ -98,6 +119,7 @@ def template_patches(old_tpl, new_tpl):
 
 def apply_template_patches(prefix, patches):
     for old, new in patches:
+        old, new = compiled_form(old), compiled_form(new)
         c = prefix.count(old)
         if c != 1:
             # the compiler rewrites some attributes (onClick -> sc-camel-on-click),
