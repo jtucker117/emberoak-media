@@ -22,6 +22,7 @@ import fs from 'fs';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { v2 as cloudinary } from 'cloudinary';
+import nodemailer from 'nodemailer';
 
 const {
   CLOUDINARY_CLOUD_NAME,
@@ -34,6 +35,13 @@ const {
   DELIVERIES_ROOT = 'deliveries',
   ALLOWED_ORIGINS = '*',
   PORT = 3000,
+  // Contact form -> email. SMTP_PASS is a Google app password, not the account
+  // password. Leave unset and inquiries still persist; only the email is skipped.
+  SMTP_HOST = 'smtp.gmail.com',
+  SMTP_PORT = 465,
+  SMTP_USER,
+  SMTP_PASS,
+  INQUIRY_TO,
 } = process.env;
 
 if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET)
@@ -632,6 +640,118 @@ app.post('/api/videos/delete', auth, (req, res) => {
   if (VIDEOS.length === before) return res.status(404).json({ error: 'No such video' });
   try { saveVideos(); res.json({ ok: true }); }
   catch (e) { res.status(500).json({ error: 'Could not save', detail: String(e.message || e) }); }
+});
+
+// ---- contact inquiries ------------------------------------------------------
+// The form used to throw submissions away. Every inquiry is now written to disk
+// FIRST and emailed second, so a mail outage can never lose a lead.
+const INQUIRIES_PATH = process.env.INQUIRIES_PATH || '/data/inquiries.json';
+let INQUIRIES = [];
+try {
+  INQUIRIES = JSON.parse(fs.readFileSync(INQUIRIES_PATH, 'utf8')) || [];
+  console.log(`[info] loaded ${INQUIRIES.length} stored inquiry(ies)`);
+} catch (e) {
+  if (e.code !== 'ENOENT') console.warn('[warn] could not read inquiries:', e.message);
+}
+function saveInquiries() {
+  fs.mkdirSync(path.dirname(INQUIRIES_PATH), { recursive: true });
+  const tmp = `${INQUIRIES_PATH}.tmp`;
+  fs.writeFileSync(tmp, JSON.stringify(INQUIRIES, null, 2), { mode: 0o600 });
+  fs.renameSync(tmp, INQUIRIES_PATH);
+}
+
+const mailer = SMTP_USER && SMTP_PASS
+  ? nodemailer.createTransport({
+      host: SMTP_HOST,
+      port: Number(SMTP_PORT),
+      secure: Number(SMTP_PORT) === 465,
+      auth: { user: SMTP_USER, pass: SMTP_PASS },
+    })
+  : null;
+if (!mailer) console.warn('[warn] SMTP_USER/SMTP_PASS not set — inquiries will be stored but not emailed.');
+
+const esc = (v) => String(v == null ? '' : v)
+  .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+async function emailInquiry(item) {
+  if (!mailer) return { sent: false, reason: 'SMTP not configured' };
+  const to = INQUIRY_TO || SMTP_USER;
+  const rows = [
+    ['Name', item.name], ['Email', item.email], ['Session type', item.sessionType],
+    ['Ideal date', item.date || '—'],
+  ].map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;color:#6f6357">${esc(k)}</td><td style="padding:4px 0"><strong>${esc(v)}</strong></td></tr>`).join('');
+  await mailer.sendMail({
+    from: `"Ember & Oak website" <${SMTP_USER}>`,
+    to,
+    // so hitting Reply in the inbox answers the client, not yourself
+    replyTo: `"${item.name.replace(/"/g, "'")}" <${item.email}>`,
+    subject: `New inquiry — ${item.sessionType} — ${item.name}`,
+    text: `${item.name} <${item.email}>\nSession type: ${item.sessionType}\nIdeal date: ${item.date || '—'}\n\n${item.message}`,
+    html: `<div style="font-family:system-ui,sans-serif;font-size:15px;color:#3c2f27">
+<h2 style="font-weight:600;margin:0 0 14px">New inquiry from the website</h2>
+<table style="border-collapse:collapse;margin-bottom:16px">${rows}</table>
+<div style="white-space:pre-wrap;line-height:1.6;border-left:3px solid #9aad8b;padding-left:14px">${esc(item.message)}</div>
+</div>`,
+  });
+  return { sent: true };
+}
+
+// Public: anyone can submit. Kept deliberately small — name, email, message.
+app.post('/api/inquiry', async (req, res) => {
+  const b = req.body || {};
+  const name = String(b.name || '').trim().slice(0, 120);
+  const email = String(b.email || '').trim().slice(0, 200);
+  const message = String(b.message || '').trim().slice(0, 5000);
+  const sessionType = String(b.sessionType || '').trim().slice(0, 80) || 'Not specified';
+  const date = String(b.date || '').trim().slice(0, 40);
+
+  if (!name || !email || !message)
+    return res.status(400).json({ error: 'Please fill in your name, email, and a message.' });
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
+    return res.status(400).json({ error: 'That email address does not look right.' });
+  if (b.website) return res.json({ ok: true });   // honeypot: silently accept and drop
+
+  const item = {
+    id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    name, email, sessionType, date, message,
+    at: new Date().toISOString(), read: false,
+  };
+
+  let stored = false;
+  try { INQUIRIES.unshift(item); saveInquiries(); stored = true; }
+  catch (e) { console.error('[error] could not store inquiry:', e.message); }
+
+  let mail = { sent: false };
+  try { mail = await emailInquiry(item); }
+  catch (e) { console.error('[error] could not email inquiry:', e.message); mail = { sent: false, reason: e.message }; }
+
+  // Only a total failure is worth telling the visitor about — if we have it
+  // written down, the studio will see it even when mail is broken.
+  if (!stored && !mail.sent)
+    return res.status(500).json({ error: 'Something went wrong sending that. Please email jordan@emberandoak.media directly.' });
+  res.json({ ok: true });
+});
+
+app.get('/api/inquiries', auth, (_req, res) => {
+  res.json({ items: INQUIRIES, unread: INQUIRIES.filter(i => !i.read).length });
+});
+
+app.post('/api/inquiry/read', auth, (req, res) => {
+  const { id, read = true } = req.body || {};
+  const item = INQUIRIES.find(i => i.id === id);
+  if (!item) return res.status(404).json({ error: 'Not found' });
+  item.read = !!read;
+  try { saveInquiries(); } catch (e) { return res.status(500).json({ error: 'Could not save' }); }
+  res.json({ ok: true, unread: INQUIRIES.filter(i => !i.read).length });
+});
+
+app.post('/api/inquiry/delete', auth, (req, res) => {
+  const { id } = req.body || {};
+  const i = INQUIRIES.findIndex(x => x.id === id);
+  if (i === -1) return res.status(404).json({ error: 'Not found' });
+  INQUIRIES.splice(i, 1);
+  try { saveInquiries(); } catch (e) { return res.status(500).json({ error: 'Could not save' }); }
+  res.json({ ok: true, unread: INQUIRIES.filter(x => !x.read).length });
 });
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, clients: CLIENTS.length, credentialStore: credStoreWritable() ? 'writable' : 'unavailable' }));

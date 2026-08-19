@@ -319,12 +319,16 @@
         </sc-if>
         <sc-if value="{{ showForm }}" hint-placeholder-val="{{ true }}">
         <form onSubmit="{{ submitContact }}" data-contact-form="" style="display:flex;flex-direction:column;gap:16px">
-          <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Your name<input required="" type="text" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"></label>
-          <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Email<input required="" type="email" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"></label>
+          <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Your name<input data-field="name" required="" type="text" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"></label>
+          <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Email<input data-field="email" required="" type="email" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"></label>
           <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Session type<select data-field="session" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"><option>Newborn</option><option>Family</option><option>Cinematic</option><option>Drone</option><option>Video / Reels</option><option>Social media reels</option><option>Something else</option></select></label>
-          <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Ideal date<input type="date" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"></label>
+          <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Ideal date<input data-field="date" type="date" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"></label>
+          <input data-field="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
           <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Tell me about it<textarea data-field="message" rows="4" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0;resize:vertical"></textarea></label>
-          <button type="submit" style="margin-top:4px;padding:14px;background:#9e5423;color:#fff;border:none;border-radius:999px;font-size:14px;font-weight:700;letter-spacing:.05em;cursor:pointer" style-hover="background:#7d3f18">Send Inquiry</button>
+          <sc-if value="{{ hasContactErr }}" hint-placeholder-val="{{ false }}">
+            <div style="color:#b23b2e;font-size:13px;background:rgba(178,59,46,.07);border:1px solid rgba(178,59,46,.2);border-radius:9px;padding:9px 12px">{{ contactErr }}</div>
+          </sc-if>
+          <button type="submit" style="margin-top:4px;padding:14px;background:#9e5423;color:#fff;border:none;border-radius:999px;font-size:14px;font-weight:700;letter-spacing:.05em;cursor:pointer" style-hover="background:#7d3f18">{{ contactBtnLabel }}</button>
         </form>
         </sc-if>
       </div>
@@ -478,8 +482,9 @@
 </x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:&quot;100%&quot;,&quot;height&quot;:900}}">
 class Component extends DCLogic {
-  state = { page: 'home', cat: 'all', lb: null, contactSent: false, cloud: {}, covers: {}, coverIds: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '',
+  state = { page: 'home', cat: 'all', lb: null, contactSent: false, contactBusy: false, contactErr: '', cloud: {}, covers: {}, coverIds: {}, token: null, clientName: '', loginErr: '', busy: '', gallery: null, galleryErr: '', galleryBusy: false, deliveryCode: '',
             profile: null, adminTab: 'work', pwBusy: false, pwErr: '', pwOk: '', deliveries: [],
+            inquiries: [], inqUnread: 0,
             upTotal: 0, upDone: 0, gv: null, slideshow: false, openDeliv: '', delivItems: {}, delivSettings: {}, saveMsg: '', videos: [], vidBusy: false, openSec: {}, heroIdx: 0, cats: null, catBusy: false, order: {}, agActive: 0, navOpen: false };
 
   // ── CLOUDINARY CONFIG ── replace these two with your account values ──
@@ -507,7 +512,7 @@ class Component extends DCLogic {
 
   componentDidMount() {
     let tok = null;
-    if (this.backendMode()) { try { tok = localStorage.getItem('eo_token'); const n = localStorage.getItem('eo_client'); if (tok) { this.setState({ token: tok, clientName: n || '' }); this.loadProfile(tok); this.loadDeliveries(); } } catch (_) {} }
+    if (this.backendMode()) { try { tok = localStorage.getItem('eo_token'); const n = localStorage.getItem('eo_client'); if (tok) { this.setState({ token: tok, clientName: n || '' }); this.loadProfile(tok); this.loadDeliveries(); this.loadInquiries(); } } catch (_) {} }
     if (this.cloudReady()) this.loadCloud(tok);
     this.loadVideos();
     this.loadCategories();
@@ -530,6 +535,7 @@ class Component extends DCLogic {
       this.setState({ token: d.token, clientName: d.client.name, busy: '' });
       this.loadProfile();
       this.loadDeliveries();
+      this.loadInquiries();
       this.loadCloud(d.token);
     } catch (e) { this.setState({ loginErr: 'Could not reach the server', busy: '' }); }
   }
@@ -843,6 +849,29 @@ class Component extends DCLogic {
     } catch (e) {}
   }
 
+  async loadInquiries() {
+    if (!this.backendMode() || !this.state.token) return;
+    try {
+      const r = await fetch(this.apiBase() + '/api/inquiries', { headers: { Authorization: 'Bearer ' + this.state.token } });
+      if (r.status === 401) return this.sessionExpired();
+      const d = await r.json();
+      if (r.ok) this.setState({ inquiries: d.items || [], inqUnread: d.unread || 0 });
+    } catch (e) {}
+  }
+
+  async inquiryAction(pathname, id, extra) {
+    if (!this.state.token) return;
+    try {
+      const r = await fetch(this.apiBase() + pathname, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + this.state.token },
+        body: JSON.stringify(Object.assign({ id }, extra || {})),
+      });
+      if (r.status === 401) return this.sessionExpired();
+      if (r.ok) this.loadInquiries();
+    } catch (e) {}
+  }
+
   deliveryLink(code) {
     var origin = '';
     try { origin = location.origin; } catch (_) {}
@@ -1141,11 +1170,12 @@ class Component extends DCLogic {
       h('button', { onClick: () => this.logout(), style: { padding: '9px 18px', background: 'none', border: '1px solid rgba(154,173,139,.6)', borderRadius: 999, color: '#5a4d43', fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } }, 'Sign out'));
 
     // ---- tabs ---------------------------------------------------------------
-    const tab = (id, label) => h('button', { key: id, onClick: () => { this.setState({ adminTab: id }); if (id === 'deliveries') this.loadDeliveries(); },
+    const tab = (id, label) => h('button', { key: id, onClick: () => { this.setState({ adminTab: id }); if (id === 'deliveries') this.loadDeliveries(); if (id === 'inbox') this.loadInquiries(); },
       style: { padding: '10px 20px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, letterSpacing: '.04em',
         background: st.adminTab === id ? '#9e5423' : 'transparent', color: st.adminTab === id ? '#fff' : '#6f6357' } }, label);
     const tabs = h('div', { style: { display: 'flex', gap: 6, background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 999, padding: 6, alignSelf: 'flex-start', flexWrap: 'wrap' } },
-      tab('work', 'My Work'), tab('videos', 'Videos'), tab('deliveries', 'Client Deliveries'), tab('account', 'Account'));
+      tab('work', 'My Work'), tab('videos', 'Videos'), tab('deliveries', 'Client Deliveries'),
+      tab('inbox', st.inqUnread ? 'Inbox (' + st.inqUnread + ')' : 'Inbox'), tab('account', 'Account'));
 
     const progressEl = (active) => (active && st.upTotal) ? h('div', { style: { margin: '12px 0 2px' } },
       h('div', { style: { fontSize: 12.5, color: '#6f6357', marginBottom: 5, fontWeight: 600 } },
@@ -1397,10 +1427,36 @@ class Component extends DCLogic {
 
     const deliveriesPanel = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } }, deliveries, delivList);
 
+    // ---- inbox: website inquiries ------------------------------------------
+    const when = (iso) => { try { return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }); } catch (_) { return iso; } };
+    const inqRow = (q) => h('div', { key: q.id, style: { background: '#fff', border: '1px solid ' + (q.read ? 'rgba(154,173,139,.3)' : '#9aad8b'),
+        borderRadius: 12, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 8 } },
+      h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'baseline' } },
+        h('div', null,
+          !q.read ? h('span', { style: { display: 'inline-block', width: 8, height: 8, borderRadius: 999, background: '#9e5423', marginRight: 8 } }) : null,
+          h('strong', { style: { fontSize: 15 } }, q.name),
+          h('span', { style: { color: '#6f6357', fontSize: 13 } }, '  ' + q.sessionType)),
+        h('span', { style: { fontSize: 12, color: '#9c9084' } }, when(q.at))),
+      q.date ? h('div', { style: { fontSize: 12.5, color: '#6f6357' } }, 'Ideal date: ' + q.date) : null,
+      h('div', { style: { whiteSpace: 'pre-wrap', fontSize: 14, lineHeight: 1.6, color: '#3c2f27' } }, q.message),
+      h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginTop: 2 } },
+        h('a', { href: 'mailto:' + q.email + '?subject=' + encodeURIComponent('Re: your ' + q.sessionType + ' inquiry'),
+          style: { fontSize: 12.5, fontWeight: 700, color: '#9e5423' } }, 'Reply to ' + q.email),
+        h('button', { onClick: () => this.inquiryAction('/api/inquiry/read', q.id, { read: !q.read }),
+          style: { padding: '5px 12px', borderRadius: 999, border: '1px solid rgba(154,173,139,.6)', background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, color: '#5a4d43' } },
+          q.read ? 'Mark unread' : 'Mark read'),
+        h('button', { onClick: () => this.inquiryAction('/api/inquiry/delete', q.id),
+          style: { padding: '5px 12px', borderRadius: 999, border: '1px solid rgba(178,59,46,.35)', background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, color: '#b23b2e' } }, 'Delete')));
+    const inboxPanel = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
+      st.inquiries.length
+        ? st.inquiries.map(inqRow)
+        : h('div', { style: { fontSize: 13, color: '#9c9084', lineHeight: 1.6, background: '#fff', border: '1px solid rgba(154,173,139,.3)', borderRadius: 12, padding: '22px 18px' } },
+            'No inquiries yet. Anything sent through the contact form lands here as well as in your email.'));
+
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, marginTop: 26, textAlign: 'left' } },
       header,
       tabs,
-      st.adminTab === 'account' ? account : (st.adminTab === 'videos' ? videoCard : (st.adminTab === 'deliveries' ? deliveriesPanel : work)));
+      st.adminTab === 'account' ? account : (st.adminTab === 'videos' ? videoCard : (st.adminTab === 'deliveries' ? deliveriesPanel : (st.adminTab === 'inbox' ? inboxPanel : work))));
   }
 
   // Signed-in admin reads the authenticated API: it is the live Cloudinary state.
@@ -1924,7 +1980,35 @@ class Component extends DCLogic {
       packages: packages.map((pk) => ({ ...pk, inquire: this.inquire(pk.name) })),
       camIcon: this.cam(44),
       contactSent: this.state.contactSent, showForm: !this.state.contactSent,
-      submitContact: (e) => { if (e) e.preventDefault(); this.setState({ contactSent: true }); },
+      hasContactErr: !!this.state.contactErr,
+      contactErr: this.state.contactErr,
+      contactBtnLabel: this.state.contactBusy ? 'Sending…' : 'Send Inquiry',
+      // The form is uncontrolled, so read it out of the DOM on submit and POST it.
+      // It used to just flip contactSent and throw the inquiry away.
+      submitContact: async (e) => {
+        if (e) e.preventDefault();
+        if (this.state.contactBusy) return;
+        const form = (e && e.target && e.target.querySelector) ? e.target : document.querySelector('[data-contact-form]');
+        if (!form) return;
+        const val = (k) => { const el = form.querySelector('[data-field="' + k + '"]'); return el ? String(el.value || '').trim() : ''; };
+        const payload = { name: val('name'), email: val('email'), sessionType: val('session'),
+                          date: val('date'), message: val('message'), website: val('website') };
+        if (!payload.name || !payload.email || !payload.message) {
+          this.setState({ contactErr: 'Please fill in your name, email, and a message.' });
+          return;
+        }
+        this.setState({ contactBusy: true, contactErr: '' });
+        try {
+          const r = await fetch(this.apiBase() + '/api/inquiry', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+          });
+          const d = await r.json().catch(() => ({}));
+          if (!r.ok) { this.setState({ contactBusy: false, contactErr: d.error || 'Could not send that. Please try again.' }); return; }
+          this.setState({ contactBusy: false, contactSent: true });
+        } catch (_) {
+          this.setState({ contactBusy: false, contactErr: 'Could not reach the server. Please email jordan@emberandoak.media directly.' });
+        }
+      },
       clientBackend: this.backendMode(), clientPlaceholder: !this.backendMode(),
       clientEl: this.renderClientAccess(),
       lightboxOpen, currentLabel, currentSrc,

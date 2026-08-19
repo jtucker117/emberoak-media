@@ -54,6 +54,14 @@ component script and a wrapped copy of `server.js` — a real syntax check.
 - `POST /api/gallery/open` `{code,pin}` → client’s full-res list (no auth; code-gated)
 - `POST /api/gallery/zip` `{code,pin}` → Cloudinary ZIP URL of all originals
 - `GET  /api/health`
+- `POST /api/inquiry` `{name,email,sessionType,date,message}` → `{ok}` (public, contact form)
+- `GET  /api/inquiries` (auth) → `{items,unread}`
+- `POST /api/inquiry/read` (auth) `{id,read}` → `{ok,unread}`
+- `POST /api/inquiry/delete` (auth) `{id}` → `{ok,unread}`
+
+Contact-form inquiries are written to `/data/inquiries.json` **before** the email is
+attempted, so a mail outage can never lose a lead; they show in Studio Admin → Inbox.
+Email needs `SMTP_USER`/`SMTP_PASS` (a Google **app password**) — unset just skips it.
 
 ## Local run
 ```bash
