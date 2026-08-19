@@ -196,7 +196,7 @@
                 <li style="font-size:14px;color:#5a4d43;display:flex;gap:9px;align-items:flex-start"><span style="color:#9aad8b;font-weight:700">✦</span>{{ li }}</li>
               </sc-for>
             </ul>
-            <a href="#" onClick="{{ goContact }}" style="{{ p.btn }}">Inquire</a>
+            <a href="#" onClick="{{ p.inquire }}" style="{{ p.btn }}">Inquire</a>
           </div>
         </sc-for>
       </div>
@@ -229,12 +229,12 @@
           </div>
         </sc-if>
         <sc-if value="{{ showForm }}" hint-placeholder-val="{{ true }}">
-        <form onSubmit="{{ submitContact }}" style="display:flex;flex-direction:column;gap:16px">
+        <form onSubmit="{{ submitContact }}" data-contact-form="" style="display:flex;flex-direction:column;gap:16px">
           <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Your name<input required="" type="text" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"></label>
           <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Email<input required="" type="email" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"></label>
-          <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Session type<select style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"><option>Newborn</option><option>Family</option><option>Cinematic</option><option>Drone</option><option>Video / Reels</option><option>Social media reels</option><option>Something else</option></select></label>
+          <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Session type<select data-field="session" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"><option>Newborn</option><option>Family</option><option>Cinematic</option><option>Drone</option><option>Video / Reels</option><option>Social media reels</option><option>Something else</option></select></label>
           <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Ideal date<input type="date" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"></label>
-          <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Tell me about it<textarea rows="4" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0;resize:vertical"></textarea></label>
+          <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Tell me about it<textarea data-field="message" rows="4" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0;resize:vertical"></textarea></label>
           <button type="submit" style="margin-top:4px;padding:14px;background:#9e5423;color:#fff;border:none;border-radius:999px;font-size:14px;font-weight:700;letter-spacing:.05em;cursor:pointer" style-hover="background:#7d3f18">Send Inquiry</button>
         </form>
         </sc-if>
@@ -694,6 +694,37 @@ class Component extends DCLogic {
   go(page) {
     return (e) => { if (e) e.preventDefault(); this.setState({ page, lb: null, contactSent: false }); try { window.scrollTo(0, 0); } catch (_) {} };
   }
+
+  // "Inquire" on a pricing card lands on the contact form with the package
+  // already named, so the visitor never has to retype what they clicked.
+  // The form is uncontrolled, so we fill it in the DOM once it has mounted.
+  inquire(name) {
+    return (e) => {
+      if (e) e.preventDefault();
+      this.setState({ page: 'contact', lb: null, contactSent: false });
+      try { window.scrollTo(0, 0); } catch (_) {}
+
+      // The contact form sits behind an sc-if, so it does not exist in the DOM at
+      // the moment of the click. Poll briefly for it rather than guess a delay.
+      let tries = 40;
+      const fill = () => {
+        const form = document.querySelector('[data-contact-form]');
+        if (!form) { if (tries-- > 0) setTimeout(fill, 16); return; }
+        const sel = form.querySelector('[data-field="session"]');
+        const msg = form.querySelector('[data-field="message"]');
+        // Package names match the Session type options, so keep the two in step.
+        if (sel && Array.prototype.some.call(sel.options, (o) => o.value === name)) sel.value = name;
+        // Never clobber something the visitor has already started writing.
+        if (msg && !msg.value.trim()) {
+          msg.value = 'Hello! I would like more info about the ' + name + ' package.';
+          try { msg.focus({ preventScroll: true }); } catch (_) { msg.focus(); }
+          msg.setSelectionRange(msg.value.length, msg.value.length);
+        }
+      };
+      fill();
+    };
+  }
+
   setCat(cat) { return (e) => { if (e) e.preventDefault(); this.setState({ cat }); }; }
 
   allItems() {
@@ -830,7 +861,8 @@ class Component extends DCLogic {
       aboutImgEl: aboutSrc ? React.createElement('img', { src: aboutSrc, alt: 'About Ember & Oak', style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } }) : null,
       uploadAbout: (e) => { if (e) e.preventDefault(); this.openUploader('about'); },
       uploadCats: cats.map(c => ({ label: c.label, count: (cloud[c.key] || []).length, upload: (e) => { if (e) e.preventDefault(); this.openUploader(c.key); } })),
-      cats: catCards, filterTabs, filtered, services, testimonials, values, packages,
+      cats: catCards, filterTabs, filtered, services, testimonials, values,
+      packages: packages.map((pk) => ({ ...pk, inquire: this.inquire(pk.name) })),
       camIcon: this.cam(44),
       contactSent: this.state.contactSent, showForm: !this.state.contactSent,
       submitContact: (e) => { if (e) e.preventDefault(); this.setState({ contactSent: true }); },
