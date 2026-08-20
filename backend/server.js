@@ -56,6 +56,7 @@ cloudinary.config({
 });
 
 const SECRET = SESSION_SECRET || 'dev-insecure-secret-change-me';
+const BOOTED_AT = new Date().toISOString();
 
 // clients: [{ slug, name, folder, passwordHash }]
 let CLIENTS = [];
@@ -685,6 +686,8 @@ const esc = (v) => String(v == null ? '' : v)
 
 async function emailInquiry(item) {
   if (!mailer) return { sent: false, reason: 'SMTP not configured' };
+  // Boot-time verify() goes stale the moment the credentials are changed without a
+  // restart, so let every real send refresh the reported status too.
   const to = INQUIRY_TO || SMTP_USER;
   const rows = [
     ['Name', item.name], ['Email', item.email], ['Session type', item.sessionType],
@@ -703,6 +706,7 @@ async function emailInquiry(item) {
 <div style="white-space:pre-wrap;line-height:1.6;border-left:3px solid #9aad8b;padding-left:14px">${esc(item.message)}</div>
 </div>`,
   });
+  MAIL_STATUS = 'ready';
   return { sent: true };
 }
 
@@ -733,7 +737,11 @@ app.post('/api/inquiry', async (req, res) => {
 
   let mail = { sent: false };
   try { mail = await emailInquiry(item); }
-  catch (e) { console.error('[error] could not email inquiry:', e.message); mail = { sent: false, reason: e.message }; }
+  catch (e) {
+    MAIL_STATUS = 'error: ' + (e.message || String(e));
+    console.error('[error] could not email inquiry:', e.message);
+    mail = { sent: false, reason: e.message };
+  }
 
   // Only a total failure is worth telling the visitor about — if we have it
   // written down, the studio will see it even when mail is broken.
@@ -764,7 +772,7 @@ app.post('/api/inquiry/delete', auth, (req, res) => {
   res.json({ ok: true, unread: INQUIRIES.filter(x => !x.read).length });
 });
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, clients: CLIENTS.length, credentialStore: credStoreWritable() ? 'writable' : 'unavailable', mail: MAIL_STATUS, inquiries: INQUIRIES.length }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, clients: CLIENTS.length, credentialStore: credStoreWritable() ? 'writable' : 'unavailable', mail: MAIL_STATUS, inquiries: INQUIRIES.length, bootedAt: BOOTED_AT }));
 
 // ============================================================================
 //  CLIENT DELIVERIES — full-resolution galleries the studio hands to a client.
