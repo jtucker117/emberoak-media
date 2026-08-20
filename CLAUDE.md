@@ -55,6 +55,7 @@ component script and a wrapped copy of `server.js` — a real syntax check.
 - `POST /api/gallery/zip` `{code,pin}` → Cloudinary ZIP URL of all originals
 - `GET  /api/health`
 - `POST /api/inquiry` `{name,email,sessionType,date,message}` → `{ok}` (public, contact form)
+- `POST /api/chat` `{messages:[{role,content}]}` → `{reply,submitted}` (public, website assistant)
 - `GET  /api/inquiries` (auth) → `{items,unread}`
 - `POST /api/inquiry/read` (auth) `{id,read}` → `{ok,unread}`
 - `POST /api/inquiry/delete` (auth) `{id}` → `{ok,unread}`
@@ -62,6 +63,14 @@ component script and a wrapped copy of `server.js` — a real syntax check.
 Contact-form inquiries are written to `/data/inquiries.json` **before** the email is
 attempted, so a mail outage can never lose a lead; they show in Studio Admin → Inbox.
 Email needs `SMTP_USER`/`SMTP_PASS` (a Google **app password**) — unset just skips it.
+
+The **website assistant** (`/api/chat`) is a booking-intake bot: it gathers detail about a
+shoot and calls a `submit_inquiry` tool, which goes through the same `recordInquiry()` path
+as the form (so it is stored, emailed, and shown in the Inbox with `via: "assistant"`). Its
+system prompt forbids quoting any price — that rule lives server-side so it cannot be edited
+from the browser. Needs `ANTHROPIC_API_KEY`; unset, the chat bubble does not render at all.
+Guardrails on the endpoint: 40 requests / 15 min per IP, 40 messages per conversation, 2000
+chars per message, max 3 tool hops, one submission per conversation.
 `SMTP_USER` must be the **real Google account**, never a send-as alias: an alias cannot
 authenticate and Google rejects it with "Username and Password not accepted", which is
 indistinguishable from a wrong password. Use `MAIL_FROM` for the alias you want mail to

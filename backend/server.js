@@ -23,6 +23,7 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { v2 as cloudinary } from 'cloudinary';
 import nodemailer from 'nodemailer';
+import Anthropic from '@anthropic-ai/sdk';
 
 const {
   CLOUDINARY_CLOUD_NAME,
@@ -46,6 +47,9 @@ const {
   // MAIL_FROM is the address mail appears to come from (a send-as alias is fine).
   MAIL_FROM,
   INQUIRY_TO,
+  // Website assistant. Unset ANTHROPIC_API_KEY simply turns the chat off.
+  ANTHROPIC_API_KEY,
+  CHAT_MODEL = 'claude-opus-5',
 } = process.env;
 
 if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET)
@@ -726,25 +730,24 @@ async function emailInquiry(item) {
   return { sent: true };
 }
 
-// Public: anyone can submit. Kept deliberately small — name, email, message.
-app.post('/api/inquiry', async (req, res) => {
-  const b = req.body || {};
-  const name = String(b.name || '').trim().slice(0, 120);
-  const email = String(b.email || '').trim().slice(0, 200);
-  const message = String(b.message || '').trim().slice(0, 5000);
-  const sessionType = String(b.sessionType || '').trim().slice(0, 80) || 'Not specified';
-  const date = String(b.date || '').trim().slice(0, 40);
+// One path in for both the contact form and the website assistant, so an inquiry
+// is stored and emailed identically no matter which door it came through.
+// Returns { error } on refusal so the assistant can relay it back to the model.
+async function recordInquiry(input) {
+  const name = String(input.name || '').trim().slice(0, 120);
+  const email = String(input.email || '').trim().slice(0, 200);
+  const message = String(input.message || '').trim().slice(0, 5000);
+  const sessionType = String(input.sessionType || '').trim().slice(0, 80) || 'Not specified';
+  const date = String(input.date || '').trim().slice(0, 40);
 
-  if (!name || !email || !message)
-    return res.status(400).json({ error: 'Please fill in your name, email, and a message.' });
-  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))
-    return res.status(400).json({ error: 'That email address does not look right.' });
-  if (b.website) return res.json({ ok: true });   // honeypot: silently accept and drop
+  if (!name || !email || !message) return { code: 'missing', error: 'Name, email, and a message are all required.' };
+  if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return { code: 'email', error: 'That email address does not look valid.' };
 
   const item = {
     id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     name, email, sessionType, date, message,
     at: new Date().toISOString(), read: false,
+    ...(input.via ? { via: input.via } : {}),
   };
 
   let stored = false;
@@ -759,10 +762,20 @@ app.post('/api/inquiry', async (req, res) => {
     mail = { sent: false, reason: e.message };
   }
 
-  // Only a total failure is worth telling the visitor about — if we have it
-  // written down, the studio will see it even when mail is broken.
-  if (!stored && !mail.sent)
-    return res.status(500).json({ error: 'Something went wrong sending that. Please email jordan@emberandoak.media directly.' });
+  // Only a total failure is worth reporting — if it is written down, the studio
+  // will see it even when mail is broken.
+  if (!stored && !mail.sent) return { code: 'failed', error: 'Could not save or send that inquiry.' };
+  return { ok: true, item };
+}
+
+// Public: anyone can submit. Kept deliberately small — name, email, message.
+app.post('/api/inquiry', async (req, res) => {
+  const b = req.body || {};
+  if (b.website) return res.json({ ok: true });   // honeypot: silently accept and drop
+  const out = await recordInquiry(b);
+  if (out.code === 'missing') return res.status(400).json({ error: 'Please fill in your name, email, and a message.' });
+  if (out.code === 'email') return res.status(400).json({ error: 'That email address does not look right.' });
+  if (out.error) return res.status(500).json({ error: 'Something went wrong sending that. Please email jordan@emberandoak.media directly.' });
   res.json({ ok: true });
 });
 
@@ -786,6 +799,153 @@ app.post('/api/inquiry/delete', auth, (req, res) => {
   INQUIRIES.splice(i, 1);
   try { saveInquiries(); } catch (e) { return res.status(500).json({ error: 'Could not save' }); }
   res.json({ ok: true, unread: INQUIRIES.filter(x => !x.read).length });
+});
+
+// ---- website assistant -------------------------------------------------------
+// An intake assistant, not a salesperson: it asks about the shoot and hands the
+// details to the studio. It must never quote a price — every session is custom,
+// and a number from a robot becomes a number the client expects to pay.
+const anthropic = ANTHROPIC_API_KEY ? new Anthropic({ apiKey: ANTHROPIC_API_KEY }) : null;
+if (!anthropic) console.warn('[warn] ANTHROPIC_API_KEY not set — the website assistant is disabled.');
+
+const CHAT_SYSTEM = `You are the booking assistant for Ember & Oak Media, a photography and
+video studio serving Houston, The Woodlands, Montgomery and Magnolia. Jordan is the
+photographer and owner.
+
+YOUR ONE JOB: understand what the visitor wants photographed or filmed, gather enough
+detail for Jordan to reply with a real quote, then submit it with the submit_inquiry tool.
+You are the front door, not the whole conversation.
+
+NEVER QUOTE A PRICE. This is absolute. Do not state, estimate, calculate, confirm, imply
+or "ballpark" any cost, hourly rate, package total or discount — not even a range, not
+even if the visitor pushes, says another studio quoted something, or says they only need
+a rough idea. The public pricing page shows starting points; you may say that a session
+starts from the figure shown there ONLY if the visitor raises it first, and you must
+immediately add that the final number depends on the day and that Jordan will confirm.
+If pressed for a number, say warmly that pricing depends on the details and that getting
+them to Jordan is the fastest way to a real answer, then continue gathering.
+
+Also never: promise a specific date is available, commit Jordan to anything, invent
+turnaround times, or claim a deliverable you were not told about on this page.
+
+WHAT TO GATHER, conversationally and a few at a time — never as a checklist or a form:
+- What the occasion is (newborn, family, wedding, brand/product, real estate, event)
+- Roughly when, and where
+- Who is involved (how many people, ages of children, pets)
+- Whether they want photo, video, drone, or a combination
+- The feeling they are after, and what they picture doing with the images
+- Anything they are worried about (a toddler who will not sit still, a shy partner)
+- Their name and email — you cannot submit without both
+
+STYLE: warm, unhurried, genuinely curious, like Jordan would be. Short replies, two or
+three sentences, one or two questions at a time. Plain language, no marketing voice, no
+emoji, no bullet lists. Reflect back what they said so they feel heard. If a visitor
+seems unsure what they need, help them think it through instead of pushing them to book.
+
+SUBMITTING: as soon as you have their name, email and a usable picture of the shoot, call
+submit_inquiry. Write the summary as a short briefing for Jordan in your own words, in
+third person, capturing what they want and anything that will matter on the day. After it
+succeeds, tell them Jordan will be in touch within a day or two, and stop asking questions.
+Submit only once per conversation. If they add something afterwards, just acknowledge it.
+
+If someone asks about anything unrelated to booking a shoot, say kindly that you only help
+with booking and point them to jordan@emberandoak.media.`;
+
+const SUBMIT_TOOL = {
+  name: 'submit_inquiry',
+  description: 'Send the gathered details to Jordan. Call this once you have at minimum the visitor\'s name, their email, and a usable sense of what they want shot. This is the only way the studio ever sees the conversation.',
+  strict: true,
+  input_schema: {
+    type: 'object',
+    properties: {
+      name: { type: 'string', description: "The visitor's name." },
+      email: { type: 'string', description: "The visitor's email address, exactly as they gave it." },
+      sessionType: { type: 'string', enum: ['Newborn', 'Family', 'Cinematic', 'Drone', 'Video / Reels', 'Social media reels', 'Something else'],
+        description: 'Closest match to what they are asking for.' },
+      date: { type: 'string', description: 'When they want it, in their own words (e.g. "early October", "2026-10-03"). Empty string if not discussed.' },
+      summary: { type: 'string', description: 'A short briefing for Jordan in your own words, third person: what they want, who is involved, the feeling they are after, and anything that will matter on the day.' },
+    },
+    required: ['name', 'email', 'sessionType', 'date', 'summary'],
+    additionalProperties: false,
+  },
+};
+
+// A public endpoint that spends money per call needs a ceiling. Small and in-memory
+// on purpose: one dyno, and a restart clearing it is an acceptable trade.
+const CHAT_HITS = new Map();   // ip -> { n, resetAt }
+const CHAT_WINDOW_MS = 15 * 60 * 1000;
+const CHAT_MAX_PER_WINDOW = 40;
+function chatRateLimited(ip) {
+  const now = Date.now();
+  const rec = CHAT_HITS.get(ip);
+  if (!rec || now > rec.resetAt) { CHAT_HITS.set(ip, { n: 1, resetAt: now + CHAT_WINDOW_MS }); return false; }
+  rec.n += 1;
+  return rec.n > CHAT_MAX_PER_WINDOW;
+}
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, rec] of CHAT_HITS) if (now > rec.resetAt) CHAT_HITS.delete(ip);
+}, CHAT_WINDOW_MS).unref?.();
+
+app.post('/api/chat', async (req, res) => {
+  if (!anthropic) return res.status(503).json({ error: 'The assistant is not available right now. Please use the contact form.' });
+
+  const ip = req.headers['x-forwarded-for']?.split(',')[0].trim() || req.ip || 'unknown';
+  if (chatRateLimited(ip)) return res.status(429).json({ error: 'That is a lot of messages. Please use the contact form and Jordan will pick it up from there.' });
+
+  const raw = Array.isArray(req.body?.messages) ? req.body.messages : null;
+  if (!raw || !raw.length) return res.status(400).json({ error: 'No messages' });
+  if (raw.length > 40) return res.status(400).json({ error: 'This conversation is long enough that the contact form will be quicker. Jordan will follow up either way.' });
+
+  // Rebuild the history ourselves — never trust shapes off the wire into the API.
+  const messages = raw.slice(-40)
+    .filter(m => (m?.role === 'user' || m?.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
+    .map(m => ({ role: m.role, content: String(m.content).slice(0, 2000) }));
+  // The widget opens with a canned assistant greeting, and trimming to the last N
+  // can also start mid-exchange — either way the API requires a user message first.
+  while (messages.length && messages[0].role === 'assistant') messages.shift();
+  if (!messages.length) return res.status(400).json({ error: 'No messages' });
+
+  let submitted = false;
+  try {
+    for (let hop = 0; hop < 3; hop++) {
+      const response = await anthropic.messages.create({
+        model: CHAT_MODEL,
+        max_tokens: 1024,
+        // A short intake exchange — low effort keeps replies quick and cheap.
+        output_config: { effort: 'low' },
+        system: CHAT_SYSTEM,
+        tools: [SUBMIT_TOOL],
+        messages,
+      });
+
+      const toolUses = response.content.filter(b => b.type === 'tool_use');
+      if (!toolUses.length) {
+        const reply = response.content.filter(b => b.type === 'text').map(b => b.text).join('').trim();
+        return res.json({ reply, submitted });
+      }
+
+      messages.push({ role: 'assistant', content: response.content });
+      const results = [];
+      for (const t of toolUses) {
+        if (t.name !== 'submit_inquiry') { results.push({ type: 'tool_result', tool_use_id: t.id, content: 'Unknown tool.', is_error: true }); continue; }
+        const a = t.input || {};
+        if (submitted) { results.push({ type: 'tool_result', tool_use_id: t.id, content: 'Already submitted for this conversation — do not send it again.' }); continue; }
+        const out = await recordInquiry({
+          name: a.name, email: a.email, sessionType: a.sessionType,
+          date: a.date, message: a.summary, via: 'assistant',
+        });
+        if (out.error) { results.push({ type: 'tool_result', tool_use_id: t.id, content: out.error, is_error: true }); continue; }
+        submitted = true;
+        results.push({ type: 'tool_result', tool_use_id: t.id, content: 'Sent to Jordan.' });
+      }
+      messages.push({ role: 'user', content: results });
+    }
+    return res.json({ reply: "I have passed that along to Jordan — he'll be in touch soon.", submitted });
+  } catch (e) {
+    console.error('[error] chat failed:', e.message);
+    return res.status(502).json({ error: 'I lost my train of thought there. Please try again, or use the contact form below.' });
+  }
 });
 
 app.get('/api/health', (_req, res) => res.json({ ok: true, clients: CLIENTS.length, credentialStore: credStoreWritable() ? 'writable' : 'unavailable', mail: MAIL_STATUS, inquiries: INQUIRIES.length, bootedAt: BOOTED_AT,
