@@ -41,6 +41,10 @@ const {
   SMTP_PORT = 465,
   SMTP_USER,
   SMTP_PASS,
+  // SMTP_USER must be the REAL Google account. An alias cannot authenticate —
+  // Google rejects it as a bad credential, which looks like a wrong password.
+  // MAIL_FROM is the address mail appears to come from (a send-as alias is fine).
+  MAIL_FROM,
   INQUIRY_TO,
 } = process.env;
 
@@ -682,7 +686,7 @@ function mailHint() {
   const bare = raw.replace(/\s/g, '');
   if (raw !== bare) return `SMTP_PASS contains spaces (${raw.length} chars, ${bare.length} without) — paste it with the spaces removed`;
   if (!/^[a-z]{16}$/i.test(bare)) return `SMTP_PASS is ${bare.length} chars — a Google app password is exactly 16 letters, so this looks like the account password, not an app password`;
-  return 'SMTP_PASS is shaped like a valid app password (16 letters), so check that SMTP_USER is the exact mailbox that generated it, and that Workspace admin allows app passwords';
+  return `SMTP_PASS is shaped like a valid app password (16 letters), so the likely cause is SMTP_USER. It is currently "${SMTP_USER}" — this must be the REAL Google account you sign in with, not a send-as alias, because an alias cannot authenticate. Set MAIL_FROM to the alias instead if you want mail to come from it.`;
 }
 if (!mailer) {
   console.warn('[warn] SMTP_USER/SMTP_PASS not set — inquiries will be stored but not emailed.');
@@ -697,15 +701,16 @@ const esc = (v) => String(v == null ? '' : v)
 
 async function emailInquiry(item) {
   if (!mailer) return { sent: false, reason: 'SMTP not configured' };
+  const from = MAIL_FROM || SMTP_USER;
   // Boot-time verify() goes stale the moment the credentials are changed without a
   // restart, so let every real send refresh the reported status too.
-  const to = INQUIRY_TO || SMTP_USER;
+  const to = INQUIRY_TO || from;
   const rows = [
     ['Name', item.name], ['Email', item.email], ['Session type', item.sessionType],
     ['Ideal date', item.date || '—'],
   ].map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;color:#6f6357">${esc(k)}</td><td style="padding:4px 0"><strong>${esc(v)}</strong></td></tr>`).join('');
   await mailer.sendMail({
-    from: `"Ember & Oak website" <${SMTP_USER}>`,
+    from: `"Ember & Oak website" <${from}>`,
     to,
     // so hitting Reply in the inbox answers the client, not yourself
     replyTo: `"${item.name.replace(/"/g, "'")}" <${item.email}>`,

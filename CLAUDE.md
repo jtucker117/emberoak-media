@@ -62,6 +62,11 @@ component script and a wrapped copy of `server.js` — a real syntax check.
 Contact-form inquiries are written to `/data/inquiries.json` **before** the email is
 attempted, so a mail outage can never lose a lead; they show in Studio Admin → Inbox.
 Email needs `SMTP_USER`/`SMTP_PASS` (a Google **app password**) — unset just skips it.
+`SMTP_USER` must be the **real Google account**, never a send-as alias: an alias cannot
+authenticate and Google rejects it with "Username and Password not accepted", which is
+indistinguishable from a wrong password. Use `MAIL_FROM` for the alias you want mail to
+come from. `GET /api/health` reports `mail` ("ready" / the SMTP error) plus a `hint` that
+tells the usual causes apart without exposing the credential.
 
 ## Local run
 ```bash
