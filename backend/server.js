@@ -673,6 +673,17 @@ const mailer = SMTP_USER && SMTP_PASS
 // fails silently on every inquiry — the visitor still sees the thank-you because
 // the inquiry was stored, so a broken mailer looks exactly like a working one.
 let MAIL_STATUS = mailer ? 'checking' : 'not configured';
+// Shown only while mail is broken, to tell the three usual causes apart without
+// ever revealing the credential: spaces left in, wrong length, or wrong account.
+// A Google app password is exactly 16 letters. SMTP_USER is a public address.
+function mailHint() {
+  if (!SMTP_PASS) return 'SMTP_PASS is empty';
+  const raw = String(SMTP_PASS);
+  const bare = raw.replace(/\s/g, '');
+  if (raw !== bare) return `SMTP_PASS contains spaces (${raw.length} chars, ${bare.length} without) — paste it with the spaces removed`;
+  if (!/^[a-z]{16}$/i.test(bare)) return `SMTP_PASS is ${bare.length} chars — a Google app password is exactly 16 letters, so this looks like the account password, not an app password`;
+  return 'SMTP_PASS is shaped like a valid app password (16 letters), so check that SMTP_USER is the exact mailbox that generated it, and that Workspace admin allows app passwords';
+}
 if (!mailer) {
   console.warn('[warn] SMTP_USER/SMTP_PASS not set — inquiries will be stored but not emailed.');
 } else {
@@ -772,7 +783,8 @@ app.post('/api/inquiry/delete', auth, (req, res) => {
   res.json({ ok: true, unread: INQUIRIES.filter(x => !x.read).length });
 });
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, clients: CLIENTS.length, credentialStore: credStoreWritable() ? 'writable' : 'unavailable', mail: MAIL_STATUS, inquiries: INQUIRIES.length, bootedAt: BOOTED_AT }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, clients: CLIENTS.length, credentialStore: credStoreWritable() ? 'writable' : 'unavailable', mail: MAIL_STATUS, inquiries: INQUIRIES.length, bootedAt: BOOTED_AT,
+  ...(String(MAIL_STATUS).startsWith('error') ? { smtpUser: SMTP_USER || '(unset)', hint: mailHint() } : {}) }));
 
 // ============================================================================
 //  CLIENT DELIVERIES — full-resolution galleries the studio hands to a client.
