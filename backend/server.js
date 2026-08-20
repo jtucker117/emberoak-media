@@ -668,7 +668,17 @@ const mailer = SMTP_USER && SMTP_PASS
       auth: { user: SMTP_USER, pass: SMTP_PASS },
     })
   : null;
-if (!mailer) console.warn('[warn] SMTP_USER/SMTP_PASS not set — inquiries will be stored but not emailed.');
+// Prove the credentials actually work at boot. Without this a wrong app password
+// fails silently on every inquiry — the visitor still sees the thank-you because
+// the inquiry was stored, so a broken mailer looks exactly like a working one.
+let MAIL_STATUS = mailer ? 'checking' : 'not configured';
+if (!mailer) {
+  console.warn('[warn] SMTP_USER/SMTP_PASS not set — inquiries will be stored but not emailed.');
+} else {
+  mailer.verify()
+    .then(() => { MAIL_STATUS = 'ready'; console.log(`[info] SMTP ready as ${SMTP_USER}`); })
+    .catch((e) => { MAIL_STATUS = 'error: ' + (e.message || String(e)); console.error('[error] SMTP verify failed:', e.message); });
+}
 
 const esc = (v) => String(v == null ? '' : v)
   .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
@@ -754,7 +764,7 @@ app.post('/api/inquiry/delete', auth, (req, res) => {
   res.json({ ok: true, unread: INQUIRIES.filter(x => !x.read).length });
 });
 
-app.get('/api/health', (_req, res) => res.json({ ok: true, clients: CLIENTS.length, credentialStore: credStoreWritable() ? 'writable' : 'unavailable' }));
+app.get('/api/health', (_req, res) => res.json({ ok: true, clients: CLIENTS.length, credentialStore: credStoreWritable() ? 'writable' : 'unavailable', mail: MAIL_STATUS, inquiries: INQUIRIES.length }));
 
 // ============================================================================
 //  CLIENT DELIVERIES — full-resolution galleries the studio hands to a client.
