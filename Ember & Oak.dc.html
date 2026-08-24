@@ -147,8 +147,9 @@
         <div style="position: absolute; inset: 0; opacity: 1; background: linear-gradient(180deg, #FAF9F53A, #28211A)"></div>
         <div class="eo-hero-in" style="position:relative;z-index:2;max-width:820px;padding:40px 28px;color:#fdf8f0">
           <div style="font-family: 'Parisienne',cursive; font-size: 34px; color: #5F4B35; margin-bottom: 6px; font-weight: 900; text-shadow: 0 2px 12px rgba(255,255,255,.85)">warm, timeless stories</div>
-          <h1 style="font-family: 'Cormorant Garamond',serif; font-weight: 600; font-size: clamp(40px,7vw,78px); line-height: 1.02; margin: 0 0 20px; text-shadow: 0px 2px 50px #3C2F27">{{ heroTitleEl }}</h1>
-          <p style="font-size:17px;line-height:1.7;max-width:560px;margin:0 auto 30px;color:#fbeedd">Weddings, newborns, families &amp; cinematic drone work for the Houston, Woodlands, Montgomery &amp; Magnolia area.</p>
+          <h1 style="font-family: 'Cormorant Garamond',serif; font-weight: 600; font-size: clamp(44px,8vw,88px); line-height: 1.02; margin: 0 0 16px; letter-spacing: .12em; text-transform: uppercase; text-shadow: 0px 2px 50px #3C2F27">{{ heroBrandEl }}</h1>
+          <p style="font-family: 'Cormorant Garamond',serif; font-weight: 500; font-size: clamp(22px,3.8vw,34px); line-height: 1.25; max-width: 640px; margin: 0 auto 18px; color: #fbeedd; text-shadow: 0 2px 30px rgba(40,33,26,.55)">{{ heroTitleEl }}</p>
+          <p style="font-size:17px;line-height:1.7;max-width:560px;margin:0 auto 30px;color:#fbeedd">Newborn, family &amp; event photography, cinematic film, and drone work for the Houston, Woodlands, Montgomery &amp; Magnolia area.</p>
           <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
             <a href="#" onClick="{{ goPortfolio }}" style="padding:14px 30px;background:#9e5423;color:#fff;border-radius:999px;font-weight:600;font-size:14px;letter-spacing:.05em" style-hover="background:#7d3f18">View the Portfolio</a>
             <a href="#" onClick="{{ goContact }}" style="padding:14px 30px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.6);border-radius:999px;font-weight:600;font-size:14px;letter-spacing:.05em" style-hover="background:#fff;color:#3c2f27">Book a Session</a>
@@ -156,25 +157,13 @@
         </div>
       </section>
 
-      <section style="max-width:900px;margin:0 auto;padding:88px 28px 60px;text-align:center">
+      <section style="max-width:900px;margin:0 auto;padding:88px 28px 48px;text-align:center">
         <div style="font-family:'Parisienne',cursive;font-size:30px;color:#9aad8b;margin-bottom:8px">hello there</div>
         <h2 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(28px,4vw,42px);line-height:1.25;margin:0 0 18px">We chase the golden, in-between moments — the ones you'll want to hold onto forever.</h2>
         <p style="font-size:17px;line-height:1.8;color:#6f6357;max-width:660px;margin:0 auto">Ember &amp; Oak is a Houston-area studio for photography, video, and custom social media reels. Whether it's a brand-new baby, a growing family, or a story told from the sky, we make images that feel warm, honest, and completely yours.</p>
       </section>
 
-      <section style="max-width:1200px;margin:0 auto;padding:30px 28px 20px">
-        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px">
-          <sc-for list="{{ services }}" as="s" hint-placeholder-count="3">
-            <div class="eo-spot" style="background:#fff;border:1px solid rgba(154,173,139,.3);border-radius:14px;padding:34px 30px;box-shadow:0 6px 24px rgba(60,47,39,.05)">
-              <div style="width:52px;height:52px;border-radius:50%;background:#f1ebdf;display:flex;align-items:center;justify-content:center;color:#9e5423;margin-bottom:18px">{{ s.icon }}</div>
-              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:26px;margin:0 0 10px">{{ s.title }}</h3>
-              <p style="font-size:15px;line-height:1.7;color:#6f6357;margin:0">{{ s.desc }}</p>
-            </div>
-          </sc-for>
-        </div>
-      </section>
-
-      <section style="max-width:1240px;margin:0 auto;padding:78px 28px 40px">
+      <section style="max-width:1240px;margin:0 auto;padding:20px 28px 40px">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:26px">
           <div>
             <div style="font-family:'Parisienne',cursive;font-size:26px;color:#9aad8b">a little look</div>
@@ -229,7 +218,9 @@
         </sc-for>
       </div>
       {{ portfolioEl }}
-      <p style="text-align:center;color:#9c9084;font-size:13px;margin-top:30px;font-style:italic">Swap these placeholders for your images — each tile is ready for a photo or video thumbnail.</p>
+      <sc-if value="{{ showPortfolioNote }}" hint-placeholder-val="{{ false }}">
+      <p style="text-align:center;color:#9c9084;font-size:13px;margin-top:30px;font-style:italic">Upload your first photos from Studio Admin — they'll appear here automatically.</p>
+      </sc-if>
     </div>
     </sc-if>
 
@@ -245,7 +236,7 @@
           <div style="font-family:'Parisienne',cursive;font-size:30px;color:#9aad8b">the heart behind the lens</div>
           <h1 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(32px,4.5vw,52px);margin:4px 0 20px">Hi, I'm Jordan.</h1>
           <p style="font-size:16px;line-height:1.85;color:#6f6357;margin:0 0 16px">Ember &amp; Oak grew out of a simple love: the quiet, glowing moments that make up a life. I started with a camera and a fascination for light, and it turned into a studio built on warmth, patience, and real connection.</p>
-          <p style="font-size:16px;line-height:1.85;color:#6f6357;margin:0 0 24px">From a newborn's first days to a wedding at golden hour to sweeping drone film, I'm here to capture your story the way it actually feels — unhurried and true. Based in the Houston area, serving The Woodlands, Montgomery &amp; Magnolia.</p>
+          <p style="font-size:16px;line-height:1.85;color:#6f6357;margin:0 0 24px">From a newborn's first days to a live event at golden hour to sweeping drone film, I'm here to capture your story the way it actually feels — unhurried and true. Based in the Houston area, serving The Woodlands, Montgomery &amp; Magnolia.</p>
           <a href="#" onClick="{{ goContact }}" style="font-weight:600;letter-spacing:.04em">Let's work together →</a>
         </div>
       </section>
@@ -321,7 +312,7 @@
         <form onSubmit="{{ submitContact }}" data-contact-form="" style="display:flex;flex-direction:column;gap:16px">
           <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Your name<input data-field="name" required="" type="text" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"></label>
           <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Email<input data-field="email" required="" type="email" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"></label>
-          <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Session type<select data-field="session" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"><option>Newborn</option><option>Family</option><option>Cinematic</option><option>Drone</option><option>Video / Reels</option><option>Social media reels</option><option>Something else</option></select></label>
+          <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Session type<select data-field="session" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"><option>Newborn</option><option>Family</option><option>Events</option><option>Cinematic</option><option>Drone</option><option>Video / Reels</option><option>Social media reels</option><option>Something else</option></select></label>
           <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Ideal date<input data-field="date" type="date" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0"></label>
           <input data-field="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
           <label style="font-size:13px;font-weight:600;color:#5a4d43;display:flex;flex-direction:column;gap:6px">Tell me about it<textarea data-field="message" rows="4" style="padding:11px 13px;border:1px solid rgba(154,173,139,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#faf7f0;resize:vertical"></textarea></label>
@@ -1938,14 +1929,6 @@ class Component extends DCLogic {
       style: 'position:relative;break-inside:avoid;margin:0 0 18px;border-radius:12px;overflow:hidden;cursor:pointer;background:linear-gradient(150deg,#eee6d8,#dfe4d3);height:' + it.h + 'px',
     }));
 
-    const services = [
-      { title: 'Photography', desc: 'Newborn, family, and cinematic portraiture — plus stunning drone work. Warm, natural, and unhurried.', icon: this.cam(26) },
-      { title: 'Video & Film', desc: 'Cinematic films and highlight reels that let you relive the day — music, motion, and all the feeling.',
-        icon: React.createElement('svg', { width: 26, height: 26, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' }, React.createElement('rect', { x: 2, y: 5, width: 15, height: 14, rx: 2 }), React.createElement('path', { d: 'm17 9 5-3v12l-5-3' })) },
-      { title: 'Social Reels', desc: 'Scroll-stopping custom reels for your brand or family — content made to share and be remembered.',
-        icon: React.createElement('svg', { width: 26, height: 26, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 1.6, strokeLinecap: 'round', strokeLinejoin: 'round' }, React.createElement('rect', { x: 4, y: 2, width: 16, height: 20, rx: 3 }), React.createElement('path', { d: 'm10 8 5 3-5 3V8Z' })) },
-    ];
-
     // Real client quotes only. Add entries here as they come in — the section
     // hides itself entirely while this is empty, so the page never shows
     // invented praise.
@@ -2010,6 +1993,8 @@ class Component extends DCLogic {
       aboutImgEl: aboutSrc ? React.createElement('img', { src: aboutSrc, alt: 'About Ember & Oak', style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } }) : null,
       uploadAbout: (e) => { if (e) e.preventDefault(); this.openUploader('about'); },
       uploadCats: cats.map(c => ({ label: c.label, count: (cloud[c.key] || []).length, upload: (e) => { if (e) e.preventDefault(); this.openUploader(c.key); } })),
+      heroBrandEl: React.createElement(React.Fragment, null,
+        'Ember ', React.createElement('span', { style: { color: '#e8c9a0' } }, '&'), ' Oak'),
       heroTitleEl: (() => {
         // SplitText: each word animates in on its own beat
         const lines = [['Photography,', 'film', '&', 'social', 'reels'], ['made', 'to', 'be', 'felt.']];
@@ -2072,7 +2057,8 @@ class Component extends DCLogic {
             this.renderAccordion(agItems),
             React.createElement('p', { className: 'eo-ag-hint' }, 'Hover a gallery to open it \u2014 click to see everything inside.'))
         : this.renderGrid(filtered),
-      cats: catCards, filterTabs, filtered, services, testimonials, hasTestimonials: testimonials.length > 0, values,
+      cats: catCards, filterTabs, filtered, testimonials, hasTestimonials: testimonials.length > 0, values,
+      showPortfolioNote: !useCloud,
       packages: packages.map((pk) => ({ ...pk, inquire: this.inquire(pk.name) })),
       camIcon: this.cam(44),
       contactSent: this.state.contactSent, showForm: !this.state.contactSent,
