@@ -164,6 +164,7 @@ const DEFAULT_CATEGORIES = [
   { key: 'newborn', label: 'Newborn' },
   { key: 'family', label: 'Family' },
   { key: 'events', label: 'Events' },
+  { key: 'commercial', label: 'Commercial' },
   { key: 'cinematic', label: 'Cinematic' },
   { key: 'drone', label: 'Drone' },
   { key: 'video', label: 'Video / Reels' },
@@ -183,6 +184,14 @@ function saveCategories() {
   fs.writeFileSync(tmp, JSON.stringify(CATEGORIES, null, 2), { mode: 0o600 });
   fs.renameSync(tmp, CATEGORIES_PATH);
 }
+// Studios can rename/delete categories in admin, but new built-in offerings still
+// need to appear on existing installs whose categories.json predates them.
+function ensureDefaultCategory(key, label) {
+  if (CATEGORIES.some(c => c.key === key)) return;
+  CATEGORIES.push({ key, label });
+  try { saveCategories(); } catch (e) { console.warn('[warn] could not persist category', key, e.message); }
+}
+ensureDefaultCategory('commercial', 'Commercial');
 // 'hero' and 'about' are the homepage cover and About photo, not portfolio
 // categories — a studio must not be able to create or delete them by name.
 const RESERVED_CATEGORIES = ['hero', 'about'];
@@ -829,7 +838,7 @@ Also never: promise a specific date is available, commit Jordan to anything, inv
 turnaround times, or claim a deliverable you were not told about on this page.
 
 WHAT TO GATHER, conversationally and a few at a time — never as a checklist or a form:
-- What the occasion is (newborn, family, wedding, brand/product, real estate, event)
+- What the occasion is (newborn, family, wedding, commercial/brand, real estate, event)
 - Roughly when, and where
 - Who is involved (how many people, ages of children, pets)
 - Whether they want photo, video, drone, or a combination
@@ -860,7 +869,7 @@ const SUBMIT_TOOL = {
     properties: {
       name: { type: 'string', description: "The visitor's name." },
       email: { type: 'string', description: "The visitor's email address, exactly as they gave it." },
-      sessionType: { type: 'string', enum: ['Newborn', 'Family', 'Cinematic', 'Drone', 'Video / Reels', 'Social media reels', 'Something else'],
+      sessionType: { type: 'string', enum: ['Newborn', 'Family', 'Events', 'Commercial', 'Cinematic', 'Drone', 'Video / Reels', 'Social media reels', 'Something else'],
         description: 'Closest match to what they are asking for.' },
       date: { type: 'string', description: 'When they want it, in their own words (e.g. "early October", "2026-10-03"). Empty string if not discussed.' },
       summary: { type: 'string', description: 'A short briefing for Jordan in your own words, third person: what they want, who is involved, the feeling they are after, and anything that will matter on the day.' },
