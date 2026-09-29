@@ -42,6 +42,21 @@
   .eo-spot:hover::after{opacity:1}
   .eo-spot:hover{transform:perspective(900px) rotateX(var(--eo-rx,0deg)) rotateY(var(--eo-ry,0deg)) translateY(-9px) scale(1.018);box-shadow:0 26px 60px rgba(60,47,39,.22);border-color:rgba(158,84,35,.55)!important}
 
+  /* Portfolio photo wall — tight masonry mosaic (near-flush, no card chrome) */
+  .eo-wall{column-count:4;column-gap:2px;width:100%}
+  .eo-wall-item{position:relative;break-inside:avoid;margin:0 0 2px;border-radius:0;overflow:hidden;cursor:pointer;background:linear-gradient(150deg,#eee6d8,#dfe4d3);display:block}
+  .eo-wall-item:focus-visible{outline:2px solid #9e5423;outline-offset:2px}
+  .eo-wall-item .eo-wall-media{position:absolute;inset:0}
+  .eo-wall-item .eo-wall-media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .55s cubic-bezier(.2,.7,.2,1),filter .4s}
+  .eo-wall-item:hover .eo-wall-media img{transform:scale(1.035);filter:brightness(1.04)}
+  .eo-filters{display:flex;gap:6px 26px;justify-content:center;flex-wrap:wrap;margin-bottom:28px;padding:0 4px}
+  .eo-filters button{padding:8px 0;border:0;border-bottom:1px solid transparent;border-radius:0;background:transparent;font-family:'Mulish',sans-serif;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;cursor:pointer;color:#9c9084;transition:color .25s,border-color .25s}
+  .eo-filters button:hover{color:#3c2f27}
+  .eo-filters button.eo-on{color:#9e5423;border-bottom-color:#9e5423}
+  @media (max-width:1100px){.eo-wall{column-count:3}}
+  @media (max-width:720px){.eo-wall{column-count:2}}
+  @media (max-width:400px){.eo-wall{column-count:1}}
+
   /* AccordionGallery — one panel per category; hover/focus expands it */
   .eo-ag{display:flex;gap:10px;height:460px;perspective:1200px;margin:0 0 10px}
   .eo-ag-panel{position:relative;display:block;flex:1 1 0;min-width:0;border-radius:16px;overflow:hidden;cursor:pointer;outline:none;background:linear-gradient(150deg,#eee6d8,#dfe4d3);transform:rotateY(var(--eo-tilt,0deg));transition:flex-grow .62s cubic-bezier(.16,1,.3,1),transform .62s cubic-bezier(.16,1,.3,1),box-shadow .4s}
@@ -109,6 +124,7 @@
     .eo-reveal{opacity:1;transform:none;transition:none}
     .eo-word,.eo-hero-in>*{animation:none}
     .eo-spot,.eo-spot:hover,.eo-ag-panel,.eo-ag-media{transition:none;transform:none}
+    .eo-wall-item:hover .eo-wall-media img{transform:none;filter:none}
     .eo-sm-pre,.eo-sm-panel,.eo-sm-list li,.eo-sm-foot{transition-duration:.001s!important;transition-delay:0s!important}
   }
   @keyframes eoUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
@@ -207,12 +223,12 @@
 
     <!-- ===================== PORTFOLIO ===================== -->
     <sc-if value="{{ showPortfolio }}" hint-placeholder-val="{{ false }}">
-    <div style="max-width:1240px;margin:0 auto;padding:64px 28px 40px">
-      <div style="text-align:center;margin-bottom:34px">
+    <div style="max-width:1360px;margin:0 auto;padding:64px 16px 48px">
+      <div style="text-align:center;margin-bottom:28px;padding:0 12px">
         <div style="font-family:'Parisienne',cursive;font-size:28px;color:#9aad8b">our work</div>
         <h1 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(34px,5vw,56px);margin:0">Portfolio</h1>
       </div>
-      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:34px">
+      <div class="eo-filters" role="tablist" aria-label="Portfolio categories">
         <sc-for list="{{ filterTabs }}" as="f" hint-placeholder-count="7">
           <button onClick="{{ f.set }}" style="{{ f.style }}">{{ f.label }}</button>
         </sc-for>
@@ -1797,15 +1813,17 @@ class Component extends DCLogic {
 
   renderGrid(items) {
     const R = React;
-    return R.createElement('div', { style: { columnWidth: '290px', columnGap: '18px' } },
+    // Photo wall: CSS multi-column masonry, 2px gutters, no labels/radius/chrome.
+    return R.createElement('div', { className: 'eo-wall', role: 'list', 'aria-label': 'Portfolio images' },
       items.map((p, i) => R.createElement('div', {
-        key: i, onClick: p.open,
-        style: { position: 'relative', breakInside: 'avoid', margin: '0 0 18px', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', background: 'linear-gradient(150deg,#eee6d8,#dfe4d3)', height: p.hpx },
+        key: i, role: 'listitem', tabIndex: 0, onClick: p.open,
+        onKeyDown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); p.open(e); } },
+        className: 'eo-wall-item',
+        'aria-label': p.label || 'Open image',
+        style: { height: p.hpx },
       },
         R.createElement('div', { className: 'eo-ag-ph' }, this.cam(44)),
-        p.imgEl,
-        R.createElement('div', { style: { position: 'absolute', inset: 0, background: 'linear-gradient(to top,rgba(60,47,39,.5),transparent 60%)' } }),
-        R.createElement('div', { style: { position: 'absolute', left: 0, right: 0, bottom: 0, padding: '14px 16px', color: '#fff', fontFamily: "'Cormorant Garamond',serif", fontSize: 20, fontWeight: 600 } }, p.label))));
+        p.imgEl)));
   }
 
   go(page) {
@@ -1904,8 +1922,10 @@ class Component extends DCLogic {
 
     const filterTabs = [{ key: 'all', label: 'All' }].concat(cats).map(t => ({
       label: t.label, set: this.setCat(t.key),
-      style: 'padding:9px 18px;border-radius:999px;font-size:13px;font-weight:600;letter-spacing:.03em;cursor:pointer;border:1px solid ' +
-        (cat === t.key ? '#9e5423' : 'rgba(154,173,139,.5)') + ';background:' + (cat === t.key ? '#9e5423' : '#fff') + ';color:' + (cat === t.key ? '#fff' : '#5a4d43'),
+      // Quiet uppercase text filters; underline marks the active category
+      style: cat === t.key
+        ? 'color:#9e5423;border-bottom-color:#9e5423'
+        : '',
     }));
 
     const heightsC = [340, 260, 400, 300, 360, 280, 420, 320, 300, 380, 260, 340];
@@ -1922,13 +1942,12 @@ class Component extends DCLogic {
     const filteredRaw = cat === 'all' ? items : items.filter(i => i.cat === cat);
     const filtered = filteredRaw.map((it, idx) => ({
       label: it.label, src: it.src, hasImg: !!it.src, full: it.full, isVideo: !!it.isVideo, isEmbed: !!it.isEmbed, hpx: it.h,
-      imgEl: it.src ? React.createElement('div', { style: { position: 'absolute', inset: 0 } },
-        React.createElement('img', { src: it.src, alt: it.label, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } }),
-        it.isVideo ? React.createElement('div', { style: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 56, height: 56, borderRadius: '50%', background: 'rgba(30,22,17,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center' } },
+      imgEl: it.src ? React.createElement('div', { className: 'eo-wall-media' },
+        React.createElement('img', { src: it.src, alt: it.label || '' }),
+        it.isVideo ? React.createElement('div', { style: { position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 56, height: 56, borderRadius: '50%', background: 'rgba(30,22,17,.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' } },
           React.createElement('div', { style: { width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '16px solid #fff', marginLeft: 4 } })) : null
       ) : null,
       open: (e) => { if (e) e.preventDefault(); this.setState({ lb: idx }); },
-      style: 'position:relative;break-inside:avoid;margin:0 0 18px;border-radius:12px;overflow:hidden;cursor:pointer;background:linear-gradient(150deg,#eee6d8,#dfe4d3);height:' + it.h + 'px',
     }));
 
     // Real client quotes only. Add entries here as they come in — the section
@@ -2056,11 +2075,9 @@ class Component extends DCLogic {
                 onClick: (e) => { this.setMenu(false); this.go('contact')(e); },
               }, 'Book a Session')))),
         document.body)),
-      portfolioEl: (cat === 'all' && agItems.length > 1)
-        ? React.createElement(React.Fragment, null,
-            this.renderAccordion(agItems),
-            React.createElement('p', { className: 'eo-ag-hint' }, 'Hover a gallery to open it \u2014 click to see everything inside.'))
-        : this.renderGrid(filtered),
+      // Always the photo wall — All + category filters feed the same mosaic.
+      // Accordion remains for the home featured strip; portfolio is image-first.
+      portfolioEl: this.renderGrid(filtered),
       cats: catCards, filterTabs, filtered, testimonials, hasTestimonials: testimonials.length > 0, values,
       showPortfolioNote: !useCloud,
       packages: packages.map((pk) => ({ ...pk, inquire: this.inquire(pk.name) })),
