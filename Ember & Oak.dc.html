@@ -15,16 +15,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=Mulish:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <style>
-  /* Midnight Sand — navy ground, sand type, soft brass accent */
+  /* Midnight Sand — warm charcoal ground, sand type, brass accent */
   :root{
-    --eo-bg:#12151c;--eo-bg-soft:#1a1e28;--eo-ink:#e8e2d6;--eo-mute:#9aa0a8;
-    --eo-mute-2:#9aa0a8;--eo-bronze:#b89a6a;--eo-bronze-deep:#8a734f;--eo-line:rgba(232,226,214,.14);
+    --eo-bg:#141210;--eo-bg-soft:#1c1916;--eo-ink:#e8e2d6;--eo-mute:#a39e94;
+    --eo-mute-2:#8f8a82;--eo-bronze:#b89a6a;--eo-bronze-deep:#8a734f;--eo-line:rgba(232,226,214,.14);
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--eo-bg);color:var(--eo-ink);font-family:'Mulish',system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:.01em}
   a{color:var(--eo-ink);text-decoration:none;border-bottom:1px solid transparent;transition:color .25s,border-color .25s}
   a:hover{color:var(--eo-bronze);border-bottom-color:rgba(122,104,76,.35)}
-  ::selection{background:var(--eo-bronze);color:#12151c}
+  ::selection{background:var(--eo-bronze);color:#141210}
 
   /* ---------- react-bits ports, rebuilt on CSS transitions (no GSAP/no deps) ---------- */
 
@@ -48,18 +48,18 @@
 
   /* AccordionGallery — one panel per category; hover/focus expands it */
   .eo-ag{display:flex;gap:8px;height:480px;perspective:1200px;margin:0 0 10px}
-  .eo-ag-panel{position:relative;display:block;flex:1 1 0;min-width:0;border-radius:0;overflow:hidden;cursor:pointer;outline:none;background:linear-gradient(150deg,#242836,#2a2f3c);transform:rotateY(var(--eo-tilt,0deg));transition:flex-grow .62s cubic-bezier(.16,1,.3,1),transform .62s cubic-bezier(.16,1,.3,1)}
+  .eo-ag-panel{position:relative;display:block;flex:1 1 0;min-width:0;border-radius:0;overflow:hidden;cursor:pointer;outline:none;background:linear-gradient(150deg,#2a2622,#3a342e);transform:rotateY(var(--eo-tilt,0deg));transition:flex-grow .62s cubic-bezier(.16,1,.3,1),transform .62s cubic-bezier(.16,1,.3,1)}
   .eo-ag-panel:focus-visible{outline:1px solid #e8e2d6;outline-offset:3px}
   .eo-ag-media{position:absolute;inset:0;transform:translateX(var(--eo-shift,0px)) scale(1.06);filter:grayscale(var(--eo-gray,0)) brightness(var(--eo-bright,1));transition:transform .62s cubic-bezier(.16,1,.3,1),filter .62s}
   .eo-ag-media img{width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none;user-select:none}
   .eo-ag-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.35;color:#e8e2d6}
-  .eo-ag-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(232,226,214,.72),rgba(232,226,214,.08) 55%,transparent 75%)}
-  .eo-ag-label{position:absolute;left:0;right:0;bottom:0;padding:22px 22px;display:flex;align-items:center;gap:12px;color:#12151c;pointer-events:none}
-  .eo-ag-bar{display:block;width:28px;height:1px;flex:none;background:#12151c;transition:opacity .5s,transform .5s cubic-bezier(.16,1,.3,1)}
+  .eo-ag-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(12,11,10,.78),rgba(12,11,10,.12) 55%,transparent 75%)}
+  .eo-ag-label{position:absolute;left:0;right:0;bottom:0;padding:22px 22px;display:flex;align-items:center;gap:12px;color:#e8e2d6;pointer-events:none}
+  .eo-ag-bar{display:block;width:28px;height:1px;flex:none;background:#e8e2d6;transition:opacity .5s,transform .5s cubic-bezier(.16,1,.3,1)}
   .eo-ag-tx{min-width:0;transition:opacity .5s,transform .5s cubic-bezier(.16,1,.3,1)}
   .eo-ag-tt{display:block;font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;line-height:1.15;white-space:nowrap}
   .eo-ag-ct{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;opacity:.75;white-space:nowrap}
-  .eo-ag-hint{text-align:center;color:#9aa0a8;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-style:normal;margin:0 0 40px}
+  .eo-ag-hint{text-align:center;color:#a39e94;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-style:normal;margin:0 0 40px}
 
   /* StaggeredMenu — the whole nav, every breakpoint. Layered panels slide in, then
      the items arrive one after another. Portaled to <body>: the header's
@@ -78,28 +78,28 @@
   .eo-sm-scrim{position:absolute;inset:0;background:rgba(232,226,214,.5);opacity:0;transition:opacity .5s}
   .eo-sm.eo-open .eo-sm-scrim{opacity:1}
   .eo-sm-pre,.eo-sm-panel{position:absolute;top:0;right:0;bottom:0;width:min(430px,88vw);transform:translateX(100%);transition:transform .62s cubic-bezier(.16,1,.3,1)}
-  .eo-sm-pre1{background:#0d0f14}
-  .eo-sm-pre2{background:#1a1e28}
-  .eo-sm-panel{background:#12151c;display:flex;flex-direction:column;justify-content:center;gap:40px;padding:48px 44px;overflow-y:auto;box-shadow:-20px 0 50px rgba(232,226,214,.14)}
+  .eo-sm-pre1{background:#0c0b0a}
+  .eo-sm-pre2{background:#1c1916}
+  .eo-sm-panel{background:#141210;display:flex;flex-direction:column;justify-content:center;gap:40px;padding:48px 44px;overflow-y:auto;box-shadow:-20px 0 50px rgba(232,226,214,.14)}
   .eo-sm.eo-open .eo-sm-pre1{transform:none}
   .eo-sm.eo-open .eo-sm-pre2{transform:none;transition-delay:.08s}
   .eo-sm.eo-open .eo-sm-panel{transform:none;transition-delay:.16s}
   .eo-sm:not(.eo-open) .eo-sm-pre1{transition-delay:.16s}
   .eo-sm:not(.eo-open) .eo-sm-pre2{transition-delay:.08s}
-  .eo-sm-eyebrow{font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#9aa0a8;line-height:1}
+  .eo-sm-eyebrow{font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#a39e94;line-height:1}
   .eo-sm-list{list-style:none;margin:0;padding:0}
   .eo-sm-list li{opacity:0;transform:translateY(30px);transition:opacity .5s cubic-bezier(.2,.7,.2,1),transform .5s cubic-bezier(.2,.7,.2,1)}
   .eo-sm.eo-open .eo-sm-list li{opacity:1;transform:none;transition-delay:calc(.30s + var(--i) * .07s)}
   .eo-sm-list a{display:flex;align-items:baseline;gap:16px;padding:10px 0;line-height:1.05;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(32px,5.4vw,48px);color:#e8e2d6;letter-spacing:.02em;border:0;transition:color .3s,transform .4s cubic-bezier(.16,1,.3,1)}
   .eo-sm-list a:hover{color:#b89a6a;transform:translateX(6px);border:0}
   .eo-sm-list a.eo-on{color:#b89a6a}
-  .eo-sm-list em{flex:none;font-style:normal;font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.18em;color:#9aa0a8}
+  .eo-sm-list em{flex:none;font-style:normal;font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.18em;color:#a39e94}
   .eo-sm-foot{opacity:0;transform:translateY(20px);transition:opacity .5s,transform .5s cubic-bezier(.2,.7,.2,1)}
   .eo-sm.eo-open .eo-sm-foot{opacity:1;transform:none;transition-delay:.72s}
-  .eo-sm-lbl{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#9aa0a8;margin-bottom:12px}
+  .eo-sm-lbl{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#a39e94;margin-bottom:12px}
   .eo-sm-soc{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;font-weight:500}
-  .eo-sm-cta{display:inline-block;margin-top:22px;padding:14px 28px;border-radius:0;background:#b89a6a;color:#12151c;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;border:0}
-  .eo-sm-cta:hover{background:#e8e2d6;color:#12151c;border:0}
+  .eo-sm-cta{display:inline-block;margin-top:22px;padding:14px 28px;border-radius:0;background:#b89a6a;color:#141210;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;border:0}
+  .eo-sm-cta:hover{background:#e8e2d6;color:#141210;border:0}
   @media (max-width:860px){
     .eo-ag{flex-direction:column;height:auto;gap:8px}
     .eo-ag-panel{flex:none!important;height:74px;transform:none;transition:height .6s cubic-bezier(.16,1,.3,1)}
@@ -127,14 +127,14 @@
 <div style="min-height:100vh;display:flex;flex-direction:column">
 
   <!-- NAV -->
-  <header style="position:sticky;top:0;z-index:40;background:rgba(18,21,28,.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(232,226,214,.12)">
+  <header style="position:sticky;top:0;z-index:40;background:rgba(20,18,16,.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(232,226,214,.12)">
     <nav style="max-width:1280px;margin:0 auto;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px">
       <a href="#" onClick="{{ goHome }}" style="display:flex;align-items:center;gap:12px;border:0">
         <img src="assets/emberoak-icon.png" alt="Ember &amp; Oak" style="height:40px;width:40px;object-fit:contain;display:block">
         <span style="font-family:'Cormorant Garamond',serif;font-size:20px;letter-spacing:.2em;text-transform:uppercase;color:#e8e2d6;font-weight:500">Ember <span style="color:#b89a6a">&amp;</span> Oak</span>
       </a>
       <div style="display:flex;align-items:center;gap:18px">
-        <a href="#" onClick="{{ goClient }}" style="padding:10px 16px;border:1px solid rgba(232,226,214,.22);border-radius:0;color:#e8e2d6;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase" style-hover="background:#e8e2d6;color:#12151c;border-color:#e8e2d6">Client Access</a>
+        <a href="#" onClick="{{ goClient }}" style="padding:10px 16px;border:1px solid rgba(232,226,214,.22);border-radius:0;color:#e8e2d6;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase" style-hover="background:#e8e2d6;color:#141210;border-color:#e8e2d6">Client Access</a>
         {{ navToggleEl }}
       </div>
     </nav>
@@ -148,38 +148,38 @@
     <div>
       <section style="position:relative;min-height:92vh;display:flex;align-items:flex-end;justify-content:flex-start;text-align:left;overflow:hidden;background:linear-gradient(160deg,#d8d6d0 0%,#b5b1a8 35%,#6e675c 70%,#2a2824 100%)">
         {{ heroImgEl }}
-        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(232,226,214,.18) 0%,rgba(232,226,214,.28) 40%,rgba(232,226,214,.72) 100%)"></div>
-        <div class="eo-hero-in" style="position:relative;z-index:2;width:100%;max-width:1280px;margin:0 auto;padding:0 32px 11vh;color:#12151c">
-          <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:rgba(18,21,28,.72);margin-bottom:18px">Houston · The Woodlands · Magnolia</div>
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(12,11,10,.25) 0%,rgba(12,11,10,.35) 40%,rgba(12,11,10,.78) 100%)"></div>
+        <div class="eo-hero-in" style="position:relative;z-index:2;width:100%;max-width:1280px;margin:0 auto;padding:0 32px 11vh;color:#e8e2d6">
+          <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:rgba(20,18,16,.72);margin-bottom:18px">Houston · The Woodlands · Magnolia</div>
           <h1 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(52px,9vw,104px);line-height:.92;margin:0 0 20px;letter-spacing:.14em;text-transform:uppercase">{{ heroBrandEl }}</h1>
-          <p style="font-family:'Cormorant Garamond',serif;font-weight:400;font-style:italic;font-size:clamp(20px,2.8vw,30px);line-height:1.35;max-width:520px;margin:0 0 36px;color:rgba(18,21,28,.88)">{{ heroTitleEl }}</p>
+          <p style="font-family:'Cormorant Garamond',serif;font-weight:400;font-style:italic;font-size:clamp(20px,2.8vw,30px);line-height:1.35;max-width:520px;margin:0 0 36px;color:rgba(20,18,16,.88)">{{ heroTitleEl }}</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap">
-            <a href="#" onClick="{{ goPortfolio }}" style="padding:15px 28px;background:#e8e2d6;color:#12151c;border:1px solid #e8e2d6;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:transparent;color:#e8e2d6">View Portfolio</a>
-            <a href="#" onClick="{{ goContact }}" style="padding:15px 28px;background:transparent;color:#12151c;border:1px solid rgba(18,21,28,.55);border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="border-color:#12151c;background:rgba(18,21,28,.08)">Inquire</a>
+            <a href="#" onClick="{{ goPortfolio }}" style="padding:15px 28px;background:#e8e2d6;color:#141210;border:1px solid #e8e2d6;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:#b89a6a;border-color:#b89a6a">View Portfolio</a>
+            <a href="#" onClick="{{ goContact }}" style="padding:15px 28px;background:transparent;color:#e8e2d6;border:1px solid rgba(232,226,214,.55);border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="border-color:#e8e2d6;background:rgba(232,226,214,.08)">Inquire</a>
           </div>
         </div>
       </section>
 
       <section style="max-width:760px;margin:0 auto;padding:112px 32px 64px;text-align:left">
-        <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#9aa0a8;margin-bottom:20px">The studio</div>
+        <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#a39e94;margin-bottom:20px">The studio</div>
         <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(30px,4.2vw,46px);line-height:1.2;margin:0 0 22px;letter-spacing:.02em">We chase the golden, in-between moments — the ones you'll want to hold onto forever.</h2>
-        <p style="font-size:16px;line-height:1.85;color:#9aa0a8;margin:0;max-width:640px">Ember &amp; Oak is a Houston-area studio for photography, film, and commercial work. Newborn, family, brand, and aerial stories — made with restraint, warmth, and lasting presence.</p>
+        <p style="font-size:16px;line-height:1.85;color:#a39e94;margin:0;max-width:640px">Ember &amp; Oak is a Houston-area studio for photography, film, and commercial work. Newborn, family, brand, and aerial stories — made with restraint, warmth, and lasting presence.</p>
       </section>
 
       <section style="max-width:1280px;margin:0 auto;padding:20px 32px 56px">
         <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid rgba(232,226,214,.1)">
           <div>
-            <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#9aa0a8;margin-bottom:10px">Selected work</div>
+            <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#a39e94;margin-bottom:10px">Selected work</div>
             <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(28px,4vw,42px);margin:0;letter-spacing:.04em">Featured Galleries</h2>
           </div>
           <a href="#" onClick="{{ goPortfolio }}" style="font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase;border:0">View all</a>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
           <sc-for list="{{ cats }}" as="c" hint-placeholder-count="6">
-            <a href="#" onClick="{{ c.go }}" style="position:relative;display:block;border-radius:3px;overflow:hidden;aspect-ratio:4/5;background:linear-gradient(150deg,#242836,#2a2f3c)" style-hover="filter:brightness(.97)">
+            <a href="#" onClick="{{ c.go }}" style="position:relative;display:block;border-radius:3px;overflow:hidden;aspect-ratio:4/5;background:linear-gradient(150deg,#2a2622,#3a342e)" style-hover="filter:brightness(.97)">
               <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.5;color:#b89a6a">{{ camIcon }}</div>
               {{ c.coverEl }}
-              <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(232,226,214,.55),transparent 55%)"></div>
+              <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(12,11,10,.72),transparent 55%)"></div>
               <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 18px;color:#fff;font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600">{{ c.label }}</div>
             </a>
           </sc-for>
@@ -187,7 +187,7 @@
       </section>
 
       <sc-if value="{{ hasTestimonials }}" hint-placeholder-val="{{ false }}">
-      <section style="background:#1a1e28;margin-top:60px;padding:80px 28px">
+      <section style="background:#1c1916;margin-top:60px;padding:80px 28px">
         <div style="max-width:1080px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:34px">
           <sc-for list="{{ testimonials }}" as="t" hint-placeholder-count="2">
             <figure style="margin:0">
@@ -200,10 +200,10 @@
       </section>
       </sc-if>
 
-      <section style="background:linear-gradient(150deg,#b89a6a,#8a734f);color:#12151c;padding:78px 28px;text-align:center">
+      <section style="background:linear-gradient(150deg,#b89a6a,#8a734f);color:#141210;padding:78px 28px;text-align:center">
         <h2 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(30px,4.5vw,46px);margin:0 0 14px">Let's tell your story.</h2>
         <p style="font-size:17px;color:#f3e2cf;max-width:520px;margin:0 auto 28px">Sessions book a few weeks out — reach out and let's find your date.</p>
-        <a href="#" onClick="{{ goContact }}" style="padding:15px 34px;background:#e8e2d6;color:#12151c;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:#b89a6a">Start Your Booking</a>
+        <a href="#" onClick="{{ goContact }}" style="padding:15px 34px;background:#141210;color:#e8e2d6;border:1px solid #141210;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:#0c0b0a">Start Your Booking</a>
       </section>
     </div>
     </sc-if>
@@ -222,7 +222,7 @@
       </div>
       {{ portfolioEl }}
       <sc-if value="{{ showPortfolioNote }}" hint-placeholder-val="{{ false }}">
-      <p style="text-align:center;color:#9aa0a8;font-size:13px;margin-top:30px;font-style:italic">Upload your first photos from Studio Admin — they'll appear here automatically.</p>
+      <p style="text-align:center;color:#a39e94;font-size:13px;margin-top:30px;font-style:italic">Upload your first photos from Studio Admin — they'll appear here automatically.</p>
       </sc-if>
     </div>
     </sc-if>
@@ -231,7 +231,7 @@
     <sc-if value="{{ showAbout }}" hint-placeholder-val="{{ false }}">
     <div>
       <section style="max-width:1140px;margin:0 auto;padding:64px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;align-items:center">
-        <div style="border-radius:4px;aspect-ratio:4/5;background:linear-gradient(150deg,#242836,#2a2f3c);position:relative;overflow:hidden">
+        <div style="border-radius:4px;aspect-ratio:4/5;background:linear-gradient(150deg,#2a2622,#3a342e);position:relative;overflow:hidden">
           <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.5;color:#b89a6a">{{ camIcon }}</div>
           {{ aboutImgEl }}
         </div>
@@ -243,7 +243,7 @@
           <a href="#" onClick="{{ goContact }}" style="font-weight:600;letter-spacing:.04em">Let's work together →</a>
         </div>
       </section>
-      <section style="background:#1a1e28;padding:70px 28px">
+      <section style="background:#1c1916;padding:70px 28px">
         <div style="max-width:1080px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:30px;text-align:center">
           <sc-for list="{{ values }}" as="v" hint-placeholder-count="3">
             <div>
@@ -260,9 +260,9 @@
     <sc-if value="{{ showServices }}" hint-placeholder-val="{{ false }}">
     <div style="max-width:1080px;margin:0 auto;padding:88px 32px 72px">
       <div style="margin-bottom:56px;max-width:560px">
-        <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#9aa0a8;margin-bottom:16px">Investment</div>
+        <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#a39e94;margin-bottom:16px">Investment</div>
         <h1 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(36px,5vw,56px);margin:0 0 16px;letter-spacing:.03em">Services &amp; Pricing</h1>
-        <p style="font-size:15px;line-height:1.8;color:#9aa0a8;margin:0">Starting points only. Every session is tailored — reach out for a quote for your day.</p>
+        <p style="font-size:15px;line-height:1.8;color:#a39e94;margin:0">Starting points only. Every session is tailored — reach out for a quote for your day.</p>
       </div>
       <div style="display:flex;flex-direction:column">
         <sc-for list="{{ packages }}" as="p" hint-placeholder-count="4">
@@ -271,10 +271,10 @@
               <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(26px,3vw,34px);margin:0;color:#e8e2d6;letter-spacing:.04em">{{ p.name }}</h3>
               <div style="font-size:12px;color:#b89a6a;font-weight:600;letter-spacing:.12em;text-transform:uppercase">{{ p.from }}</div>
             </div>
-            <p style="font-size:15px;line-height:1.75;color:#9aa0a8;margin:0 0 18px;max-width:640px">{{ p.desc }}</p>
+            <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0 0 18px;max-width:640px">{{ p.desc }}</p>
             <ul style="list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 24px">
               <sc-for list="{{ p.items }}" as="li" hint-placeholder-count="4">
-                <li style="font-size:13px;color:#c8c2b6;display:flex;gap:10px;align-items:flex-start"><span style="color:#9aa0a8">—</span>{{ li }}</li>
+                <li style="font-size:13px;color:#c8c2b6;display:flex;gap:10px;align-items:flex-start"><span style="color:#a39e94">—</span>{{ li }}</li>
               </sc-for>
             </ul>
             <a href="#" onClick="{{ p.inquire }}" style="{{ p.btn }}">Inquire</a>
@@ -283,7 +283,7 @@
       </div>
       <div style="margin-top:48px;padding-top:36px;border-top:1px solid rgba(232,226,214,.1)">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:28px;margin:0 0 10px;letter-spacing:.03em">Video &amp; Social Reels</h3>
-        <p style="font-size:15px;line-height:1.75;color:#9aa0a8;max-width:640px;margin:0">Cinematic films, highlight reels, and custom social content — add-ons to any session or booked on their own.</p>
+        <p style="font-size:15px;line-height:1.75;color:#a39e94;max-width:640px;margin:0">Cinematic films, highlight reels, and custom social content — add-ons to any session or booked on their own.</p>
       </div>
     </div>
     </sc-if>
@@ -292,22 +292,22 @@
     <sc-if value="{{ showContact }}" hint-placeholder-val="{{ false }}">
     <div style="max-width:1120px;margin:0 auto;padding:88px 32px 80px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:64px">
       <div>
-        <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#9aa0a8;margin-bottom:16px">Contact</div>
+        <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#a39e94;margin-bottom:16px">Contact</div>
         <h1 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(34px,5vw,52px);margin:0 0 20px;letter-spacing:.02em">Let's begin.</h1>
-        <p style="font-size:15px;line-height:1.85;color:#9aa0a8;margin:0 0 36px">Tell me a little about what you're dreaming up. I'll be in touch within a day or two.</p>
+        <p style="font-size:15px;line-height:1.85;color:#a39e94;margin:0 0 36px">Tell me a little about what you're dreaming up. I'll be in touch within a day or two.</p>
         <div style="display:flex;flex-direction:column;gap:18px;font-size:15px;color:#c8c2b6">
-          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9aa0a8;font-weight:600;margin-bottom:4px">Email</span><a href="mailto:jordan@emberandoak.media" style="border:0">jordan@emberandoak.media</a></div>
-          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9aa0a8;font-weight:600;margin-bottom:4px">Instagram</span><a href="https://instagram.com/emberandoakmedia" target="_blank" style="border:0">@emberandoakmedia</a></div>
-          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9aa0a8;font-weight:600;margin-bottom:4px">Facebook</span><a href="https://www.facebook.com/emberandoakmedia/" target="_blank" style="border:0">/emberandoakmedia</a></div>
-          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9aa0a8;font-weight:600;margin-bottom:4px">YouTube</span><a href="https://www.youtube.com/@EmberandOak" target="_blank" style="border:0">@EmberandOak</a></div>
-          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#9aa0a8;font-weight:600;margin-bottom:4px">Service Area</span>Houston · The Woodlands · Montgomery · Magnolia</div>
+          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#a39e94;font-weight:600;margin-bottom:4px">Email</span><a href="mailto:jordan@emberandoak.media" style="border:0">jordan@emberandoak.media</a></div>
+          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#a39e94;font-weight:600;margin-bottom:4px">Instagram</span><a href="https://instagram.com/emberandoakmedia" target="_blank" style="border:0">@emberandoakmedia</a></div>
+          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#a39e94;font-weight:600;margin-bottom:4px">Facebook</span><a href="https://www.facebook.com/emberandoakmedia/" target="_blank" style="border:0">/emberandoakmedia</a></div>
+          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#a39e94;font-weight:600;margin-bottom:4px">YouTube</span><a href="https://www.youtube.com/@EmberandOak" target="_blank" style="border:0">@EmberandOak</a></div>
+          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#a39e94;font-weight:600;margin-bottom:4px">Service Area</span>Houston · The Woodlands · Montgomery · Magnolia</div>
         </div>
       </div>
       <div style="background:transparent;border-top:1px solid rgba(232,226,214,.12);padding:8px 0 0">
         <sc-if value="{{ contactSent }}" hint-placeholder-val="{{ false }}">
           <div style="padding:40px 0">
-            <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#9aa0a8;margin-bottom:12px">Thank you</div>
-            <p style="font-size:16px;color:#9aa0a8;line-height:1.7;margin:0">Your message is on its way. I'll be in touch very soon.</p>
+            <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#a39e94;margin-bottom:12px">Thank you</div>
+            <p style="font-size:16px;color:#a39e94;line-height:1.7;margin:0">Your message is on its way. I'll be in touch very soon.</p>
           </div>
         </sc-if>
         <sc-if value="{{ showForm }}" hint-placeholder-val="{{ true }}">
@@ -321,7 +321,7 @@
           <sc-if value="{{ hasContactErr }}" hint-placeholder-val="{{ false }}">
             <div style="color:#b23b2e;font-size:13px;padding:9px 0">{{ contactErr }}</div>
           </sc-if>
-          <button type="submit" style="margin-top:12px;align-self:flex-start;padding:15px 32px;background:#e8e2d6;color:#12151c;border:none;border-radius:0;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;cursor:pointer" style-hover="background:#b89a6a">{{ contactBtnLabel }}</button>
+          <button type="submit" style="margin-top:12px;align-self:flex-start;padding:15px 32px;background:#e8e2d6;color:#141210;border:none;border-radius:0;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;cursor:pointer" style-hover="background:#b89a6a">{{ contactBtnLabel }}</button>
         </form>
         </sc-if>
       </div>
@@ -339,11 +339,11 @@
         <div style="max-width:520px;margin:0 auto">{{ clientEl }}</div>
       </sc-if>
       <sc-if value="{{ clientPlaceholder }}" hint-placeholder-val="{{ true }}">
-        <div style="max-width:520px;margin:0 auto;background:#1a1e28;border:1px solid rgba(184,154,106,.4);border-radius:4px;padding:30px;text-align:left">
+        <div style="max-width:520px;margin:0 auto;background:#1c1916;border:1px solid rgba(184,154,106,.4);border-radius:4px;padding:30px;text-align:left">
           <p style="font-size:15px;color:#c8c2b6;line-height:1.7;margin:0">Private client galleries turn on once your delivery backend is connected. Deploy the backend and set <strong>USE_BACKEND</strong>, and this page becomes a full-resolution gallery with one-click downloads.</p>
         </div>
       </sc-if>
-      <p style="font-size:13px;color:#9aa0a8;margin-top:20px">Trouble getting in? <a href="#" onClick="{{ goContact }}">Message me</a> and I'll help.</p>
+      <p style="font-size:13px;color:#a39e94;margin-top:20px">Trouble getting in? <a href="#" onClick="{{ goContact }}">Message me</a> and I'll help.</p>
     </div>
     </sc-if>
 
@@ -357,7 +357,7 @@
       </div>
 
       <sc-if value="{{ loggedOut }}" hint-placeholder-val="{{ false }}">
-        <p style="text-align:center;font-size:14px;color:#9aa0a8;margin:0">Sign in to manage this site's photos &amp; videos.</p>
+        <p style="text-align:center;font-size:14px;color:#a39e94;margin:0">Sign in to manage this site's photos &amp; videos.</p>
         {{ loginEl }}
       </sc-if>
       <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ false }}">
@@ -383,14 +383,14 @@
       <div style="background:#fff;border:1px solid rgba(184,154,106,.3);border-radius:4px;padding:26px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:30px;box-shadow:0 6px 24px rgba(232,226,214,.05)">
         <div>
           <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;margin:0 0 4px">Cover Photo</h3>
-          <div style="font-size:13px;color:#9aa0a8">The big image on your homepage. Newest upload wins.</div>
+          <div style="font-size:13px;color:#a39e94">The big image on your homepage. Newest upload wins.</div>
         </div>
         <button onClick="{{ uploadHero }}" style="padding:12px 22px;background:#b89a6a;color:#fff;border:none;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;white-space:nowrap" style-hover="background:#8a734f">Upload Cover</button>
       </div>
       <div style="background:#fff;border:1px solid rgba(184,154,106,.3);border-radius:4px;padding:26px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:18px;box-shadow:0 6px 24px rgba(232,226,214,.05)">
         <div>
           <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;margin:0 0 4px">About Photo</h3>
-          <div style="font-size:13px;color:#9aa0a8">Your portrait on the About page. Newest upload wins.</div>
+          <div style="font-size:13px;color:#a39e94">Your portrait on the About page. Newest upload wins.</div>
         </div>
         <button onClick="{{ uploadAbout }}" style="padding:12px 22px;background:#b89a6a;color:#fff;border:none;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;white-space:nowrap" style-hover="background:#8a734f">Upload About</button>
       </div>
@@ -398,12 +398,12 @@
         <sc-for list="{{ uploadCats }}" as="u" hint-placeholder-count="6">
           <div style="background:#fff;border:1px solid rgba(184,154,106,.3);border-radius:4px;padding:26px;display:flex;flex-direction:column;gap:10px;box-shadow:0 6px 24px rgba(232,226,214,.05)">
             <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;margin:0">{{ u.label }}</h3>
-            <div style="font-size:13px;color:#9aa0a8">{{ u.count }} photos live</div>
+            <div style="font-size:13px;color:#a39e94">{{ u.count }} photos live</div>
             <button onClick="{{ u.upload }}" style="margin-top:6px;padding:12px;background:#b89a6a;color:#fff;border:none;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer" style-hover="background:#8a734f">Upload / Manage</button>
           </div>
         </sc-for>
       </div>
-      <div style="margin-top:26px;background:#1a1e28;border:1px solid rgba(184,154,106,.4);border-radius:4px;padding:22px 26px">
+      <div style="margin-top:26px;background:#1c1916;border:1px solid rgba(184,154,106,.4);border-radius:4px;padding:22px 26px">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:22px;margin:0 0 6px">Deleting photos &amp; videos</h3>
         <p style="font-size:14px;line-height:1.7;color:#c8c2b6;margin:0 0 12px">To remove something, open your Cloudinary <strong>Media Library</strong>, find the file (they're in folders by category, e.g. <em>emberoak/video</em>), select it and hit delete. It disappears from the site on the next page load.</p>
         <a href="https://console.cloudinary.com/console/media_library" target="_blank" style="display:inline-block;padding:11px 22px;background:#b89a6a;color:#fff;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em" style-hover="background:#8a734f">Open Cloudinary Media Library →</a>
@@ -426,35 +426,35 @@
   </main>
 
   <!-- FOOTER -->
-  <footer style="background:#0d0f14;color:#e8e2d6;padding:56px 28px 34px">
+  <footer style="background:#0c0b0a;color:#e8e2d6;padding:56px 28px 34px">
     <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:34px;align-items:start">
       <div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;letter-spacing:.14em;text-transform:uppercase;font-weight:600">Ember <span style="color:#b89a6a">&amp;</span> Oak</div>
-        <p style="font-size:14px;line-height:1.7;color:#b6a794;margin:12px 0 0;max-width:280px">Photography, film &amp; social reels for the Houston area — warm, timeless, and made for you.</p>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;color:#e8e2d6">Ember <span style="color:#b89a6a">&amp;</span> Oak</div>
+        <p style="font-size:14px;line-height:1.7;color:#a39e94;margin:12px 0 0;max-width:280px">Photography, film &amp; social reels for the Houston area — warm, timeless, and made for you.</p>
       </div>
       <div>
-        <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#b89a6a;font-weight:700;margin-bottom:12px">Explore</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#b89a6a;font-weight:600;margin-bottom:14px">Explore</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
           <sc-for list="{{ nav }}" as="item" hint-placeholder-count="5">
-            <a href="#" onClick="{{ item.go }}" style="color:#e2e0da;font-size:14px" style-hover="color:#fff">{{ item.label }}</a>
+            <a href="#" onClick="{{ item.go }}" style="color:#e8e2d6;font-size:14px;border:0" style-hover="color:#b89a6a">{{ item.label }}</a>
           </sc-for>
         </div>
       </div>
       <div>
-        <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#b89a6a;font-weight:700;margin-bottom:12px">Connect</div>
-        <div style="display:flex;flex-direction:column;gap:8px;font-size:14px">
-          <a href="mailto:jordan@emberandoak.media" style="color:#e2e0da" style-hover="color:#fff">jordan@emberandoak.media</a>
-          <a href="https://instagram.com/emberandoakmedia" target="_blank" style="color:#e2e0da" style-hover="color:#fff">@emberandoakmedia</a>
-          <a href="https://www.facebook.com/emberandoakmedia/" target="_blank" style="color:#e2e0da" style-hover="color:#fff">Facebook</a>
-          <a href="https://www.youtube.com/@EmberandOak" target="_blank" style="color:#e2e0da" style-hover="color:#fff">YouTube</a>
+        <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#b89a6a;font-weight:600;margin-bottom:14px">Connect</div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:14px">
+          <a href="mailto:jordan@emberandoak.media" style="color:#e8e2d6;border:0" style-hover="color:#b89a6a">jordan@emberandoak.media</a>
+          <a href="https://instagram.com/emberandoakmedia" target="_blank" style="color:#e8e2d6;border:0" style-hover="color:#b89a6a">@emberandoakmedia</a>
+          <a href="https://www.facebook.com/emberandoakmedia/" target="_blank" style="color:#e8e2d6;border:0" style-hover="color:#b89a6a">Facebook</a>
+          <a href="https://www.youtube.com/@EmberandOak" target="_blank" style="color:#e8e2d6;border:0" style-hover="color:#b89a6a">YouTube</a>
         </div>
       </div>
       <div>
-        <div style="font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:#b89a6a;font-weight:700;margin-bottom:12px">Service Area</div>
-        <p style="font-size:14px;line-height:1.8;color:#b6a794;margin:0">Houston<br>The Woodlands<br>Montgomery · Magnolia</p>
+        <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#b89a6a;font-weight:600;margin-bottom:14px">Service Area</div>
+        <p style="font-size:14px;line-height:1.8;color:#a39e94;margin:0">Houston<br>The Woodlands<br>Montgomery · Magnolia</p>
       </div>
     </div>
-    <div style="max-width:1200px;margin:34px auto 0;padding-top:20px;border-top:1px solid rgba(255,255,255,.12);font-size:12px;color:#9a8b79;text-align:center">© 2026 Ember &amp; Oak Media. All rights reserved. · <a href="#" onClick="{{ goAdmin }}" style="color:#9a8b79" style-hover="color:#fff">Studio Admin</a></div>
+    <div style="max-width:1200px;margin:34px auto 0;padding-top:20px;border-top:1px solid rgba(232,226,214,.12);font-size:12px;color:#8f8a82;text-align:center">© 2026 Ember &amp; Oak Media. All rights reserved. · <a href="#" onClick="{{ goAdmin }}" style="color:#8f8a82;border:0" style-hover="color:#e8e2d6">Studio Admin</a></div>
   </footer>
 
   <!-- LIGHTBOX -->
@@ -462,7 +462,7 @@
   <div onClick="{{ closeLb }}" style="position:fixed;inset:0;z-index:90;background:rgba(20,19,17,.9);display:flex;align-items:center;justify-content:center;padding:40px;animation:eoFade .25s both">
     <button onClick="{{ closeLb }}" style="position:absolute;top:22px;right:26px;background:none;border:none;color:#fff;font-size:34px;cursor:pointer;line-height:1">×</button>
     <button onClick="{{ prevLb }}" style="position:absolute;left:20px;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:26px;width:48px;height:48px;border-radius:50%;cursor:pointer">‹</button>
-    <div style="position:relative;max-width:900px;width:100%;aspect-ratio:3/2;border-radius:10px;overflow:hidden;background:linear-gradient(150deg,#242836,#2a2f3c);display:flex;align-items:center;justify-content:center">
+    <div style="position:relative;max-width:900px;width:100%;aspect-ratio:3/2;border-radius:10px;overflow:hidden;background:linear-gradient(150deg,#2a2622,#3a342e);display:flex;align-items:center;justify-content:center">
       <div style="opacity:.5;color:#b89a6a">{{ camIcon }}</div>
       {{ currentImgEl }}
       <div style="position:absolute;left:0;right:0;bottom:0;padding:18px 22px;color:#fff;font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;background:linear-gradient(to top,rgba(20,19,17,.7),transparent)">{{ currentLabel }}</div>
@@ -898,37 +898,37 @@ class Component extends DCLogic {
     const bubble = (m, i) => h('div', { key: i, style: {
         alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
         maxWidth: '85%', padding: '10px 14px', borderRadius: 0,
-        background: m.role === 'user' ? '#e8e2d6' : '#1a1e28',
-        color: m.role === 'user' ? '#12151c' : '#e8e2d6',
+        background: m.role === 'user' ? '#e8e2d6' : '#1c1916',
+        color: m.role === 'user' ? '#141210' : '#e8e2d6',
         fontSize: 14.5, lineHeight: 1.55, whiteSpace: 'pre-wrap' } }, m.content);
 
     const panel = h('div', { style: {
         position: 'fixed', right: 18, bottom: 78, zIndex: 95, width: 'min(380px, calc(100vw - 36px))',
         maxHeight: 'min(560px, calc(100vh - 120px))', display: st.chatOpen ? 'flex' : 'none',
-        flexDirection: 'column', background: '#12151c', borderRadius: 0,
+        flexDirection: 'column', background: '#141210', borderRadius: 0,
         border: '1px solid rgba(232,226,214,.14)', boxShadow: '0 16px 40px rgba(232,226,214,.14)', overflow: 'hidden' },
         role: 'dialog', 'aria-label': 'Booking assistant' },
       h('div', { style: { padding: '14px 16px', borderBottom: '1px solid rgba(232,226,214,.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 } },
         h('div', null,
           h('div', { style: { fontFamily: "'Cormorant Garamond',serif", fontSize: 20, fontWeight: 400, color: '#e8e2d6', letterSpacing: '.03em' } }, 'Tell me about your session'),
-          h('div', { style: { fontSize: 11.5, color: '#9aa0a8' } }, 'Goes straight to Jordan — no quotes given here')),
+          h('div', { style: { fontSize: 11.5, color: '#a39e94' } }, 'Goes straight to Jordan — no quotes given here')),
         h('button', { onClick: this.toggleChat(false), 'aria-label': 'Close',
-          style: { background: 'none', border: 'none', fontSize: 22, lineHeight: 1, cursor: 'pointer', color: '#9aa0a8', padding: 2 } }, '\u00d7')),
+          style: { background: 'none', border: 'none', fontSize: 22, lineHeight: 1, cursor: 'pointer', color: '#a39e94', padding: 2 } }, '\u00d7')),
       h('div', { 'data-chat-log': '', style: { flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 10 } },
         st.chatMsgs.map(bubble),
-        st.chatBusy ? h('div', { style: { alignSelf: 'flex-start', fontSize: 13, color: '#9aa0a8', fontStyle: 'italic' } }, 'typing\u2026') : null,
+        st.chatBusy ? h('div', { style: { alignSelf: 'flex-start', fontSize: 13, color: '#a39e94', fontStyle: 'italic' } }, 'typing\u2026') : null,
         st.chatErr ? h('div', { style: { alignSelf: 'stretch', fontSize: 13, color: '#b23b2e', padding: '9px 0' } }, st.chatErr) : null),
       h('form', { onSubmit: (ev) => this.sendChat(ev), style: { display: 'flex', gap: 8, padding: 12, borderTop: '1px solid rgba(232,226,214,.1)' } },
         h('input', { 'data-chat-input': '', value: st.chatInput, placeholder: 'Type your answer\u2026',
           onChange: (ev) => this.setState({ chatInput: ev.target.value }),
           style: { flex: 1, padding: '10px 0', border: '0', borderBottom: '1px solid rgba(232,226,214,.18)', borderRadius: 0, fontSize: 14.5, fontFamily: 'inherit', background: 'transparent' } }),
         h('button', { type: 'submit', disabled: st.chatBusy,
-          style: { padding: '10px 16px', background: st.chatBusy ? '#9aa0a8' : '#e8e2d6', color: '#12151c', border: 'none', borderRadius: 0, fontSize: 11, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', cursor: st.chatBusy ? 'default' : 'pointer', fontFamily: 'inherit' } }, 'Send')));
+          style: { padding: '10px 16px', background: st.chatBusy ? '#a39e94' : '#e8e2d6', color: '#141210', border: 'none', borderRadius: 0, fontSize: 11, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', cursor: st.chatBusy ? 'default' : 'pointer', fontFamily: 'inherit' } }, 'Send')));
 
     const launcher = h('button', { onClick: this.toggleChat(), 'aria-label': st.chatOpen ? 'Close the booking assistant' : 'Open the booking assistant',
       style: { position: 'fixed', right: 18, bottom: 18, zIndex: 95, display: 'flex', alignItems: 'center', gap: 10,
         padding: '12px 18px', borderRadius: 0, border: '1px solid rgba(232,226,214,.2)', cursor: 'pointer', fontFamily: 'inherit',
-        fontSize: 11, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', background: '#e8e2d6', color: '#12151c' } },
+        fontSize: 11, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', background: '#e8e2d6', color: '#141210' } },
       st.chatOpen ? 'Close' : 'Plan a session');
 
     // Fragment-wrapped portal — the DC runtime drops values that fail isValidElement,
@@ -1143,20 +1143,20 @@ class Component extends DCLogic {
 
   renderClientAccess() {
     const h = React.createElement;
-    const inp = { padding: '11px 13px', border: '1px solid rgba(184,154,106,.5)', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', background: '#1a1e28' };
+    const inp = { padding: '11px 13px', border: '1px solid rgba(184,154,106,.5)', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', background: '#1c1916' };
     const g = this.state.gallery;
     if (g) {
       return h('div', null,
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14, flexWrap: 'wrap', marginBottom: 18 } },
           h('div', { style: { textAlign: 'left' } },
             h('h2', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 30, margin: 0 } }, g.title),
-            h('div', { style: { fontSize: 13, color: '#9aa0a8' } }, g.count + ' full-resolution files')),
+            h('div', { style: { fontSize: 13, color: '#a39e94' } }, g.count + ' full-resolution files')),
           (g.downloads === false) ? null : h('button', { onClick: () => this.downloadAllZip(), disabled: this.state.galleryBusy,
             style: { padding: '13px 24px', background: '#b89a6a', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer' } },
             this.state.galleryBusy ? 'Preparing ZIP…' : '⬇ Download all (ZIP)')),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 12 } },
           g.items.map((it, i) => h('div', { key: i,
-            style: { position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: '#242836' } },
+            style: { position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: '#2a2622' } },
             h('button', { onClick: () => this.openViewer(i), title: 'View larger',
               style: { position: 'absolute', inset: 0, padding: 0, border: 'none', background: 'none', cursor: 'zoom-in', width: '100%', height: '100%' } },
               h('img', { src: it.thumb, alt: it.filename, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } })),
@@ -1170,7 +1170,7 @@ class Component extends DCLogic {
           (this.canSharePhotos() && g.downloads !== false) ? h('button', { onClick: () => this.saveToPhotos(g.items), disabled: !!this.state.saveMsg,
             style: { padding: '11px 20px', background: '#b89a6a', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } },
             this.state.saveMsg || '\u2b07 Save all to Photos') : null,
-          h('span', { style: { fontSize: 13, color: '#9aa0a8' } },
+          h('span', { style: { fontSize: 13, color: '#a39e94' } },
             g.downloads === false
               ? 'Tap a photo to view it large. Downloads are turned off for this gallery — contact the studio for the final files.'
               : 'Tap a photo to view it large, or \u2b07 to download the full-resolution file.')),
@@ -1217,13 +1217,13 @@ class Component extends DCLogic {
 
   renderLogin() {
     const h = React.createElement;
-    const inp = { padding: '12px 14px', border: '1px solid rgba(184,154,106,.5)', borderRadius: 10, fontSize: 15, fontFamily: 'inherit', background: '#1a1e28', width: '100%' };
+    const inp = { padding: '12px 14px', border: '1px solid rgba(184,154,106,.5)', borderRadius: 10, fontSize: 15, fontFamily: 'inherit', background: '#1c1916', width: '100%' };
     return h('form', { onSubmit: (e) => { e.preventDefault(); this.doLogin(e.target.slug.value.trim(), e.target.password.value); },
       style: { maxWidth: 420, margin: '26px auto 0', background: '#fff', border: '1px solid rgba(184,154,106,.3)', borderRadius: 18, padding: '36px 32px', boxShadow: '0 10px 34px rgba(232,226,214,.07)', display: 'flex', flexDirection: 'column', gap: 15, textAlign: 'left' } },
       h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginBottom: 6 } },
         h('div', { style: { width: 62, height: 62, borderRadius: '50%', background: 'linear-gradient(145deg,#b89a6a,#c07a3e)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond',serif", fontSize: 26, fontWeight: 600, letterSpacing: '.04em', boxShadow: '0 6px 18px rgba(184,154,106,.28)' } }, 'E&O'),
         h('div', { style: { fontFamily: "'Cormorant Garamond',serif", fontSize: 25, fontWeight: 600 } }, 'Studio Sign In'),
-        h('div', { style: { fontSize: 12.5, color: '#9aa0a8', textAlign: 'center', lineHeight: 1.5 } }, 'Manage your portfolio, covers, and client deliveries.')),
+        h('div', { style: { fontSize: 12.5, color: '#a39e94', textAlign: 'center', lineHeight: 1.5 } }, 'Manage your portfolio, covers, and client deliveries.')),
       h('label', { style: { fontSize: 13, fontWeight: 600, color: '#c8c2b6', display: 'flex', flexDirection: 'column', gap: 6 } }, 'Login name',
         h('input', { name: 'slug', required: true, autoComplete: 'username', autoCapitalize: 'none', autoCorrect: 'off', spellCheck: false, style: inp })),
       h('label', { style: { fontSize: 13, fontWeight: 600, color: '#c8c2b6', display: 'flex', flexDirection: 'column', gap: 6 } }, 'Password',
@@ -1246,13 +1246,13 @@ class Component extends DCLogic {
     const featuredCount = cats.filter(c => st.coverIds && st.coverIds[c.key]).length;
     const stat = (n, l) => h('div', { key: l, style: { textAlign: 'center', minWidth: 74 } },
       h('div', { style: { fontFamily: "'Cormorant Garamond',serif", fontSize: 26, fontWeight: 600, lineHeight: 1 } }, String(n)),
-      h('div', { style: { fontSize: 11, color: '#9aa0a8', letterSpacing: '.06em', textTransform: 'uppercase', marginTop: 4 } }, l));
+      h('div', { style: { fontSize: 11, color: '#a39e94', letterSpacing: '.06em', textTransform: 'uppercase', marginTop: 4 } }, l));
 
     const header = h('div', { style: { ...card, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' } },
       h('div', { style: { width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(145deg,#b89a6a,#c07a3e)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 600, flexShrink: 0, boxShadow: '0 6px 18px rgba(184,154,106,.25)' } }, initials),
       h('div', { style: { flex: '1 1 180px', minWidth: 0 } },
         h('div', { style: { fontFamily: "'Cormorant Garamond',serif", fontSize: 26, fontWeight: 600, lineHeight: 1.15 } }, name),
-        h('div', { style: { fontSize: 12.5, color: '#9aa0a8', marginTop: 3 } }, st.profile ? 'Signed in as ' + st.profile.slug : 'Signed in')),
+        h('div', { style: { fontSize: 12.5, color: '#a39e94', marginTop: 3 } }, st.profile ? 'Signed in as ' + st.profile.slug : 'Signed in')),
       h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap' } }, stat(photos, 'Photos'), stat(videos, 'Videos'), stat(featuredCount, 'Covers')),
       h('button', { onClick: () => this.logout(), style: { padding: '9px 18px', background: 'none', border: '1px solid rgba(184,154,106,.6)', borderRadius: 999, color: '#c8c2b6', fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } }, 'Sign out'));
 
@@ -1281,7 +1281,7 @@ class Component extends DCLogic {
             h('span', { style: { color: '#b89a6a', fontSize: 13, transform: openS ? 'rotate(90deg)' : 'none', transition: 'transform .15s', display: 'inline-block' } }, '\u25b6'),
             h('span', null,
               h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 22, margin: 0 } }, label),
-              h('div', { style: { fontSize: 12, color: '#9aa0a8' } }, items.length + ' live'))),
+              h('div', { style: { fontSize: 12, color: '#a39e94' } }, items.length + ' live'))),
           this.backendMode()
             ? h('label', { style: { padding: '10px 18px', background: busy ? '#c4a87a' : '#b89a6a', color: '#fff', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: busy ? 'default' : 'pointer', whiteSpace: 'nowrap' } },
                 busy ? 'Uploading…' : '+ Upload',
@@ -1292,7 +1292,7 @@ class Component extends DCLogic {
         !openS ? null : items.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(124px,1fr))', gap: 10 } },
           items.map((it, i) => {
             const isCover = !!(st.coverIds && st.coverIds[key] && st.coverIds[key] === it.publicId);
-            return h('div', { key: i, style: { position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: '#242836', boxShadow: isCover ? '0 0 0 3px #f0b429' : 'none' } },
+            return h('div', { key: i, style: { position: 'relative', aspectRatio: '1', borderRadius: 10, overflow: 'hidden', background: '#2a2622', boxShadow: isCover ? '0 0 0 3px #f0b429' : 'none' } },
               h('img', { src: it.thumb, alt: '', style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }),
               it.isVideo ? h('div', { style: { position: 'absolute', top: 5, left: 5, background: 'rgba(20,19,17,.65)', color: '#fff', fontSize: 10, padding: '1px 6px', borderRadius: 4 } }, 'video') : null,
               isCover ? h('div', { style: { position: 'absolute', bottom: 0, left: 0, right: 0, background: 'linear-gradient(to top,rgba(20,19,17,.8),transparent)', color: '#f6c667', fontSize: 10, fontWeight: 700, letterSpacing: '.07em', textAlign: 'center', padding: '10px 2px 4px' } }, 'FEATURED') : null,
@@ -1312,13 +1312,13 @@ class Component extends DCLogic {
                 onClick: () => this.backendFeature(key, it.publicId, it.resourceType),
                 style: { position: 'absolute', top: 5, left: it.isVideo ? 'auto' : 5, right: it.isVideo ? 36 : 'auto', width: 26, height: 26, borderRadius: '50%', border: 'none', background: isCover ? '#f0b429' : 'rgba(20,19,17,.6)', color: isCover ? '#e8e2d6' : '#f6c667', fontSize: 14, lineHeight: '26px', cursor: 'pointer', padding: 0 } }, '★') : null);
           }))
-          : h('div', { style: { fontSize: 13, color: '#9aa0a8', padding: '14px 0 2px', lineHeight: 1.6 } },
+          : h('div', { style: { fontSize: 13, color: '#a39e94', padding: '14px 0 2px', lineHeight: 1.6 } },
               key === 'hero' ? 'No cover photo yet — upload one and it becomes the homepage banner.'
               : key === 'about' ? 'No About photo yet — upload one for the About section.'
               : 'Nothing here yet. Upload a few files, then tap ★ on the one you want as this category’s cover.'));
     };
     const busyD = this.state.busy === 'delivery';
-    const deliveries = h('div', { style: { ...card, background: '#1a1e28' } },
+    const deliveries = h('div', { style: { ...card, background: '#1c1916' } },
       h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 22, margin: '0 0 4px' } }, 'Client Deliveries (full-res)'),
       h('p', { style: { fontSize: 13, color: '#5c5954', margin: '0 0 12px', lineHeight: 1.6 } }, 'Post a client’s finished, full-resolution gallery. Give it a short code, upload the originals, then share the link — they can download any photo or the whole set as a ZIP, no account needed.'),
       h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end' } },
@@ -1337,7 +1337,7 @@ class Component extends DCLogic {
       progressEl(busyD),
       this.state.deliveryCode ? h('div', { style: { fontSize: 12, color: '#8a7a68', marginTop: 10, wordBreak: 'break-all' } }, 'Share link: ', h('code', null, this.deliveryLink(this.state.deliveryCode)), this.state.deliveryExpires ? ' · auto-deletes ' + this.state.deliveryExpires : '') : null);
     // ---- account tab --------------------------------------------------------
-    const inp = { padding: '11px 13px', border: '1px solid rgba(184,154,106,.5)', borderRadius: 9, fontSize: 15, fontFamily: 'inherit', background: '#1a1e28', width: '100%' };
+    const inp = { padding: '11px 13px', border: '1px solid rgba(184,154,106,.5)', borderRadius: 9, fontSize: 15, fontFamily: 'inherit', background: '#1c1916', width: '100%' };
     const field = (label, nm, auto) => h('label', { key: nm, style: { fontSize: 13, fontWeight: 600, color: '#c8c2b6', display: 'flex', flexDirection: 'column', gap: 6 } }, label,
       h('input', { name: nm, type: 'password', required: true, autoComplete: auto, style: inp }));
     const noStore = !!(st.profile && st.profile.canChangePassword === false);
@@ -1345,10 +1345,10 @@ class Component extends DCLogic {
       h('div', { style: card },
         h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 22, margin: '0 0 12px' } }, 'Account'),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 12, fontSize: 13.5 } },
-          h('div', null, h('div', { style: { fontSize: 11, color: '#9aa0a8', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Studio'), h('div', { style: { marginTop: 3 } }, name)),
-          h('div', null, h('div', { style: { fontSize: 11, color: '#9aa0a8', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Login name'), h('div', { style: { marginTop: 3 } }, (st.profile && st.profile.slug) || '—')),
-          h('div', null, h('div', { style: { fontSize: 11, color: '#9aa0a8', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Media folder'), h('div', { style: { marginTop: 3 } }, (st.profile && st.profile.folder) || '—')),
-          h('div', null, h('div', { style: { fontSize: 11, color: '#9aa0a8', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Password changed'),
+          h('div', null, h('div', { style: { fontSize: 11, color: '#a39e94', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Studio'), h('div', { style: { marginTop: 3 } }, name)),
+          h('div', null, h('div', { style: { fontSize: 11, color: '#a39e94', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Login name'), h('div', { style: { marginTop: 3 } }, (st.profile && st.profile.slug) || '—')),
+          h('div', null, h('div', { style: { fontSize: 11, color: '#a39e94', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Media folder'), h('div', { style: { marginTop: 3 } }, (st.profile && st.profile.folder) || '—')),
+          h('div', null, h('div', { style: { fontSize: 11, color: '#a39e94', letterSpacing: '.06em', textTransform: 'uppercase' } }, 'Password changed'),
             h('div', { style: { marginTop: 3 } }, (st.profile && st.profile.passwordUpdatedAt) ? new Date(st.profile.passwordUpdatedAt).toLocaleDateString() : 'Never')))),
       h('form', { onSubmit: (e) => { e.preventDefault(); const f = e.target; this.changePassword(f.currentPassword.value, f.newPassword.value, f.confirmPassword.value).then(ok => { if (ok) f.reset(); }); },
         style: { ...card, display: 'flex', flexDirection: 'column', gap: 13, maxWidth: 460 } },
@@ -1356,7 +1356,7 @@ class Component extends DCLogic {
         noStore
           ? h('div', { style: { fontSize: 13, color: '#8a6d3b', background: 'rgba(240,180,41,.12)', border: '1px solid rgba(240,180,41,.4)', borderRadius: 9, padding: '10px 12px', lineHeight: 1.6 } },
               'Password changes can’t be saved yet — this deployment has no persistent volume, so a new password would be lost on the next deploy. Add a Railway Volume mounted at /data to switch this on.')
-          : h('div', { style: { fontSize: 12.5, color: '#9aa0a8', lineHeight: 1.6 } }, 'At least 10 characters. You’ll use the new password the next time you sign in.'),
+          : h('div', { style: { fontSize: 12.5, color: '#a39e94', lineHeight: 1.6 } }, 'At least 10 characters. You’ll use the new password the next time you sign in.'),
         field('Current password', 'currentPassword', 'current-password'),
         field('New password', 'newPassword', 'new-password'),
         field('Confirm new password', 'confirmPassword', 'new-password'),
@@ -1392,23 +1392,23 @@ class Component extends DCLogic {
                      background: v.featured ? '#f0b429' : 'rgba(20,19,17,.55)', color: v.featured ? '#e8e2d6' : '#f6c667' } }, '\u2605'),
           h('input', { defaultValue: v.title || '', key: 't-' + v.id + '-' + (v.title || ''), placeholder: 'Title shown on the site',
             onBlur: (e) => { const t = e.target.value.trim(); if (t !== (v.title || '')) this.updateVideo(v.id, { title: t }); },
-            style: { flex: '1 1 200px', minWidth: 0, padding: '9px 11px', border: '1px solid rgba(184,154,106,.45)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', background: '#1a1e28' } }),
+            style: { flex: '1 1 200px', minWidth: 0, padding: '9px 11px', border: '1px solid rgba(184,154,106,.45)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', background: '#1c1916' } }),
           h('select', { defaultValue: v.category, key: 'c-' + v.id + '-' + v.category,
             onChange: (e) => this.updateVideo(v.id, { category: e.target.value }),
-            style: { flex: '0 1 150px', padding: '9px 11px', border: '1px solid rgba(184,154,106,.45)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: '#1a1e28' } },
+            style: { flex: '0 1 150px', padding: '9px 11px', border: '1px solid rgba(184,154,106,.45)', borderRadius: 8, fontSize: 13, fontFamily: 'inherit', background: '#1c1916' } },
             vidCats.map(c => h('option', { key: c.key, value: c.key }, c.label))),
-          h('a', { href: v.url, target: '_blank', rel: 'noopener', style: { fontSize: 12, color: '#9aa0a8' } }, v.provider),
+          h('a', { href: v.url, target: '_blank', rel: 'noopener', style: { fontSize: 12, color: '#a39e94' } }, v.provider),
           h('button', { title: 'Remove', onClick: () => this.removeVideo(v.id, v.title),
             style: { width: 28, height: 28, borderRadius: '50%', border: 'none', background: 'rgba(178,59,46,.92)', color: '#fff', fontSize: 16, lineHeight: '28px', cursor: 'pointer', padding: 0, flexShrink: 0 } }, '\u00d7'))))
-        : h('div', { style: { fontSize: 12.5, color: '#9aa0a8', marginTop: 12 } }, 'No videos linked yet.'));
+        : h('div', { style: { fontSize: 12.5, color: '#a39e94', marginTop: 12 } }, 'No videos linked yet.'));
 
-    const catMgr = h('div', { style: { ...card, background: '#1a1e28' } },
+    const catMgr = h('div', { style: { ...card, background: '#1c1916' } },
       h('button', { onClick: () => this.toggleSec('__cats'),
         style: { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' } },
         h('span', { style: { color: '#b89a6a', fontSize: 13, transform: st.openSec['__cats'] ? 'rotate(90deg)' : 'none', transition: 'transform .15s', display: 'inline-block' } }, '\u25b6'),
         h('span', null,
           h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 20, margin: 0 } }, 'Manage categories'),
-          h('div', { style: { fontSize: 12, color: '#9aa0a8' } }, cats.length + ' categories'))),
+          h('div', { style: { fontSize: 12, color: '#a39e94' } }, cats.length + ' categories'))),
       !st.openSec['__cats'] ? null : h('div', { style: { marginTop: 12 } },
         h('form', { onSubmit: (e) => { e.preventDefault(); const f = e.target; this.addCategory(f.cname.value.trim()); f.cname.value = ''; },
           style: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'flex-end', paddingBottom: 12, borderBottom: '1px dashed rgba(184,154,106,.45)' } },
@@ -1423,8 +1423,8 @@ class Component extends DCLogic {
             return h('div', { key: c.key, style: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: '#fff', border: '1px solid rgba(184,154,106,.3)', borderRadius: 10, padding: '8px 10px' } },
               h('input', { defaultValue: c.label, key: 'cl-' + c.key + '-' + c.label,
                 onBlur: (e) => { const l = e.target.value.trim(); if (l && l !== c.label) this.renameCategory(c.key, l); },
-                style: { flex: '1 1 160px', minWidth: 0, padding: '8px 10px', border: '1px solid rgba(184,154,106,.45)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', background: '#1a1e28' } }),
-              h('span', { style: { fontSize: 11.5, color: '#9aa0a8', whiteSpace: 'nowrap' } }, n + (n === 1 ? ' item' : ' items')),
+                style: { flex: '1 1 160px', minWidth: 0, padding: '8px 10px', border: '1px solid rgba(184,154,106,.45)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', background: '#1c1916' } }),
+              h('span', { style: { fontSize: 11.5, color: '#a39e94', whiteSpace: 'nowrap' } }, n + (n === 1 ? ' item' : ' items')),
               h('button', { onClick: () => this.deleteCategory(c.key, c.label), disabled: n > 0,
                 title: n > 0 ? 'Empty this category first' : 'Remove this category',
                 style: { padding: '7px 12px', background: 'none', border: '1px solid rgba(178,59,46,.45)', borderRadius: 999, color: n > 0 ? '#c9b9a8' : '#b23b2e', fontSize: 12, fontWeight: 700, cursor: n > 0 ? 'not-allowed' : 'pointer', fontFamily: 'inherit' } }, 'Remove'));
@@ -1434,7 +1434,7 @@ class Component extends DCLogic {
 
     const work = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
       catMgr,
-      h('div', { style: { fontSize: 12.5, color: '#9aa0a8', lineHeight: 1.6 } }, 'Tap a category to open it.'),
+      h('div', { style: { fontSize: 12.5, color: '#a39e94', lineHeight: 1.6 } }, 'Tap a category to open it.'),
       specials.map(s => sectionOf(s.key, s.label)),
       cats.map(c => sectionOf(c.key, c.label)),
       h('div', { style: { textAlign: 'right', marginTop: 2 } },
@@ -1450,7 +1450,7 @@ class Component extends DCLogic {
       h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: list.length ? 13 : 0 } },
         h('div', null,
           h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 22, margin: 0 } }, 'Posted galleries'),
-          h('div', { style: { fontSize: 12, color: '#9aa0a8' } }, list.length + (list.length === 1 ? ' gallery' : ' galleries'))),
+          h('div', { style: { fontSize: 12, color: '#a39e94' } }, list.length + (list.length === 1 ? ' gallery' : ' galleries'))),
         h('button', { onClick: () => this.loadDeliveries(), style: btnSm }, 'Refresh')),
       list.length ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 10 } },
         list.map(g => {
@@ -1464,7 +1464,7 @@ class Component extends DCLogic {
             h('div', { style: { flex: '1 1 250px', minWidth: 0 } },
               h('div', { style: { fontWeight: 700, fontSize: 14.5 } }, g.title,
                 g.hasPin ? h('span', { style: { marginLeft: 8, fontSize: 10, letterSpacing: '.06em', color: '#8a6d3b', background: 'rgba(240,180,41,.16)', borderRadius: 999, padding: '2px 8px' } }, 'PIN') : null),
-              h('div', { style: { fontSize: 12, color: '#9aa0a8', margin: '3px 0 4px' } },
+              h('div', { style: { fontSize: 12, color: '#a39e94', margin: '3px 0 4px' } },
                 g.count + (g.count === 1 ? ' file' : ' files') + (g.expires ? ' · auto-deletes ' + new Date(g.expires).toLocaleDateString() : '')),
               h('a', { href: link, target: '_blank', rel: 'noopener', style: { fontSize: 12, wordBreak: 'break-all' } }, link)),
             h('div', { style: { display: 'flex', gap: 8, flexWrap: 'wrap' } },
@@ -1486,7 +1486,7 @@ class Component extends DCLogic {
                     style: { padding: '10px 12px', border: '1px solid rgba(184,154,106,.5)', borderRadius: 8, fontSize: 14, fontFamily: 'inherit', background: '#fff', width: '100%' } })),
                 h('button', { onClick: () => this.saveDelivSettings(g.code, (this._pinDraft && this._pinDraft[g.code] !== undefined) ? this._pinDraft[g.code] : ((set_ && set_.pin) || '')),
                   disabled: !!(set_ && set_.canSave === false), style: btnSm }, 'Save code'),
-                h('div', { style: { fontSize: 11.5, color: '#9aa0a8', flex: '1 1 200px', lineHeight: 1.5 } },
+                h('div', { style: { fontSize: 11.5, color: '#a39e94', flex: '1 1 200px', lineHeight: 1.5 } },
                   (set_ && set_.canSave === false)
                     ? 'Needs a Railway Volume at /data before codes can be saved.'
                     : ((set_ && set_.pin) ? 'Clients must enter this code to open the gallery.' : 'Anyone with the link can open this gallery.'))),
@@ -1499,18 +1499,18 @@ class Component extends DCLogic {
                   h('input', { type: 'checkbox', checked: !(set_ && set_.downloads === false),
                     onChange: (e) => this.saveDelivSettings(g.code, (set_ && set_.pin) || '', { downloads: e.target.checked, watermark: !!(set_ && set_.watermark) }) }),
                   'Allow downloads'),
-                h('div', { style: { fontSize: 11.5, color: '#9aa0a8', flex: '1 1 220px', lineHeight: 1.5 } },
+                h('div', { style: { fontSize: 11.5, color: '#a39e94', flex: '1 1 220px', lineHeight: 1.5 } },
                   'For a proofing gallery: watermark on, downloads off. The watermark covers what clients view — with downloads left on they still receive the clean original.')),
               progressEl(addBusy),
               (items_ && items_.length) ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(92px,1fr))', gap: 8 } },
-                items_.map((it, k) => h('div', { key: k, style: { position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', background: '#242836' } },
+                items_.map((it, k) => h('div', { key: k, style: { position: 'relative', aspectRatio: '1', borderRadius: 8, overflow: 'hidden', background: '#2a2622' } },
                   h('img', { src: it.thumb, alt: it.filename, title: it.filename, style: { width: '100%', height: '100%', objectFit: 'cover', display: 'block' } }),
                   it.isVideo ? h('div', { style: { position: 'absolute', top: 4, left: 4, background: 'rgba(20,19,17,.6)', color: '#fff', fontSize: 9, padding: '1px 5px', borderRadius: 4 } }, 'video') : null,
                   h('button', { title: 'Remove ' + it.filename, onClick: () => this.deleteDelivItem(g.code, it),
                     style: { position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: '50%', border: 'none', background: 'rgba(178,59,46,.92)', color: '#fff', fontSize: 15, lineHeight: '24px', cursor: 'pointer', padding: 0 } }, '×'))))
-                : (items_ !== undefined ? h('div', { style: { fontSize: 12.5, color: '#9aa0a8' } }, 'This gallery is empty — add photos above.') : null)) : null);
+                : (items_ !== undefined ? h('div', { style: { fontSize: 12.5, color: '#a39e94' } }, 'This gallery is empty — add photos above.') : null)) : null);
         }))
-        : h('div', { style: { fontSize: 13, color: '#9aa0a8', lineHeight: 1.6 } }, 'No client galleries yet. Enter a code above, upload the full-res originals, then share the link that appears here.'));
+        : h('div', { style: { fontSize: 13, color: '#a39e94', lineHeight: 1.6 } }, 'No client galleries yet. Enter a code above, upload the full-res originals, then share the link that appears here.'));
 
     const deliveriesPanel = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16 } }, deliveries, delivList);
 
@@ -1523,7 +1523,7 @@ class Component extends DCLogic {
           !q.read ? h('span', { style: { display: 'inline-block', width: 8, height: 8, borderRadius: 999, background: '#b89a6a', marginRight: 8 } }) : null,
           h('strong', { style: { fontSize: 15 } }, q.name),
           h('span', { style: { color: '#5c5954', fontSize: 13 } }, '  ' + q.sessionType)),
-        h('span', { style: { fontSize: 12, color: '#9aa0a8' } }, when(q.at))),
+        h('span', { style: { fontSize: 12, color: '#a39e94' } }, when(q.at))),
       q.date ? h('div', { style: { fontSize: 12.5, color: '#5c5954' } }, 'Ideal date: ' + q.date) : null,
       h('div', { style: { whiteSpace: 'pre-wrap', fontSize: 14, lineHeight: 1.6, color: '#e8e2d6' } }, q.message),
       h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginTop: 2 } },
@@ -1537,7 +1537,7 @@ class Component extends DCLogic {
     const inboxPanel = h('div', { style: { display: 'flex', flexDirection: 'column', gap: 12 } },
       st.inquiries.length
         ? st.inquiries.map(inqRow)
-        : h('div', { style: { fontSize: 13, color: '#9aa0a8', lineHeight: 1.6, background: '#fff', border: '1px solid rgba(184,154,106,.3)', borderRadius: 12, padding: '22px 18px' } },
+        : h('div', { style: { fontSize: 13, color: '#a39e94', lineHeight: 1.6, background: '#fff', border: '1px solid rgba(184,154,106,.3)', borderRadius: 12, padding: '22px 18px' } },
             'No inquiries yet. Anything sent through the contact form lands here as well as in your email.'));
 
     return h('div', { style: { display: 'flex', flexDirection: 'column', gap: 16, marginTop: 26, textAlign: 'left' } },
@@ -1799,7 +1799,7 @@ class Component extends DCLogic {
     return R.createElement('div', { style: { columnWidth: '290px', columnGap: '18px' } },
       items.map((p, i) => R.createElement('div', {
         key: i, onClick: p.open,
-        style: { position: 'relative', breakInside: 'avoid', margin: '0 0 18px', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', background: 'linear-gradient(150deg,#242836,#2a2f3c)', height: p.hpx },
+        style: { position: 'relative', breakInside: 'avoid', margin: '0 0 18px', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', background: 'linear-gradient(150deg,#2a2622,#3a342e)', height: p.hpx },
       },
         R.createElement('div', { className: 'eo-ag-ph' }, this.cam(44)),
         p.imgEl,
@@ -1926,7 +1926,7 @@ class Component extends DCLogic {
           React.createElement('div', { style: { width: 0, height: 0, borderTop: '10px solid transparent', borderBottom: '10px solid transparent', borderLeft: '16px solid #fff', marginLeft: 4 } })) : null
       ) : null,
       open: (e) => { if (e) e.preventDefault(); this.setState({ lb: idx }); },
-      style: 'position:relative;break-inside:avoid;margin:0 0 18px;border-radius:3px;overflow:hidden;cursor:pointer;background:linear-gradient(150deg,#242836,#2a2f3c);height:' + it.h + 'px',
+      style: 'position:relative;break-inside:avoid;margin:0 0 18px;border-radius:3px;overflow:hidden;cursor:pointer;background:linear-gradient(150deg,#2a2622,#3a342e);height:' + it.h + 'px',
     }));
 
     // Real client quotes only. Add entries here as they come in — the section
@@ -2057,6 +2057,7 @@ class Component extends DCLogic {
             this.renderAccordion(agItems),
             React.createElement('p', { className: 'eo-ag-hint' }, 'Hover a gallery to open it \u2014 click to see everything inside.'))
         : this.renderGrid(filtered),
+      nav: navPages.map(([key, label]) => ({ label, go: this.go(key) })),
       cats: catCards, filterTabs, filtered, testimonials, hasTestimonials: testimonials.length > 0, values,
       showPortfolioNote: !useCloud,
       packages: packages.map((pk) => ({ ...pk, inquire: this.inquire(pk.name) })),
