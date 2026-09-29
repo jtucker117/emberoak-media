@@ -15,16 +15,16 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=Mulish:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <style>
-  /* Editorial Oak — near-white ground, charcoal type, single bronze accent */
+  /* Editorial Oak — cooler white, charcoal type, bronze used sparingly */
   :root{
-    --eo-bg:#f7f6f3;--eo-bg-soft:#ecebe6;--eo-ink:#1c1b19;--eo-mute:#5c5954;
-    --eo-mute-2:#7a7670;--eo-bronze:#8a734f;--eo-bronze-deep:#6e5a3c;--eo-line:rgba(28,27,25,.12);
+    --eo-bg:#fafaf8;--eo-bg-soft:#f0efeb;--eo-ink:#141413;--eo-mute:#5a5854;
+    --eo-mute-2:#8a8680;--eo-bronze:#7a684c;--eo-bronze-deep:#5c4e3a;--eo-line:rgba(20,20,19,.10);
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--eo-bg);color:var(--eo-ink);font-family:'Mulish',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
-  a{color:#8a734f;text-decoration:none}
-  a:hover{color:#6e5a3c}
-  ::selection{background:var(--eo-ink);color:#f7f6f3}
+  body{margin:0;background:var(--eo-bg);color:var(--eo-ink);font-family:'Mulish',system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:.01em}
+  a{color:var(--eo-ink);text-decoration:none;border-bottom:1px solid transparent;transition:color .25s,border-color .25s}
+  a:hover{color:var(--eo-bronze);border-bottom-color:rgba(122,104,76,.35)}
+  ::selection{background:var(--eo-ink);color:#fafaf8}
 
   /* ---------- react-bits ports, rebuilt on CSS transitions (no GSAP/no deps) ---------- */
 
@@ -41,32 +41,31 @@
   .eo-hero-in>*:nth-child(3){animation-delay:.70s}
   .eo-hero-in>*:nth-child(4){animation-delay:.82s}
 
-  /* SpotlightCard + TiltedCard — cursor glow and a slight 3D lean */
-  .eo-spot{position:relative;transition:transform .4s cubic-bezier(.2,.7,.2,1),box-shadow .4s cubic-bezier(.2,.7,.2,1),border-color .4s}
-  .eo-spot::after{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .4s;background:radial-gradient(300px circle at var(--eo-mx,50%) var(--eo-my,50%),rgba(138,115,79,.30),rgba(138,115,79,.13) 42%,transparent 68%)}
-  .eo-spot:hover::after{opacity:1}
-  .eo-spot:hover{transform:perspective(900px) rotateX(var(--eo-rx,0deg)) rotateY(var(--eo-ry,0deg)) translateY(-9px) scale(1.018);box-shadow:0 26px 60px rgba(28,27,25,.22);border-color:rgba(138,115,79,.55)!important}
+  /* SpotlightCard — restrained lift, no glow chrome */
+  .eo-spot{position:relative;transition:transform .45s cubic-bezier(.2,.7,.2,1),opacity .45s}
+  .eo-spot::after{display:none}
+  .eo-spot:hover{transform:translateY(-4px)}
 
   /* AccordionGallery — one panel per category; hover/focus expands it */
-  .eo-ag{display:flex;gap:10px;height:460px;perspective:1200px;margin:0 0 10px}
-  .eo-ag-panel{position:relative;display:block;flex:1 1 0;min-width:0;border-radius:4px;overflow:hidden;cursor:pointer;outline:none;background:linear-gradient(150deg,#e8e7e2,#dddcd6);transform:rotateY(var(--eo-tilt,0deg));transition:flex-grow .62s cubic-bezier(.16,1,.3,1),transform .62s cubic-bezier(.16,1,.3,1),box-shadow .4s}
-  .eo-ag-panel:focus-visible{box-shadow:0 0 0 3px rgba(138,115,79,.6)}
+  .eo-ag{display:flex;gap:8px;height:480px;perspective:1200px;margin:0 0 10px}
+  .eo-ag-panel{position:relative;display:block;flex:1 1 0;min-width:0;border-radius:0;overflow:hidden;cursor:pointer;outline:none;background:linear-gradient(150deg,#e8e7e2,#dddcd6);transform:rotateY(var(--eo-tilt,0deg));transition:flex-grow .62s cubic-bezier(.16,1,.3,1),transform .62s cubic-bezier(.16,1,.3,1)}
+  .eo-ag-panel:focus-visible{outline:1px solid #141413;outline-offset:3px}
   .eo-ag-media{position:absolute;inset:0;transform:translateX(var(--eo-shift,0px)) scale(1.06);filter:grayscale(var(--eo-gray,0)) brightness(var(--eo-bright,1));transition:transform .62s cubic-bezier(.16,1,.3,1),filter .62s}
   .eo-ag-media img{width:100%;height:100%;object-fit:cover;display:block;-webkit-user-drag:none;user-select:none}
-  .eo-ag-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.45;color:#8a734f}
-  .eo-ag-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(28,27,25,.68),rgba(28,27,25,.04) 60%)}
-  .eo-ag-label{position:absolute;left:0;right:0;bottom:0;padding:18px 20px;display:flex;align-items:center;gap:12px;color:#f7f6f3;pointer-events:none}
-  .eo-ag-bar{display:block;width:34px;height:2px;flex:none;background:#f7f6f3;transition:opacity .5s,transform .5s cubic-bezier(.16,1,.3,1)}
+  .eo-ag-ph{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.35;color:#141413}
+  .eo-ag-ov{position:absolute;inset:0;background:linear-gradient(to top,rgba(20,20,19,.72),rgba(20,20,19,.08) 55%,transparent 75%)}
+  .eo-ag-label{position:absolute;left:0;right:0;bottom:0;padding:22px 22px;display:flex;align-items:center;gap:12px;color:#fafaf8;pointer-events:none}
+  .eo-ag-bar{display:block;width:28px;height:1px;flex:none;background:#fafaf8;transition:opacity .5s,transform .5s cubic-bezier(.16,1,.3,1)}
   .eo-ag-tx{min-width:0;transition:opacity .5s,transform .5s cubic-bezier(.16,1,.3,1)}
-  .eo-ag-tt{display:block;font-family:'Cormorant Garamond',serif;font-size:26px;font-weight:600;line-height:1.15;white-space:nowrap}
-  .eo-ag-ct{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;opacity:.82;white-space:nowrap}
-  .eo-ag-hint{text-align:center;color:#7a7670;font-size:13px;font-style:italic;margin:0 0 34px}
+  .eo-ag-tt{display:block;font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:500;letter-spacing:.06em;text-transform:uppercase;line-height:1.15;white-space:nowrap}
+  .eo-ag-ct{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;opacity:.75;white-space:nowrap}
+  .eo-ag-hint{text-align:center;color:#8a8680;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-style:normal;margin:0 0 40px}
 
   /* StaggeredMenu — the whole nav, every breakpoint. Layered panels slide in, then
      the items arrive one after another. Portaled to <body>: the header's
      backdrop-filter makes it a containing block, which would trap position:fixed. */
-  .eo-smtoggle{display:inline-flex;align-items:center;gap:11px;padding:9px 6px;border:0;background:transparent;cursor:pointer;color:#1c1b19;font-family:'Mulish',sans-serif;font-size:12px;font-weight:700;letter-spacing:.16em;text-transform:uppercase}
-  .eo-smtoggle:hover{color:#8a734f}
+  .eo-smtoggle{display:inline-flex;align-items:center;gap:11px;padding:9px 6px;border:0;background:transparent;cursor:pointer;color:#141413;font-family:'Mulish',sans-serif;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase}
+  .eo-smtoggle:hover{color:#7a684c}
   .eo-smtoggle-l{position:relative;display:block;width:26px;height:13px}
   .eo-smtoggle-l i{position:absolute;left:0;right:0;height:1.6px;border-radius:2px;background:currentColor;transition:transform .45s cubic-bezier(.16,1,.3,1)}
   .eo-smtoggle-l i:nth-child(1){top:0}
@@ -79,28 +78,28 @@
   .eo-sm-scrim{position:absolute;inset:0;background:rgba(28,27,25,.5);opacity:0;transition:opacity .5s}
   .eo-sm.eo-open .eo-sm-scrim{opacity:1}
   .eo-sm-pre,.eo-sm-panel{position:absolute;top:0;right:0;bottom:0;width:min(430px,88vw);transform:translateX(100%);transition:transform .62s cubic-bezier(.16,1,.3,1)}
-  .eo-sm-pre1{background:#2a2926}
-  .eo-sm-pre2{background:#8a734f}
-  .eo-sm-panel{background:#f7f6f3;display:flex;flex-direction:column;justify-content:center;gap:34px;padding:44px 40px;overflow-y:auto;box-shadow:-30px 0 60px rgba(28,27,25,.18)}
+  .eo-sm-pre1{background:#1a1918}
+  .eo-sm-pre2{background:#2e2d2b}
+  .eo-sm-panel{background:#fafaf8;display:flex;flex-direction:column;justify-content:center;gap:40px;padding:48px 44px;overflow-y:auto;box-shadow:-20px 0 50px rgba(20,20,19,.14)}
   .eo-sm.eo-open .eo-sm-pre1{transform:none}
   .eo-sm.eo-open .eo-sm-pre2{transform:none;transition-delay:.08s}
   .eo-sm.eo-open .eo-sm-panel{transform:none;transition-delay:.16s}
   .eo-sm:not(.eo-open) .eo-sm-pre1{transition-delay:.16s}
   .eo-sm:not(.eo-open) .eo-sm-pre2{transition-delay:.08s}
-  .eo-sm-eyebrow{font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#8a734f;line-height:1}
+  .eo-sm-eyebrow{font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#8a8680;line-height:1}
   .eo-sm-list{list-style:none;margin:0;padding:0}
   .eo-sm-list li{opacity:0;transform:translateY(30px);transition:opacity .5s cubic-bezier(.2,.7,.2,1),transform .5s cubic-bezier(.2,.7,.2,1)}
   .eo-sm.eo-open .eo-sm-list li{opacity:1;transform:none;transition-delay:calc(.30s + var(--i) * .07s)}
-  .eo-sm-list a{display:flex;align-items:baseline;gap:14px;padding:8px 0;line-height:1.08;font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(30px,5.4vw,46px);color:#1c1b19;transition:color .3s,transform .4s cubic-bezier(.16,1,.3,1)}
-  .eo-sm-list a:hover{color:#8a734f;transform:translateX(7px)}
-  .eo-sm-list a.eo-on{color:#8a734f}
-  .eo-sm-list em{flex:none;font-style:normal;font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.16em;color:#8a734f}
+  .eo-sm-list a{display:flex;align-items:baseline;gap:16px;padding:10px 0;line-height:1.05;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(32px,5.4vw,48px);color:#141413;letter-spacing:.02em;border:0;transition:color .3s,transform .4s cubic-bezier(.16,1,.3,1)}
+  .eo-sm-list a:hover{color:#7a684c;transform:translateX(6px);border:0}
+  .eo-sm-list a.eo-on{color:#7a684c}
+  .eo-sm-list em{flex:none;font-style:normal;font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.18em;color:#8a8680}
   .eo-sm-foot{opacity:0;transform:translateY(20px);transition:opacity .5s,transform .5s cubic-bezier(.2,.7,.2,1)}
   .eo-sm.eo-open .eo-sm-foot{opacity:1;transform:none;transition-delay:.72s}
-  .eo-sm-lbl{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#8a734f;margin-bottom:10px}
-  .eo-sm-soc{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;font-weight:600}
-  .eo-sm-cta{display:inline-block;margin-top:22px;padding:13px 26px;border-radius:2px;background:#8a734f;color:#fff;font-size:13px;font-weight:700;letter-spacing:.05em}
-  .eo-sm-cta:hover{background:#6e5a3c;color:#fff}
+  .eo-sm-lbl{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#8a8680;margin-bottom:12px}
+  .eo-sm-soc{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;font-weight:500}
+  .eo-sm-cta{display:inline-block;margin-top:22px;padding:14px 28px;border-radius:0;background:#141413;color:#fafaf8;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;border:0}
+  .eo-sm-cta:hover{background:#7a684c;color:#fafaf8;border:0}
   @media (max-width:860px){
     .eo-ag{flex-direction:column;height:auto;gap:8px}
     .eo-ag-panel{flex:none!important;height:74px;transform:none;transition:height .6s cubic-bezier(.16,1,.3,1)}
@@ -128,14 +127,14 @@
 <div style="min-height:100vh;display:flex;flex-direction:column">
 
   <!-- NAV -->
-  <header style="position:sticky;top:0;z-index:40;background:rgba(248,244,236,.86);backdrop-filter:blur(10px);border-bottom:1px solid rgba(138,115,79,.35)">
-    <nav style="max-width:1240px;margin:0 auto;padding:10px 28px;display:flex;align-items:center;justify-content:space-between;gap:20px">
-      <a href="#" onClick="{{ goHome }}" style="display:flex;align-items:center;gap:10px">
-        <img src="assets/emberoak-icon.png" alt="Ember &amp; Oak" style="height:52px;width:52px;object-fit:contain;display:block">
-        <span style="font-family:'Cormorant Garamond',serif;font-size:23px;letter-spacing:.14em;text-transform:uppercase;color:#1c1b19;font-weight:600">Ember <span style="color:#8a734f">&amp;</span> Oak</span>
+  <header style="position:sticky;top:0;z-index:40;background:rgba(250,250,248,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(20,20,19,.08)">
+    <nav style="max-width:1280px;margin:0 auto;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px">
+      <a href="#" onClick="{{ goHome }}" style="display:flex;align-items:center;gap:12px;border:0">
+        <img src="assets/emberoak-icon.png" alt="Ember &amp; Oak" style="height:40px;width:40px;object-fit:contain;display:block">
+        <span style="font-family:'Cormorant Garamond',serif;font-size:20px;letter-spacing:.2em;text-transform:uppercase;color:#141413;font-weight:500">Ember <span style="color:#7a684c">&amp;</span> Oak</span>
       </a>
-      <div style="display:flex;align-items:center;gap:14px">
-        <a href="#" onClick="{{ goClient }}" style="padding:9px 18px;border:1px solid #8a734f;border-radius:2px;color:#8a734f;font-size:13px;font-weight:600;letter-spacing:.04em" style-hover="background:#8a734f;color:#fff">Client Access</a>
+      <div style="display:flex;align-items:center;gap:18px">
+        <a href="#" onClick="{{ goClient }}" style="padding:10px 16px;border:1px solid rgba(20,20,19,.22);border-radius:0;color:#141413;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase" style-hover="background:#141413;color:#fafaf8;border-color:#141413">Client Access</a>
         {{ navToggleEl }}
       </div>
     </nav>
@@ -147,34 +146,33 @@
     <!-- ===================== HOME ===================== -->
     <sc-if value="{{ showHome }}" hint-placeholder-val="{{ true }}">
     <div>
-      <section style="position:relative;min-height:88vh;display:flex;align-items:center;justify-content:center;text-align:center;overflow:hidden;background:linear-gradient(160deg,#d8d6d0 0%,#b5b1a8 35%,#6e675c 70%,#2a2824 100%)">
+      <section style="position:relative;min-height:92vh;display:flex;align-items:flex-end;justify-content:flex-start;text-align:left;overflow:hidden;background:linear-gradient(160deg,#d8d6d0 0%,#b5b1a8 35%,#6e675c 70%,#2a2824 100%)">
         {{ heroImgEl }}
-        <div style="position: absolute; inset: 0; opacity: 1; background: linear-gradient(180deg, #F7F6F33A, #1c1b19)"></div>
-        <div class="eo-hero-in" style="position:relative;z-index:2;max-width:820px;padding:40px 28px;color:#f7f6f3">
-          <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#3f3d39">warm, timeless stories</div>
-          <h1 style="font-family: 'Cormorant Garamond',serif; font-weight: 600; font-size: clamp(44px,8vw,88px); line-height: 1.02; margin: 0 0 16px; letter-spacing: .12em; text-transform: uppercase; text-shadow: 0px 2px 50px #1c1b19">{{ heroBrandEl }}</h1>
-          <p style="font-family: 'Cormorant Garamond',serif; font-weight: 500; font-size: clamp(22px,3.8vw,34px); line-height: 1.25; max-width: 640px; margin: 0 auto 18px; color: #ebe9e3; text-shadow: 0 2px 30px rgba(28,27,25,.55)">{{ heroTitleEl }}</p>
-          <p style="font-size:17px;line-height:1.7;max-width:560px;margin:0 auto 30px;color:#ebe9e3">Newborn, family &amp; event photography, cinematic film, and drone work for the Houston, Woodlands, Montgomery &amp; Magnolia area.</p>
-          <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap">
-            <a href="#" onClick="{{ goPortfolio }}" style="padding:14px 30px;background:#8a734f;color:#fff;border-radius:2px;font-weight:600;font-size:14px;letter-spacing:.05em" style-hover="background:#6e5a3c">View the Portfolio</a>
-            <a href="#" onClick="{{ goContact }}" style="padding:14px 30px;background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.6);border-radius:2px;font-weight:600;font-size:14px;letter-spacing:.05em" style-hover="background:#fff;color:#1c1b19">Book a Session</a>
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,20,19,.18) 0%,rgba(20,20,19,.28) 40%,rgba(20,20,19,.72) 100%)"></div>
+        <div class="eo-hero-in" style="position:relative;z-index:2;width:100%;max-width:1280px;margin:0 auto;padding:0 32px 11vh;color:#fafaf8">
+          <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:rgba(250,250,248,.72);margin-bottom:18px">Houston · The Woodlands · Magnolia</div>
+          <h1 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(52px,9vw,104px);line-height:.92;margin:0 0 20px;letter-spacing:.14em;text-transform:uppercase">{{ heroBrandEl }}</h1>
+          <p style="font-family:'Cormorant Garamond',serif;font-weight:400;font-style:italic;font-size:clamp(20px,2.8vw,30px);line-height:1.35;max-width:520px;margin:0 0 36px;color:rgba(250,250,248,.88)">{{ heroTitleEl }}</p>
+          <div style="display:flex;gap:12px;flex-wrap:wrap">
+            <a href="#" onClick="{{ goPortfolio }}" style="padding:15px 28px;background:#fafaf8;color:#141413;border:1px solid #fafaf8;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:transparent;color:#fafaf8">View Portfolio</a>
+            <a href="#" onClick="{{ goContact }}" style="padding:15px 28px;background:transparent;color:#fafaf8;border:1px solid rgba(250,250,248,.55);border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="border-color:#fafaf8;background:rgba(250,250,248,.08)">Inquire</a>
           </div>
         </div>
       </section>
 
-      <section style="max-width:900px;margin:0 auto;padding:88px 28px 48px;text-align:center">
-        <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#8a734f">hello there</div>
-        <h2 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(28px,4vw,42px);line-height:1.25;margin:0 0 18px">We chase the golden, in-between moments — the ones you'll want to hold onto forever.</h2>
-        <p style="font-size:17px;line-height:1.8;color:#5c5954;max-width:660px;margin:0 auto">Ember &amp; Oak is a Houston-area studio for photography, video, and custom social media reels. Whether it's a brand-new baby, a growing family, or a story told from the sky, we make images that feel warm, honest, and completely yours.</p>
+      <section style="max-width:760px;margin:0 auto;padding:112px 32px 64px;text-align:left">
+        <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#8a8680;margin-bottom:20px">The studio</div>
+        <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(30px,4.2vw,46px);line-height:1.2;margin:0 0 22px;letter-spacing:.02em">We chase the golden, in-between moments — the ones you'll want to hold onto forever.</h2>
+        <p style="font-size:16px;line-height:1.85;color:#5a5854;margin:0;max-width:640px">Ember &amp; Oak is a Houston-area studio for photography, film, and commercial work. Newborn, family, brand, and aerial stories — made with restraint, warmth, and lasting presence.</p>
       </section>
 
-      <section style="max-width:1240px;margin:0 auto;padding:20px 28px 40px">
-        <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:26px">
+      <section style="max-width:1280px;margin:0 auto;padding:20px 32px 56px">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid rgba(20,20,19,.1)">
           <div>
-            <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#8a734f">a little look</div>
-            <h2 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(28px,4vw,40px);margin:0">Featured Galleries</h2>
+            <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#8a8680;margin-bottom:10px">Selected work</div>
+            <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(28px,4vw,42px);margin:0;letter-spacing:.04em">Featured Galleries</h2>
           </div>
-          <a href="#" onClick="{{ goPortfolio }}" style="font-weight:600;font-size:14px;letter-spacing:.04em">See everything →</a>
+          <a href="#" onClick="{{ goPortfolio }}" style="font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase;border:0">View all</a>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
           <sc-for list="{{ cats }}" as="c" hint-placeholder-count="6">
@@ -249,7 +247,7 @@
         <div style="max-width:1080px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:30px;text-align:center">
           <sc-for list="{{ values }}" as="v" hint-placeholder-count="3">
             <div>
-              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:26px;color:#8a734f;margin:0 0 10px">{{ v.title }}</h3>
+              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:24px;color:#141413;margin:0 0 10px;letter-spacing:.03em">{{ v.title }}</h3>
               <p style="font-size:15px;line-height:1.7;color:#5c5954;margin:0">{{ v.desc }}</p>
             </div>
           </sc-for>
@@ -260,71 +258,70 @@
 
     <!-- ===================== SERVICES & PRICING ===================== -->
     <sc-if value="{{ showServices }}" hint-placeholder-val="{{ false }}">
-    <div style="max-width:1200px;margin:0 auto;padding:64px 28px 50px">
-      <div style="text-align:center;margin-bottom:44px">
-        <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#8a734f">investment</div>
-        <h1 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(34px,5vw,56px);margin:0 0 12px">Services &amp; Pricing</h1>
-        <p style="font-size:16px;color:#5c5954;max-width:560px;margin:0 auto">Every session is tailored — these are starting points. Reach out for a custom quote for your day.</p>
+    <div style="max-width:1080px;margin:0 auto;padding:88px 32px 72px">
+      <div style="margin-bottom:56px;max-width:560px">
+        <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#8a8680;margin-bottom:16px">Investment</div>
+        <h1 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(36px,5vw,56px);margin:0 0 16px;letter-spacing:.03em">Services &amp; Pricing</h1>
+        <p style="font-size:15px;line-height:1.8;color:#5a5854;margin:0">Starting points only. Every session is tailored — reach out for a quote for your day.</p>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:22px">
+      <div style="display:flex;flex-direction:column">
         <sc-for list="{{ packages }}" as="p" hint-placeholder-count="4">
           <div style="{{ p.card }}">
-            <sc-if value="{{ p.featured }}" hint-placeholder-val="{{ false }}">
-              <div style="position:absolute;top:16px;right:16px;background:#8a734f;color:#fff;font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;padding:4px 10px;border-radius:2px">Popular</div>
-            </sc-if>
-            <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:28px;margin:0 0 4px;color:#1c1b19">{{ p.name }}</h3>
-            <div style="font-size:14px;color:#8a734f;font-weight:600;letter-spacing:.04em;margin-bottom:16px">{{ p.from }}</div>
-            <p style="font-size:15px;line-height:1.7;color:#5c5954;margin:0 0 18px">{{ p.desc }}</p>
-            <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:9px">
+            <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px">
+              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(26px,3vw,34px);margin:0;color:#141413;letter-spacing:.04em">{{ p.name }}</h3>
+              <div style="font-size:12px;color:#7a684c;font-weight:600;letter-spacing:.12em;text-transform:uppercase">{{ p.from }}</div>
+            </div>
+            <p style="font-size:15px;line-height:1.75;color:#5a5854;margin:0 0 18px;max-width:640px">{{ p.desc }}</p>
+            <ul style="list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 24px">
               <sc-for list="{{ p.items }}" as="li" hint-placeholder-count="4">
-                <li style="font-size:14px;color:#3f3d39;display:flex;gap:9px;align-items:flex-start"><span style="color:#8a734f;font-weight:700">✦</span>{{ li }}</li>
+                <li style="font-size:13px;color:#3f3d39;display:flex;gap:10px;align-items:flex-start"><span style="color:#8a8680">—</span>{{ li }}</li>
               </sc-for>
             </ul>
             <a href="#" onClick="{{ p.inquire }}" style="{{ p.btn }}">Inquire</a>
           </div>
         </sc-for>
       </div>
-      <div style="text-align:center;margin-top:40px;padding:30px;background:#ecebe6;border-radius:4px">
-        <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:26px;margin:0 0 8px">Video &amp; Social Reels</h3>
-        <p style="font-size:15px;color:#5c5954;max-width:640px;margin:0 auto 4px">Cinematic films, highlight reels, and custom social-media content — add-ons to any session or booked on their own. Ask about monthly reel packages for small businesses.</p>
+      <div style="margin-top:48px;padding-top:36px;border-top:1px solid rgba(20,20,19,.1)">
+        <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:28px;margin:0 0 10px;letter-spacing:.03em">Video &amp; Social Reels</h3>
+        <p style="font-size:15px;line-height:1.75;color:#5a5854;max-width:640px;margin:0">Cinematic films, highlight reels, and custom social content — add-ons to any session or booked on their own.</p>
       </div>
     </div>
     </sc-if>
 
     <!-- ===================== CONTACT ===================== -->
     <sc-if value="{{ showContact }}" hint-placeholder-val="{{ false }}">
-    <div style="max-width:1120px;margin:0 auto;padding:64px 28px 60px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px">
+    <div style="max-width:1120px;margin:0 auto;padding:88px 32px 80px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:64px">
       <div>
-        <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#8a734f">say hello</div>
-        <h1 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(34px,5vw,52px);margin:4px 0 20px">Let's book your session.</h1>
-        <p style="font-size:16px;line-height:1.8;color:#5c5954;margin:0 0 28px">Tell me a little about what you're dreaming up and I'll be in touch within a day or two. I can't wait to hear from you.</p>
-        <div style="display:flex;flex-direction:column;gap:16px;font-size:15px;color:#3f3d39">
-          <div><span style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a734f;font-weight:700;margin-bottom:3px">Email</span><a href="mailto:jordan@emberandoak.media">jordan@emberandoak.media</a></div>
-          <div><span style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a734f;font-weight:700;margin-bottom:3px">Instagram</span><a href="https://instagram.com/emberandoakmedia" target="_blank">@emberandoakmedia</a></div>
-          <div><span style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a734f;font-weight:700;margin-bottom:3px">Facebook</span><a href="https://www.facebook.com/emberandoakmedia/" target="_blank">/emberandoakmedia</a></div>
-          <div><span style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a734f;font-weight:700;margin-bottom:3px">YouTube</span><a href="https://www.youtube.com/@EmberandOak" target="_blank">@EmberandOak</a></div>
-          <div><span style="display:block;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#8a734f;font-weight:700;margin-bottom:3px">Service Area</span>Houston · The Woodlands · Montgomery · Magnolia</div>
+        <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#8a8680;margin-bottom:16px">Contact</div>
+        <h1 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(34px,5vw,52px);margin:0 0 20px;letter-spacing:.02em">Let's begin.</h1>
+        <p style="font-size:15px;line-height:1.85;color:#5a5854;margin:0 0 36px">Tell me a little about what you're dreaming up. I'll be in touch within a day or two.</p>
+        <div style="display:flex;flex-direction:column;gap:18px;font-size:15px;color:#3f3d39">
+          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#8a8680;font-weight:600;margin-bottom:4px">Email</span><a href="mailto:jordan@emberandoak.media" style="border:0">jordan@emberandoak.media</a></div>
+          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#8a8680;font-weight:600;margin-bottom:4px">Instagram</span><a href="https://instagram.com/emberandoakmedia" target="_blank" style="border:0">@emberandoakmedia</a></div>
+          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#8a8680;font-weight:600;margin-bottom:4px">Facebook</span><a href="https://www.facebook.com/emberandoakmedia/" target="_blank" style="border:0">/emberandoakmedia</a></div>
+          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#8a8680;font-weight:600;margin-bottom:4px">YouTube</span><a href="https://www.youtube.com/@EmberandOak" target="_blank" style="border:0">@EmberandOak</a></div>
+          <div><span style="display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#8a8680;font-weight:600;margin-bottom:4px">Service Area</span>Houston · The Woodlands · Montgomery · Magnolia</div>
         </div>
       </div>
-      <div style="background:#fff;border:1px solid rgba(138,115,79,.3);border-radius:4px;padding:32px;box-shadow:0 8px 30px rgba(28,27,25,.06)">
+      <div style="background:transparent;border-top:1px solid rgba(20,20,19,.12);padding:8px 0 0">
         <sc-if value="{{ contactSent }}" hint-placeholder-val="{{ false }}">
-          <div style="text-align:center;padding:40px 10px">
-            <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#8a734f">thank you!</div>
-            <p style="font-size:16px;color:#5c5954;line-height:1.7;margin:0">Your message is on its way. I'll be in touch very soon.</p>
+          <div style="padding:40px 0">
+            <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#8a8680;margin-bottom:12px">Thank you</div>
+            <p style="font-size:16px;color:#5a5854;line-height:1.7;margin:0">Your message is on its way. I'll be in touch very soon.</p>
           </div>
         </sc-if>
         <sc-if value="{{ showForm }}" hint-placeholder-val="{{ true }}">
-        <form onSubmit="{{ submitContact }}" data-contact-form="" style="display:flex;flex-direction:column;gap:16px">
-          <label style="font-size:13px;font-weight:600;color:#3f3d39;display:flex;flex-direction:column;gap:6px">Your name<input data-field="name" required="" type="text" style="padding:11px 13px;border:1px solid rgba(138,115,79,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#f3f2ee"></label>
-          <label style="font-size:13px;font-weight:600;color:#3f3d39;display:flex;flex-direction:column;gap:6px">Email<input data-field="email" required="" type="email" style="padding:11px 13px;border:1px solid rgba(138,115,79,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#f3f2ee"></label>
-          <label style="font-size:13px;font-weight:600;color:#3f3d39;display:flex;flex-direction:column;gap:6px">Session type<select data-field="session" style="padding:11px 13px;border:1px solid rgba(138,115,79,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#f3f2ee"><option>Newborn</option><option>Family</option><option>Events</option><option>Cinematic</option><option>Drone</option><option>Video / Reels</option><option>Social media reels</option><option>Something else</option></select></label>
-          <label style="font-size:13px;font-weight:600;color:#3f3d39;display:flex;flex-direction:column;gap:6px">Ideal date<input data-field="date" type="date" style="padding:11px 13px;border:1px solid rgba(138,115,79,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#f3f2ee"></label>
+        <form onSubmit="{{ submitContact }}" data-contact-form="" style="display:flex;flex-direction:column;gap:18px">
+          <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#3f3d39;display:flex;flex-direction:column;gap:8px">Your name<input data-field="name" required="" type="text" style="padding:14px 0;border:0;border-bottom:1px solid rgba(20,20,19,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"></label>
+          <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#3f3d39;display:flex;flex-direction:column;gap:8px">Email<input data-field="email" required="" type="email" style="padding:14px 0;border:0;border-bottom:1px solid rgba(20,20,19,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"></label>
+          <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#3f3d39;display:flex;flex-direction:column;gap:8px">Session type<select data-field="session" style="padding:14px 0;border:0;border-bottom:1px solid rgba(20,20,19,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"><option>Newborn</option><option>Family</option><option>Events</option><option>Cinematic</option><option>Drone</option><option>Video / Reels</option><option>Social media reels</option><option>Something else</option></select></label>
+          <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#3f3d39;display:flex;flex-direction:column;gap:8px">Ideal date<input data-field="date" type="date" style="padding:14px 0;border:0;border-bottom:1px solid rgba(20,20,19,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"></label>
           <input data-field="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
-          <label style="font-size:13px;font-weight:600;color:#3f3d39;display:flex;flex-direction:column;gap:6px">Tell me about it<textarea data-field="message" rows="4" style="padding:11px 13px;border:1px solid rgba(138,115,79,.5);border-radius:8px;font-size:15px;font-family:inherit;background:#f3f2ee;resize:vertical"></textarea></label>
+          <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#3f3d39;display:flex;flex-direction:column;gap:8px">Tell me about it<textarea data-field="message" rows="4" style="padding:14px 0;border:0;border-bottom:1px solid rgba(20,20,19,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent;resize:vertical"></textarea></label>
           <sc-if value="{{ hasContactErr }}" hint-placeholder-val="{{ false }}">
-            <div style="color:#b23b2e;font-size:13px;background:rgba(178,59,46,.07);border:1px solid rgba(178,59,46,.2);border-radius:9px;padding:9px 12px">{{ contactErr }}</div>
+            <div style="color:#b23b2e;font-size:13px;padding:9px 0">{{ contactErr }}</div>
           </sc-if>
-          <button type="submit" style="margin-top:4px;padding:14px;background:#8a734f;color:#fff;border:none;border-radius:2px;font-size:14px;font-weight:700;letter-spacing:.05em;cursor:pointer" style-hover="background:#6e5a3c">{{ contactBtnLabel }}</button>
+          <button type="submit" style="margin-top:12px;align-self:flex-start;padding:15px 32px;background:#141413;color:#fafaf8;border:none;border-radius:0;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;cursor:pointer" style-hover="background:#7a684c">{{ contactBtnLabel }}</button>
         </form>
         </sc-if>
       </div>
@@ -900,41 +897,39 @@ class Component extends DCLogic {
     const st = this.state;
     const bubble = (m, i) => h('div', { key: i, style: {
         alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
-        maxWidth: '85%', padding: '10px 14px', borderRadius: 14,
-        background: m.role === 'user' ? '#8a734f' : '#ecebe6',
-        color: m.role === 'user' ? '#fff' : '#1c1b19',
+        maxWidth: '85%', padding: '10px 14px', borderRadius: 0,
+        background: m.role === 'user' ? '#141413' : '#f0efeb',
+        color: m.role === 'user' ? '#fafaf8' : '#141413',
         fontSize: 14.5, lineHeight: 1.55, whiteSpace: 'pre-wrap' } }, m.content);
 
     const panel = h('div', { style: {
-        position: 'fixed', right: 18, bottom: 88, zIndex: 95, width: 'min(380px, calc(100vw - 36px))',
-        maxHeight: 'min(560px, calc(100vh - 130px))', display: st.chatOpen ? 'flex' : 'none',
-        flexDirection: 'column', background: '#fff', borderRadius: 16,
-        border: '1px solid rgba(138,115,79,.4)', boxShadow: '0 18px 50px rgba(28,27,25,.18)', overflow: 'hidden' },
+        position: 'fixed', right: 18, bottom: 78, zIndex: 95, width: 'min(380px, calc(100vw - 36px))',
+        maxHeight: 'min(560px, calc(100vh - 120px))', display: st.chatOpen ? 'flex' : 'none',
+        flexDirection: 'column', background: '#fafaf8', borderRadius: 0,
+        border: '1px solid rgba(20,20,19,.14)', boxShadow: '0 16px 40px rgba(20,20,19,.14)', overflow: 'hidden' },
         role: 'dialog', 'aria-label': 'Booking assistant' },
-      h('div', { style: { padding: '14px 16px', borderBottom: '1px solid rgba(138,115,79,.3)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 } },
+      h('div', { style: { padding: '14px 16px', borderBottom: '1px solid rgba(20,20,19,.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10 } },
         h('div', null,
-          h('div', { style: { fontFamily: "'Cormorant Garamond',serif", fontSize: 19, fontWeight: 600, color: '#1c1b19' } }, 'Tell me about your session'),
-          h('div', { style: { fontSize: 11.5, color: '#7a7670' } }, 'Goes straight to Jordan — no quotes given here')),
+          h('div', { style: { fontFamily: "'Cormorant Garamond',serif", fontSize: 20, fontWeight: 400, color: '#141413', letterSpacing: '.03em' } }, 'Tell me about your session'),
+          h('div', { style: { fontSize: 11.5, color: '#8a8680' } }, 'Goes straight to Jordan — no quotes given here')),
         h('button', { onClick: this.toggleChat(false), 'aria-label': 'Close',
-          style: { background: 'none', border: 'none', fontSize: 22, lineHeight: 1, cursor: 'pointer', color: '#7a7670', padding: 2 } }, '\u00d7')),
+          style: { background: 'none', border: 'none', fontSize: 22, lineHeight: 1, cursor: 'pointer', color: '#8a8680', padding: 2 } }, '\u00d7')),
       h('div', { 'data-chat-log': '', style: { flex: 1, overflowY: 'auto', padding: 16, display: 'flex', flexDirection: 'column', gap: 10 } },
         st.chatMsgs.map(bubble),
-        st.chatBusy ? h('div', { style: { alignSelf: 'flex-start', fontSize: 13, color: '#7a7670', fontStyle: 'italic' } }, 'typing\u2026') : null,
-        st.chatErr ? h('div', { style: { alignSelf: 'stretch', fontSize: 13, color: '#b23b2e', background: 'rgba(178,59,46,.07)', border: '1px solid rgba(178,59,46,.2)', borderRadius: 9, padding: '9px 12px' } }, st.chatErr) : null),
-      h('form', { onSubmit: (ev) => this.sendChat(ev), style: { display: 'flex', gap: 8, padding: 12, borderTop: '1px solid rgba(138,115,79,.3)' } },
+        st.chatBusy ? h('div', { style: { alignSelf: 'flex-start', fontSize: 13, color: '#8a8680', fontStyle: 'italic' } }, 'typing\u2026') : null,
+        st.chatErr ? h('div', { style: { alignSelf: 'stretch', fontSize: 13, color: '#b23b2e', padding: '9px 0' } }, st.chatErr) : null),
+      h('form', { onSubmit: (ev) => this.sendChat(ev), style: { display: 'flex', gap: 8, padding: 12, borderTop: '1px solid rgba(20,20,19,.1)' } },
         h('input', { 'data-chat-input': '', value: st.chatInput, placeholder: 'Type your answer\u2026',
           onChange: (ev) => this.setState({ chatInput: ev.target.value }),
-          style: { flex: 1, padding: '10px 12px', border: '1px solid rgba(138,115,79,.5)', borderRadius: 999, fontSize: 14.5, fontFamily: 'inherit', background: '#f3f2ee' } }),
+          style: { flex: 1, padding: '10px 0', border: '0', borderBottom: '1px solid rgba(20,20,19,.18)', borderRadius: 0, fontSize: 14.5, fontFamily: 'inherit', background: 'transparent' } }),
         h('button', { type: 'submit', disabled: st.chatBusy,
-          style: { padding: '10px 18px', background: st.chatBusy ? '#c8a68c' : '#8a734f', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, cursor: st.chatBusy ? 'default' : 'pointer', fontFamily: 'inherit' } }, 'Send')));
+          style: { padding: '10px 16px', background: st.chatBusy ? '#8a8680' : '#141413', color: '#fafaf8', border: 'none', borderRadius: 0, fontSize: 11, fontWeight: 600, letterSpacing: '.12em', textTransform: 'uppercase', cursor: st.chatBusy ? 'default' : 'pointer', fontFamily: 'inherit' } }, 'Send')));
 
     const launcher = h('button', { onClick: this.toggleChat(), 'aria-label': st.chatOpen ? 'Close the booking assistant' : 'Open the booking assistant',
-      style: { position: 'fixed', right: 18, bottom: 18, zIndex: 95, display: 'flex', alignItems: 'center', gap: 9,
-        padding: '13px 20px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit',
-        fontSize: 13.5, fontWeight: 700, letterSpacing: '.03em', background: '#1c1b19', color: '#fff',
-        boxShadow: '0 10px 28px rgba(28,27,25,.28)' } },
-      h('span', { style: { width: 8, height: 8, borderRadius: 999, background: '#8a734f', display: 'inline-block' } }),
-      st.chatOpen ? 'Close' : 'Plan your session');
+      style: { position: 'fixed', right: 18, bottom: 18, zIndex: 95, display: 'flex', alignItems: 'center', gap: 10,
+        padding: '12px 18px', borderRadius: 0, border: '1px solid rgba(20,20,19,.2)', cursor: 'pointer', fontFamily: 'inherit',
+        fontSize: 11, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', background: '#141413', color: '#fafaf8' } },
+      st.chatOpen ? 'Close' : 'Plan a session');
 
     // Fragment-wrapped portal — the DC runtime drops values that fail isValidElement,
     // and the header's backdrop-filter would otherwise clip a fixed child.
@@ -1945,10 +1940,10 @@ class Component extends DCLogic {
       { title: 'Heirloom Quality', desc: 'Images and films made to be printed, shared, and treasured for decades.' },
     ];
 
-    const cardBase = 'position:relative;background:#fff;border:1px solid rgba(138,115,79,.3);border-radius:4px;padding:34px 30px;box-shadow:0 6px 24px rgba(28,27,25,.05);display:flex;flex-direction:column';
-    const cardFeat = 'position:relative;background:#fff;border:2px solid #8a734f;border-radius:4px;padding:34px 30px;box-shadow:0 12px 34px rgba(28,27,25,.1);display:flex;flex-direction:column';
-    const btnBase = 'margin-top:auto;text-align:center;padding:12px;border:1px solid #8a734f;border-radius:2px;color:#8a734f;font-weight:700;font-size:13px;letter-spacing:.05em';
-    const btnFeat = 'margin-top:auto;text-align:center;padding:12px;background:#8a734f;color:#fff;border-radius:2px;font-weight:700;font-size:13px;letter-spacing:.05em';
+    const cardBase = 'position:relative;padding:36px 0;border-top:1px solid rgba(20,20,19,.12);display:flex;flex-direction:column';
+    const cardFeat = cardBase;
+    const btnBase = 'align-self:flex-start;padding:0 0 6px;border:0;border-bottom:1px solid #141413;color:#141413;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase';
+    const btnFeat = btnBase;
     const packages = [
       { name: 'Newborn', from: 'from $450', featured: false, card: cardBase, btn: btnBase,
         desc: 'Gentle, posed & lifestyle sessions in your home or the studio.', items: ['Up to 2 hours', 'Baby-led & unhurried pace', '30+ edited images', 'Print & download rights'] },

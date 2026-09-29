@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ember &amp; Oak — Palette explorations</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&family=Mulish:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root { font-family: Mulish, system-ui, sans-serif; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #111; color: #eee; padding: 40px 28px 80px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(32px,5vw,48px); letter-spacing: .06em; text-transform: uppercase; margin: 0 0 8px; }
+  .lead { color: #999; max-width: 560px; line-height: 1.6; margin: 0 0 40px; font-size: 14px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 22px; }
+  .card { border: 1px solid #2a2a2a; overflow: hidden; cursor: pointer; transition: border-color .2s, transform .2s; }
+  .card:hover, .card.active { border-color: #888; transform: translateY(-2px); }
+  .swatches { display: grid; grid-template-columns: repeat(5, 1fr); height: 88px; }
+  .meta { padding: 18px 18px 20px; background: #161616; }
+  .meta h2 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 26px; margin: 0 0 6px; letter-spacing: .04em; }
+  .meta p { margin: 0 0 12px; color: #9a9a9a; font-size: 13px; line-height: 1.55; }
+  .hexes { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 11px; letter-spacing: .04em; color: #777; }
+  .hexes span b { color: #ccc; font-weight: 500; }
+  .preview {
+    margin-top: 48px; border: 1px solid #2a2a2a; overflow: hidden;
+    --bg: #fafaf8; --ink: #141413; --mute: #5a5854; --accent: #7a684c; --line: rgba(20,20,19,.12);
+  }
+  .preview-bar { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; background: var(--bg); color: var(--ink); border-bottom: 1px solid var(--line); }
+  .preview-bar .brand { font-family: 'Cormorant Garamond', serif; letter-spacing: .18em; text-transform: uppercase; font-size: 15px; }
+  .preview-bar .brand em { color: var(--accent); font-style: normal; }
+  .preview-bar .cta { font-size: 10px; letter-spacing: .16em; text-transform: uppercase; padding: 10px 14px; border: 1px solid var(--ink); color: var(--ink); }
+  .preview-hero { min-height: 280px; display: flex; align-items: flex-end; padding: 36px 24px; color: #fafaf8;
+    background: linear-gradient(160deg, color-mix(in srgb, var(--accent) 35%, #888), color-mix(in srgb, var(--ink) 85%, #000)); }
+  .preview-hero .kicker { font-size: 10px; letter-spacing: .28em; text-transform: uppercase; opacity: .7; margin-bottom: 12px; }
+  .preview-hero h3 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: clamp(36px,6vw,56px); letter-spacing: .12em; text-transform: uppercase; margin: 0 0 10px; }
+  .preview-hero p { font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 20px; margin: 0; opacity: .9; max-width: 420px; }
+  .preview-body { background: var(--bg); color: var(--ink); padding: 36px 24px; display: grid; gap: 18px; grid-template-columns: 1.2fr .8fr; }
+  .preview-body h4 { font-family: 'Cormorant Garamond', serif; font-weight: 400; font-size: 28px; margin: 0 0 10px; }
+  .preview-body p { margin: 0; color: var(--mute); line-height: 1.7; font-size: 14px; }
+  .preview-body .btn { display: inline-block; margin-top: 18px; padding: 12px 18px; background: var(--ink); color: var(--bg); font-size: 10px; letter-spacing: .16em; text-transform: uppercase; }
+  .preview-body .panel { border-top: 1px solid var(--line); padding-top: 8px; }
+  .preview-body label { display: block; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; margin: 14px 0 6px; }
+  .preview-body .field { border: 0; border-bottom: 1px solid var(--line); padding: 10px 0; color: var(--mute); font-size: 14px; }
+  .note { margin-top: 18px; color: #777; font-size: 12px; }
+  a.back { color: #aaa; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; text-decoration: none; }
+</style>
+</head>
+<body>
+  <a class="back" href="/">← Back to site</a>
+  <h1 style="margin-top:20px">Palette explorations</h1>
+  <p class="lead">Click a direction to preview it below. These are color systems only — pick one and I’ll apply it to the live Editorial Oak layout.</p>
+  <div class="grid" id="grid"></div>
+  <div class="preview" id="preview">
+    <div class="preview-bar">
+      <div class="brand">Ember <em>&amp;</em> Oak</div>
+      <div class="cta">Client Access</div>
+    </div>
+    <div class="preview-hero">
+      <div>
+        <div class="kicker">Houston · The Woodlands · Magnolia</div>
+        <h3>Ember &amp; Oak</h3>
+        <p>Photography, film &amp; social reels made to be felt.</p>
+      </div>
+    </div>
+    <div class="preview-body">
+      <div>
+        <div class="kicker" style="font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute);margin-bottom:12px">The studio</div>
+        <h4>Quiet confidence. Lasting images.</h4>
+        <p>A more restrained system lets the photography carry warmth — chrome stays out of the way.</p>
+        <div class="btn">View Portfolio</div>
+      </div>
+      <div class="panel">
+        <label>Your name</label><div class="field">Jordan Tucker</div>
+        <label>Session type</label><div class="field">Commercial</div>
+        <div class="btn" style="margin-top:22px">Inquire</div>
+      </div>
+    </div>
+  </div>
+  <p class="note">Tip: say the palette name in chat (e.g. “apply Noir Clay”) and I’ll wire it into the site.</p>
+<script>
+const palettes = [
+  {
+    id: 'editorial-oak',
+    name: 'Editorial Oak',
+    vibe: 'Current prototype — cool near-white, charcoal type, bronze used sparingly.',
+    bg: '#fafaf8', ink: '#141413', mute: '#5a5854', accent: '#7a684c', soft: '#f0efeb'
+  },
+  {
+    id: 'noir-clay',
+    name: 'Noir Clay',
+    vibe: 'Darker luxury. Soft black ground, bone type, muted clay accent. Cinematic.',
+    bg: '#161513', ink: '#f3efe6', mute: '#a39e94', accent: '#c4a484', soft: '#1e1c19'
+  },
+  {
+    id: 'porcelain-ink',
+    name: 'Porcelain Ink',
+    vibe: 'Gallery white, pure black type, almost no accent. Maximum restraint.',
+    bg: '#ffffff', ink: '#0a0a0a', mute: '#666666', accent: '#0a0a0a', soft: '#f5f5f5'
+  },
+  {
+    id: 'sea-glass',
+    name: 'Sea Glass',
+    vibe: 'Cool professional. Mist white, deep slate, quiet blue-green accent.',
+    bg: '#f4f6f5', ink: '#1b2422', mute: '#5d6a66', accent: '#3f6f64', soft: '#e7eeeb'
+  },
+  {
+    id: 'oxblood-bone',
+    name: 'Oxblood Bone',
+    vibe: 'Bold luxury. Warm bone ground, espresso ink, deep oxblood accent.',
+    bg: '#f6f1ea', ink: '#1a1210', mute: '#6b5c54', accent: '#7a2e2e', soft: '#ebe3d8'
+  },
+  {
+    id: 'champagne-graphite',
+    name: 'Champagne Graphite',
+    vibe: 'Soft metallic. Pale champagne, graphite type, champagne-gold accent.',
+    bg: '#f3efe8', ink: '#2a2a28', mute: '#6f6c64', accent: '#a8926a', soft: '#e8e2d6'
+  },
+  {
+    id: 'forest-linen',
+    name: 'Forest Linen',
+    vibe: 'Nature-forward. Linen ground, charcoal, deep forest green accent.',
+    bg: '#f7f5f0', ink: '#1c1f1c', mute: '#5c635c', accent: '#3d5245', soft: '#ebe8e0'
+  },
+  {
+    id: 'midnight-sand',
+    name: 'Midnight Sand',
+    vibe: 'Evening editorial. Midnight navy ground, sand type, soft brass accent.',
+    bg: '#12151c', ink: '#e8e2d6', mute: '#9aa0a8', accent: '#b89a6a', soft: '#1a1e28'
+  }
+];
+
+const grid = document.getElementById('grid');
+const preview = document.getElementById('preview');
+
+function apply(p) {
+  preview.style.setProperty('--bg', p.bg);
+  preview.style.setProperty('--ink', p.ink);
+  preview.style.setProperty('--mute', p.mute);
+  preview.style.setProperty('--accent', p.accent);
+  preview.style.setProperty('--line', p.bg.startsWith('#1') || p.bg.startsWith('#0') || p.bg === '#12151c' || p.bg === '#161513'
+    ? 'rgba(243,239,230,.14)' : 'rgba(20,20,19,.12)');
+  document.querySelectorAll('.card').forEach(c => c.classList.toggle('active', c.dataset.id === p.id));
+}
+
+palettes.forEach((p, i) => {
+  const el = document.createElement('div');
+  el.className = 'card' + (i === 0 ? ' active' : '');
+  el.dataset.id = p.id;
+  el.innerHTML = `
+    <div class="swatches">
+      <div style="background:${p.bg}"></div>
+      <div style="background:${p.soft}"></div>
+      <div style="background:${p.mute}"></div>
+      <div style="background:${p.accent}"></div>
+      <div style="background:${p.ink}"></div>
+    </div>
+    <div class="meta">
+      <h2>${p.name}</h2>
+      <p>${p.vibe}</p>
+      <div class="hexes">
+        <span><b>bg</b> ${p.bg}</span>
+        <span><b>ink</b> ${p.ink}</span>
+        <span><b>mute</b> ${p.mute}</span>
+        <span><b>accent</b> ${p.accent}</span>
+      </div>
+    </div>`;
+  el.onclick = () => apply(p);
+  grid.appendChild(el);
+});
+apply(palettes[0]);
+</script>
+</body>
+</html>
