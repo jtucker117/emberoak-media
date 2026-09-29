@@ -143,7 +143,7 @@ function apply(p) {
 
 palettes.forEach((p, i) => {
   const el = document.createElement('div');
-  el.className = 'card' + (i === 0 ? ' active' : '');
+  el.className = 'card' + (p.id === 'midnight-sand' ? ' active' : '');
   el.dataset.id = p.id;
   el.innerHTML = `
     <div class="swatches">
@@ -166,7 +166,7 @@ palettes.forEach((p, i) => {
   el.onclick = () => apply(p);
   grid.appendChild(el);
 });
-apply(palettes[0]);
+apply(palettes.find(p=>p.id==='midnight-sand')||palettes[0]);
 </script>
 </body>
 </html>
