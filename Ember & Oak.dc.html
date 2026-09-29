@@ -315,7 +315,7 @@
         <form onSubmit="{{ submitContact }}" data-contact-form="" style="display:flex;flex-direction:column;gap:18px">
           <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c8c2b6;display:flex;flex-direction:column;gap:8px">Your name<input data-field="name" required="" type="text" style="padding:14px 0;border:0;border-bottom:1px solid rgba(232,226,214,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"></label>
           <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c8c2b6;display:flex;flex-direction:column;gap:8px">Email<input data-field="email" required="" type="email" style="padding:14px 0;border:0;border-bottom:1px solid rgba(232,226,214,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"></label>
-          <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c8c2b6;display:flex;flex-direction:column;gap:8px">Session type<select data-field="session" style="padding:14px 0;border:0;border-bottom:1px solid rgba(232,226,214,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"><option>Newborn</option><option>Family</option><option>Events</option><option>Cinematic</option><option>Drone</option><option>Video / Reels</option><option>Social media reels</option><option>Something else</option></select></label>
+          <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c8c2b6;display:flex;flex-direction:column;gap:8px">Session type<select data-field="session" style="padding:14px 0;border:0;border-bottom:1px solid rgba(232,226,214,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"><option>Newborn</option><option>Family</option><option>Events</option><option>Commercial</option><option>Cinematic</option><option>Drone</option><option>Video / Reels</option><option>Social media reels</option><option>Something else</option></select></label>
           <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c8c2b6;display:flex;flex-direction:column;gap:8px">Ideal date<input data-field="date" type="date" style="padding:14px 0;border:0;border-bottom:1px solid rgba(232,226,214,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"></label>
           <input data-field="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
           <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c8c2b6;display:flex;flex-direction:column;gap:8px">Tell me about it<textarea data-field="message" rows="4" style="padding:14px 0;border:0;border-bottom:1px solid rgba(232,226,214,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent;resize:vertical"></textarea></label>
@@ -714,7 +714,8 @@ class Component extends DCLogic {
   catList() {
     return (this.state.cats && this.state.cats.length) ? this.state.cats : [
       { key: 'newborn', label: 'Newborn' }, { key: 'family', label: 'Family' },
-      { key: 'events', label: 'Events' }, { key: 'cinematic', label: 'Cinematic' },
+      { key: 'events', label: 'Events' }, { key: 'commercial', label: 'Commercial' },
+      { key: 'cinematic', label: 'Cinematic' },
       { key: 'drone', label: 'Drone' },
       { key: 'video', label: 'Video / Reels' }, { key: 'social', label: 'Social Reels' },
     ];
@@ -1854,6 +1855,7 @@ class Component extends DCLogic {
       ['newborn', 'Sleeping Newborn', 340, ''], ['newborn', 'First Days at Home', 260, ''], ['newborn', 'Tiny Details', 400, ''],
       ['family', 'Golden Hour Family', 300, ''], ['family', 'In the Backyard', 360, ''], ['family', 'Generations', 280, ''],
       ['events', 'Concert Night', 360, ''], ['events', 'Live on Stage', 300, ''], ['events', 'Crowd & Lights', 400, ''],
+      ['commercial', 'On Set', 340, ''], ['commercial', 'Product Light', 300, ''], ['commercial', 'Brand Portrait', 380, ''],
       ['cinematic', 'Cinematic Portrait', 420, ''], ['cinematic', 'Editorial Light', 320, ''], ['cinematic', 'Moody & Warm', 300, ''],
       ['drone', 'Aerial Estate', 380, ''], ['drone', 'Coastline from Above', 260, ''], ['drone', 'Sweeping Landscape', 340, ''],
       ['video', 'Highlight Film', 340, ''], ['video', 'Wedding Trailer', 260, ''], ['video', 'Brand Story', 400, ''],
