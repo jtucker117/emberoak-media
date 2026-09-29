@@ -15,16 +15,17 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&amp;family=Mulish:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
 <script src="https://upload-widget.cloudinary.com/global/all.js"></script>
 <style>
-  /* Midnight Sand — warm charcoal ground, sand type, brass accent */
+  /* Midnight Sand — warm charcoal ground, sand type, midnight blue accent */
   :root{
     --eo-bg:#141210;--eo-bg-soft:#1c1916;--eo-ink:#e8e2d6;--eo-mute:#a39e94;
-    --eo-mute-2:#8f8a82;--eo-bronze:#b89a6a;--eo-bronze-deep:#8a734f;--eo-line:rgba(232,226,214,.14);
+    --eo-mute-2:#8f8a82;--eo-accent:#5b7d92;--eo-accent-deep:#3e5a6c;
+    --eo-bronze:#5b7d92;--eo-bronze-deep:#3e5a6c;--eo-line:rgba(232,226,214,.14);
   }
   *{box-sizing:border-box}
   body{margin:0;background:var(--eo-bg);color:var(--eo-ink);font-family:'Mulish',system-ui,sans-serif;-webkit-font-smoothing:antialiased;letter-spacing:.01em}
   a{color:var(--eo-ink);text-decoration:none;border-bottom:1px solid transparent;transition:color .25s,border-color .25s}
   a:hover{color:var(--eo-bronze);border-bottom-color:rgba(122,104,76,.35)}
-  ::selection{background:var(--eo-bronze);color:#141210}
+  ::selection{background:var(--eo-accent);color:#e8e2d6}
 
   /* ---------- react-bits ports, rebuilt on CSS transitions (no GSAP/no deps) ---------- */
 
@@ -65,7 +66,7 @@
      the items arrive one after another. Portaled to <body>: the header's
      backdrop-filter makes it a containing block, which would trap position:fixed. */
   .eo-smtoggle{display:inline-flex;align-items:center;gap:11px;padding:9px 6px;border:0;background:transparent;cursor:pointer;color:#e8e2d6;font-family:'Mulish',sans-serif;font-size:11px;font-weight:600;letter-spacing:.2em;text-transform:uppercase}
-  .eo-smtoggle:hover{color:#b89a6a}
+  .eo-smtoggle:hover{color:#5b7d92}
   .eo-smtoggle-l{position:relative;display:block;width:26px;height:13px}
   .eo-smtoggle-l i{position:absolute;left:0;right:0;height:1.6px;border-radius:2px;background:currentColor;transition:transform .45s cubic-bezier(.16,1,.3,1)}
   .eo-smtoggle-l i:nth-child(1){top:0}
@@ -91,15 +92,15 @@
   .eo-sm-list li{opacity:0;transform:translateY(30px);transition:opacity .5s cubic-bezier(.2,.7,.2,1),transform .5s cubic-bezier(.2,.7,.2,1)}
   .eo-sm.eo-open .eo-sm-list li{opacity:1;transform:none;transition-delay:calc(.30s + var(--i) * .07s)}
   .eo-sm-list a{display:flex;align-items:baseline;gap:16px;padding:10px 0;line-height:1.05;font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(32px,5.4vw,48px);color:#e8e2d6;letter-spacing:.02em;border:0;transition:color .3s,transform .4s cubic-bezier(.16,1,.3,1)}
-  .eo-sm-list a:hover{color:#b89a6a;transform:translateX(6px);border:0}
-  .eo-sm-list a.eo-on{color:#b89a6a}
+  .eo-sm-list a:hover{color:#5b7d92;transform:translateX(6px);border:0}
+  .eo-sm-list a.eo-on{color:#5b7d92}
   .eo-sm-list em{flex:none;font-style:normal;font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.18em;color:#a39e94}
   .eo-sm-foot{opacity:0;transform:translateY(20px);transition:opacity .5s,transform .5s cubic-bezier(.2,.7,.2,1)}
   .eo-sm.eo-open .eo-sm-foot{opacity:1;transform:none;transition-delay:.72s}
   .eo-sm-lbl{font-size:10px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:#a39e94;margin-bottom:12px}
   .eo-sm-soc{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px;font-weight:500}
-  .eo-sm-cta{display:inline-block;margin-top:22px;padding:14px 28px;border-radius:0;background:#b89a6a;color:#141210;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;border:0}
-  .eo-sm-cta:hover{background:#e8e2d6;color:#141210;border:0}
+  .eo-sm-cta{display:inline-block;margin-top:22px;padding:14px 28px;border-radius:0;background:#5b7d92;color:#e8e2d6;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;border:0}
+  .eo-sm-cta:hover{background:#3e5a6c;color:#e8e2d6;border:0}
   @media (max-width:860px){
     .eo-ag{flex-direction:column;height:auto;gap:8px}
     .eo-ag-panel{flex:none!important;height:74px;transform:none;transition:height .6s cubic-bezier(.16,1,.3,1)}
@@ -131,10 +132,10 @@
     <nav style="max-width:1280px;margin:0 auto;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px">
       <a href="#" onClick="{{ goHome }}" style="display:flex;align-items:center;gap:12px;border:0">
         <img src="assets/emberoak-icon.png" alt="Ember &amp; Oak" style="height:40px;width:40px;object-fit:contain;display:block">
-        <span style="font-family:'Cormorant Garamond',serif;font-size:20px;letter-spacing:.2em;text-transform:uppercase;color:#e8e2d6;font-weight:500">Ember <span style="color:#b89a6a">&amp;</span> Oak</span>
+        <span style="font-family:'Cormorant Garamond',serif;font-size:20px;letter-spacing:.2em;text-transform:uppercase;color:#e8e2d6;font-weight:500">Ember <span style="color:#5b7d92">&amp;</span> Oak</span>
       </a>
       <div style="display:flex;align-items:center;gap:18px">
-        <a href="#" onClick="{{ goClient }}" style="padding:10px 16px;border:1px solid rgba(232,226,214,.22);border-radius:0;color:#e8e2d6;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase" style-hover="background:#e8e2d6;color:#141210;border-color:#e8e2d6">Client Access</a>
+        <a href="#" onClick="{{ goClient }}" style="padding:10px 16px;border:1px solid rgba(232,226,214,.22);border-radius:0;color:#e8e2d6;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase" style-hover="background:#5b7d92;color:#e8e2d6;border-color:#5b7d92">Client Access</a>
         {{ navToggleEl }}
       </div>
     </nav>
@@ -154,7 +155,7 @@
           <h1 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(52px,9vw,104px);line-height:.92;margin:0 0 20px;letter-spacing:.14em;text-transform:uppercase">{{ heroBrandEl }}</h1>
           <p style="font-family:'Cormorant Garamond',serif;font-weight:400;font-style:italic;font-size:clamp(20px,2.8vw,30px);line-height:1.35;max-width:520px;margin:0 0 36px;color:rgba(20,18,16,.88)">{{ heroTitleEl }}</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap">
-            <a href="#" onClick="{{ goPortfolio }}" style="padding:15px 28px;background:#e8e2d6;color:#141210;border:1px solid #e8e2d6;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:#b89a6a;border-color:#b89a6a">View Portfolio</a>
+            <a href="#" onClick="{{ goPortfolio }}" style="padding:15px 28px;background:#e8e2d6;color:#141210;border:1px solid #e8e2d6;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:#5b7d92;border-color:#5b7d92;color:#e8e2d6">View Portfolio</a>
             <a href="#" onClick="{{ goContact }}" style="padding:15px 28px;background:transparent;color:#e8e2d6;border:1px solid rgba(232,226,214,.55);border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="border-color:#e8e2d6;background:rgba(232,226,214,.08)">Inquire</a>
           </div>
         </div>
@@ -167,7 +168,7 @@
       </section>
 
       <section style="max-width:1280px;margin:0 auto;padding:20px 32px 56px">
-        <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid rgba(232,226,214,.1)">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:28px;padding-bottom:18px;border-bottom:1px solid #5b7d92">
           <div>
             <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#a39e94;margin-bottom:10px">Selected work</div>
             <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(28px,4vw,42px);margin:0;letter-spacing:.04em">Featured Galleries</h2>
@@ -177,7 +178,7 @@
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
           <sc-for list="{{ cats }}" as="c" hint-placeholder-count="6">
             <a href="#" onClick="{{ c.go }}" style="position:relative;display:block;border-radius:3px;overflow:hidden;aspect-ratio:4/5;background:linear-gradient(150deg,#2a2622,#3a342e)" style-hover="filter:brightness(.97)">
-              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.5;color:#b89a6a">{{ camIcon }}</div>
+              <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.5;color:#5b7d92">{{ camIcon }}</div>
               {{ c.coverEl }}
               <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(12,11,10,.72),transparent 55%)"></div>
               <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 18px;color:#fff;font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600">{{ c.label }}</div>
@@ -191,19 +192,19 @@
         <div style="max-width:1080px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:34px">
           <sc-for list="{{ testimonials }}" as="t" hint-placeholder-count="2">
             <figure style="margin:0">
-              <div style="font-family:'Cormorant Garamond',serif;font-size:44px;color:#b89a6a;line-height:0;height:22px">“</div>
+              <div style="font-family:'Cormorant Garamond',serif;font-size:44px;color:#5b7d92;line-height:0;height:22px">“</div>
               <blockquote style="font-family:'Cormorant Garamond',serif;font-style:italic;font-size:24px;line-height:1.45;margin:0 0 16px;color:#e8e2d6">{{ t.quote }}</blockquote>
-              <figcaption style="font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#b89a6a;font-weight:600">{{ t.name }}</figcaption>
+              <figcaption style="font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#5b7d92;font-weight:600">{{ t.name }}</figcaption>
             </figure>
           </sc-for>
         </div>
       </section>
       </sc-if>
 
-      <section style="background:linear-gradient(150deg,#b89a6a,#8a734f);color:#141210;padding:78px 28px;text-align:center">
+      <section style="background:#1c1916;color:#e8e2d6;padding:78px 28px;text-align:center;border-top:1px solid rgba(232,226,214,.1);border-bottom:1px solid rgba(232,226,214,.1)">
         <h2 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(30px,4.5vw,46px);margin:0 0 14px">Let's tell your story.</h2>
         <p style="font-size:17px;color:#f3e2cf;max-width:520px;margin:0 auto 28px">Sessions book a few weeks out — reach out and let's find your date.</p>
-        <a href="#" onClick="{{ goContact }}" style="padding:15px 34px;background:#141210;color:#e8e2d6;border:1px solid #141210;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:#0c0b0a">Start Your Booking</a>
+        <a href="#" onClick="{{ goContact }}" style="padding:15px 34px;background:#5b7d92;color:#e8e2d6;border:1px solid #5b7d92;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:#3e5a6c;border-color:#3e5a6c">Start Your Booking</a>
       </section>
     </div>
     </sc-if>
@@ -212,7 +213,7 @@
     <sc-if value="{{ showPortfolio }}" hint-placeholder-val="{{ false }}">
     <div style="max-width:1240px;margin:0 auto;padding:64px 28px 40px">
       <div style="text-align:center;margin-bottom:34px">
-        <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#b89a6a">our work</div>
+        <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#5b7d92">our work</div>
         <h1 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(34px,5vw,56px);margin:0">Portfolio</h1>
       </div>
       <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:34px">
@@ -232,11 +233,11 @@
     <div>
       <section style="max-width:1140px;margin:0 auto;padding:64px 28px;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;align-items:center">
         <div style="border-radius:4px;aspect-ratio:4/5;background:linear-gradient(150deg,#2a2622,#3a342e);position:relative;overflow:hidden">
-          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.5;color:#b89a6a">{{ camIcon }}</div>
+          <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.5;color:#5b7d92">{{ camIcon }}</div>
           {{ aboutImgEl }}
         </div>
         <div>
-          <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#b89a6a">the heart behind the lens</div>
+          <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#5b7d92">the heart behind the lens</div>
           <h1 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(32px,4.5vw,52px);margin:4px 0 20px">Hi, I'm Jordan.</h1>
           <p style="font-size:16px;line-height:1.85;color:#5c5954;margin:0 0 16px">Ember &amp; Oak grew out of a simple love: the quiet, glowing moments that make up a life. I started with a camera and a fascination for light, and it turned into a studio built on warmth, patience, and real connection.</p>
           <p style="font-size:16px;line-height:1.85;color:#5c5954;margin:0 0 24px">From a newborn's first days to a live event at golden hour to sweeping drone film, I'm here to capture your story the way it actually feels — unhurried and true. Based in the Houston area, serving The Woodlands, Montgomery &amp; Magnolia.</p>
@@ -269,7 +270,7 @@
           <div style="{{ p.card }}">
             <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px">
               <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(26px,3vw,34px);margin:0;color:#e8e2d6;letter-spacing:.04em">{{ p.name }}</h3>
-              <div style="font-size:12px;color:#b89a6a;font-weight:600;letter-spacing:.12em;text-transform:uppercase">{{ p.from }}</div>
+              <div style="font-size:12px;color:#5b7d92;font-weight:600;letter-spacing:.12em;text-transform:uppercase">{{ p.from }}</div>
             </div>
             <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0 0 18px;max-width:640px">{{ p.desc }}</p>
             <ul style="list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 24px">
@@ -321,7 +322,7 @@
           <sc-if value="{{ hasContactErr }}" hint-placeholder-val="{{ false }}">
             <div style="color:#b23b2e;font-size:13px;padding:9px 0">{{ contactErr }}</div>
           </sc-if>
-          <button type="submit" style="margin-top:12px;align-self:flex-start;padding:15px 32px;background:#e8e2d6;color:#141210;border:none;border-radius:0;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;cursor:pointer" style-hover="background:#b89a6a">{{ contactBtnLabel }}</button>
+          <button type="submit" style="margin-top:12px;align-self:flex-start;padding:15px 32px;background:#5b7d92;color:#e8e2d6;border:none;border-radius:0;font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;cursor:pointer" style-hover="background:#3e5a6c">{{ contactBtnLabel }}</button>
         </form>
         </sc-if>
       </div>
@@ -332,7 +333,7 @@
     <sc-if value="{{ showClient }}" hint-placeholder-val="{{ false }}">
     <div style="max-width:920px;margin:0 auto;padding:64px 28px 60px;text-align:center">
       <img src="assets/emberoak-icon.png" alt="Ember &amp; Oak" style="height:76px;width:76px;object-fit:contain;margin:0 auto 6px;display:block">
-      <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#b89a6a">welcome back</div>
+      <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#5b7d92">welcome back</div>
       <h1 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(32px,5vw,48px);margin:4px 0 12px">Client Gallery</h1>
       <p style="font-size:16px;color:#5c5954;line-height:1.8;margin:0 auto 26px;max-width:520px">Enter the gallery code from your delivery note to view and download your full-resolution photos.</p>
       <sc-if value="{{ clientBackend }}" hint-placeholder-val="{{ false }}">
@@ -351,7 +352,7 @@
     <sc-if value="{{ showAdmin }}" hint-placeholder-val="{{ false }}">
     <div style="max-width:1040px;margin:0 auto;padding:64px 28px 60px">
       <div style="text-align:center;margin-bottom:14px">
-        <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#b89a6a">studio admin</div>
+        <div style="font-family:'Mulish',sans-serif;font-size:11px;font-weight:700;letter-spacing:.22em;text-transform:uppercase;color:#5b7d92">studio admin</div>
         <h1 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(32px,5vw,52px);margin:0">Manage Photos</h1>
         <p style="font-size:16px;color:#5c5954;max-width:620px;margin:12px auto 0">Upload straight to your galleries — new photos appear on the site instantly. No code, no emails.</p>
       </div>
@@ -366,7 +367,7 @@
       </sc-if>
 
       <sc-if value="{{ demoAdmin }}" hint-placeholder-val="{{ true }}">
-        <div style="background:#e8e2d6;border:1px solid #a89068;border-radius:3px;padding:14px 20px;color:#8a734f;font-size:14px;line-height:1.6;text-align:left;margin-top:8px">
+        <div style="background:#e8e2d6;border:1px solid #a89068;border-radius:3px;padding:14px 20px;color:#3e5a6c;font-size:14px;line-height:1.6;text-align:left;margin-top:8px">
           <strong>Preview of the admin.</strong> Upload works now via Cloudinary. Delete, featured covers, and Client Deliveries switch on once your backend is deployed and you sign in.
         </div>
         {{ managerEl }}
@@ -375,7 +376,7 @@
 
       <sc-if value="{{ cloudReady }}" hint-placeholder-val="{{ false }}">
       <sc-if value="{{ listBlocked }}" hint-placeholder-val="{{ false }}">
-      <div style="max-width:680px;margin:24px auto 0;background:#e8e2d6;border:1px solid #a89068;border-radius:4px;padding:22px 26px;color:#8a734f">
+      <div style="max-width:680px;margin:24px auto 0;background:#e8e2d6;border:1px solid #a89068;border-radius:4px;padding:22px 26px;color:#3e5a6c">
         <strong style="display:block;font-size:16px;margin-bottom:6px">⚠ Galleries can't load photos yet</strong>
         <span style="font-size:14px;line-height:1.7;color:#8a5a34">Cloudinary is blocking the gallery list. In Cloudinary go to <strong>Settings → Security → Restricted image types</strong>, make sure <strong>“Resource list”</strong> is <strong>unchecked</strong>, click <strong>Save</strong>, then reload this page. Uploads still work — they just won't display until this is off.</span>
       </div>
@@ -385,28 +386,28 @@
           <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;margin:0 0 4px">Cover Photo</h3>
           <div style="font-size:13px;color:#a39e94">The big image on your homepage. Newest upload wins.</div>
         </div>
-        <button onClick="{{ uploadHero }}" style="padding:12px 22px;background:#b89a6a;color:#fff;border:none;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;white-space:nowrap" style-hover="background:#8a734f">Upload Cover</button>
+        <button onClick="{{ uploadHero }}" style="padding:12px 22px;background:#5b7d92;color:#fff;border:none;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;white-space:nowrap" style-hover="background:#3e5a6c">Upload Cover</button>
       </div>
       <div style="background:#fff;border:1px solid rgba(184,154,106,.3);border-radius:4px;padding:26px;display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:18px;box-shadow:0 6px 24px rgba(232,226,214,.05)">
         <div>
           <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;margin:0 0 4px">About Photo</h3>
           <div style="font-size:13px;color:#a39e94">Your portrait on the About page. Newest upload wins.</div>
         </div>
-        <button onClick="{{ uploadAbout }}" style="padding:12px 22px;background:#b89a6a;color:#fff;border:none;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;white-space:nowrap" style-hover="background:#8a734f">Upload About</button>
+        <button onClick="{{ uploadAbout }}" style="padding:12px 22px;background:#5b7d92;color:#fff;border:none;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer;white-space:nowrap" style-hover="background:#3e5a6c">Upload About</button>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:18px">
         <sc-for list="{{ uploadCats }}" as="u" hint-placeholder-count="6">
           <div style="background:#fff;border:1px solid rgba(184,154,106,.3);border-radius:4px;padding:26px;display:flex;flex-direction:column;gap:10px;box-shadow:0 6px 24px rgba(232,226,214,.05)">
             <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:24px;margin:0">{{ u.label }}</h3>
             <div style="font-size:13px;color:#a39e94">{{ u.count }} photos live</div>
-            <button onClick="{{ u.upload }}" style="margin-top:6px;padding:12px;background:#b89a6a;color:#fff;border:none;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer" style-hover="background:#8a734f">Upload / Manage</button>
+            <button onClick="{{ u.upload }}" style="margin-top:6px;padding:12px;background:#5b7d92;color:#fff;border:none;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em;cursor:pointer" style-hover="background:#3e5a6c">Upload / Manage</button>
           </div>
         </sc-for>
       </div>
       <div style="margin-top:26px;background:#1c1916;border:1px solid rgba(184,154,106,.4);border-radius:4px;padding:22px 26px">
         <h3 style="font-family:'Cormorant Garamond',serif;font-weight:600;font-size:22px;margin:0 0 6px">Deleting photos &amp; videos</h3>
         <p style="font-size:14px;line-height:1.7;color:#c8c2b6;margin:0 0 12px">To remove something, open your Cloudinary <strong>Media Library</strong>, find the file (they're in folders by category, e.g. <em>emberoak/video</em>), select it and hit delete. It disappears from the site on the next page load.</p>
-        <a href="https://console.cloudinary.com/console/media_library" target="_blank" style="display:inline-block;padding:11px 22px;background:#b89a6a;color:#fff;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em" style-hover="background:#8a734f">Open Cloudinary Media Library →</a>
+        <a href="https://console.cloudinary.com/console/media_library" target="_blank" style="display:inline-block;padding:11px 22px;background:#5b7d92;color:#fff;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em" style-hover="background:#3e5a6c">Open Cloudinary Media Library →</a>
       </div>
       <p style="text-align:center;margin-top:24px"><a href="#" onClick="{{ goPortfolio }}" style="font-weight:600">View the live portfolio →</a></p>
       </sc-if>
@@ -429,28 +430,28 @@
   <footer style="background:#0c0b0a;color:#e8e2d6;padding:56px 28px 34px">
     <div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:34px;align-items:start">
       <div>
-        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;color:#e8e2d6">Ember <span style="color:#b89a6a">&amp;</span> Oak</div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:24px;letter-spacing:.14em;text-transform:uppercase;font-weight:500;color:#e8e2d6">Ember <span style="color:#5b7d92">&amp;</span> Oak</div>
         <p style="font-size:14px;line-height:1.7;color:#a39e94;margin:12px 0 0;max-width:280px">Photography, film &amp; social reels for the Houston area — warm, timeless, and made for you.</p>
       </div>
       <div>
-        <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#b89a6a;font-weight:600;margin-bottom:14px">Explore</div>
+        <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#5b7d92;font-weight:600;margin-bottom:14px">Explore</div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <sc-for list="{{ nav }}" as="item" hint-placeholder-count="5">
-            <a href="#" onClick="{{ item.go }}" style="color:#e8e2d6;font-size:14px;border:0" style-hover="color:#b89a6a">{{ item.label }}</a>
+            <a href="#" onClick="{{ item.go }}" style="color:#e8e2d6;font-size:14px;border:0" style-hover="color:#5b7d92">{{ item.label }}</a>
           </sc-for>
         </div>
       </div>
       <div>
-        <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#b89a6a;font-weight:600;margin-bottom:14px">Connect</div>
+        <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#5b7d92;font-weight:600;margin-bottom:14px">Connect</div>
         <div style="display:flex;flex-direction:column;gap:10px;font-size:14px">
-          <a href="mailto:jordan@emberandoak.media" style="color:#e8e2d6;border:0" style-hover="color:#b89a6a">jordan@emberandoak.media</a>
-          <a href="https://instagram.com/emberandoakmedia" target="_blank" style="color:#e8e2d6;border:0" style-hover="color:#b89a6a">@emberandoakmedia</a>
-          <a href="https://www.facebook.com/emberandoakmedia/" target="_blank" style="color:#e8e2d6;border:0" style-hover="color:#b89a6a">Facebook</a>
-          <a href="https://www.youtube.com/@EmberandOak" target="_blank" style="color:#e8e2d6;border:0" style-hover="color:#b89a6a">YouTube</a>
+          <a href="mailto:jordan@emberandoak.media" style="color:#e8e2d6;border:0" style-hover="color:#5b7d92">jordan@emberandoak.media</a>
+          <a href="https://instagram.com/emberandoakmedia" target="_blank" style="color:#e8e2d6;border:0" style-hover="color:#5b7d92">@emberandoakmedia</a>
+          <a href="https://www.facebook.com/emberandoakmedia/" target="_blank" style="color:#e8e2d6;border:0" style-hover="color:#5b7d92">Facebook</a>
+          <a href="https://www.youtube.com/@EmberandOak" target="_blank" style="color:#e8e2d6;border:0" style-hover="color:#5b7d92">YouTube</a>
         </div>
       </div>
       <div>
-        <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#b89a6a;font-weight:600;margin-bottom:14px">Service Area</div>
+        <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#5b7d92;font-weight:600;margin-bottom:14px">Service Area</div>
         <p style="font-size:14px;line-height:1.8;color:#a39e94;margin:0">Houston<br>The Woodlands<br>Montgomery · Magnolia</p>
       </div>
     </div>
@@ -463,7 +464,7 @@
     <button onClick="{{ closeLb }}" style="position:absolute;top:22px;right:26px;background:none;border:none;color:#fff;font-size:34px;cursor:pointer;line-height:1">×</button>
     <button onClick="{{ prevLb }}" style="position:absolute;left:20px;background:rgba(255,255,255,.12);border:none;color:#fff;font-size:26px;width:48px;height:48px;border-radius:50%;cursor:pointer">‹</button>
     <div style="position:relative;max-width:900px;width:100%;aspect-ratio:3/2;border-radius:10px;overflow:hidden;background:linear-gradient(150deg,#2a2622,#3a342e);display:flex;align-items:center;justify-content:center">
-      <div style="opacity:.5;color:#b89a6a">{{ camIcon }}</div>
+      <div style="opacity:.5;color:#5b7d92">{{ camIcon }}</div>
       {{ currentImgEl }}
       <div style="position:absolute;left:0;right:0;bottom:0;padding:18px 22px;color:#fff;font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:600;background:linear-gradient(to top,rgba(20,19,17,.7),transparent)">{{ currentLabel }}</div>
     </div>
@@ -928,7 +929,7 @@ class Component extends DCLogic {
     const launcher = h('button', { onClick: this.toggleChat(), 'aria-label': st.chatOpen ? 'Close the booking assistant' : 'Open the booking assistant',
       style: { position: 'fixed', right: 18, bottom: 18, zIndex: 95, display: 'flex', alignItems: 'center', gap: 10,
         padding: '12px 18px', borderRadius: 0, border: '1px solid rgba(232,226,214,.2)', cursor: 'pointer', fontFamily: 'inherit',
-        fontSize: 11, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', background: '#e8e2d6', color: '#141210' } },
+        fontSize: 11, fontWeight: 600, letterSpacing: '.14em', textTransform: 'uppercase', background: '#5b7d92', color: '#e8e2d6' } },
       st.chatOpen ? 'Close' : 'Plan a session');
 
     // Fragment-wrapped portal — the DC runtime drops values that fail isValidElement,
@@ -1152,7 +1153,7 @@ class Component extends DCLogic {
             h('h2', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 30, margin: 0 } }, g.title),
             h('div', { style: { fontSize: 13, color: '#a39e94' } }, g.count + ' full-resolution files')),
           (g.downloads === false) ? null : h('button', { onClick: () => this.downloadAllZip(), disabled: this.state.galleryBusy,
-            style: { padding: '13px 24px', background: '#b89a6a', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer' } },
+            style: { padding: '13px 24px', background: '#5b7d92', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer' } },
             this.state.galleryBusy ? 'Preparing ZIP…' : '⬇ Download all (ZIP)')),
         h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(150px,1fr))', gap: 12 } },
           g.items.map((it, i) => h('div', { key: i,
@@ -1168,13 +1169,13 @@ class Component extends DCLogic {
             style: { padding: '11px 20px', background: 'none', border: '1px solid rgba(184,154,106,.6)', borderRadius: 999, color: '#c8c2b6', fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } },
             this.state.slideshow ? '\u23f8 Pause slideshow' : '\u25b6 Play slideshow'),
           (this.canSharePhotos() && g.downloads !== false) ? h('button', { onClick: () => this.saveToPhotos(g.items), disabled: !!this.state.saveMsg,
-            style: { padding: '11px 20px', background: '#b89a6a', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } },
+            style: { padding: '11px 20px', background: '#5b7d92', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', fontFamily: 'inherit' } },
             this.state.saveMsg || '\u2b07 Save all to Photos') : null,
           h('span', { style: { fontSize: 13, color: '#a39e94' } },
             g.downloads === false
               ? 'Tap a photo to view it large. Downloads are turned off for this gallery — contact the studio for the final files.'
               : 'Tap a photo to view it large, or \u2b07 to download the full-resolution file.')),
-        h('button', { onClick: () => this.setState({ gallery: null, deliveryCode: '' }), style: { marginTop: 6, background: 'none', border: 'none', color: '#b89a6a', fontWeight: 700, cursor: 'pointer', fontSize: 13 } }, '← Open a different gallery'),
+        h('button', { onClick: () => this.setState({ gallery: null, deliveryCode: '' }), style: { marginTop: 6, background: 'none', border: 'none', color: '#5b7d92', fontWeight: 700, cursor: 'pointer', fontSize: 13 } }, '← Open a different gallery'),
         this.renderViewer(g));
     }
     return h('form', { onSubmit: (e) => { e.preventDefault(); this.openGallery(e.target.code.value, e.target.pin.value); },
@@ -1182,7 +1183,7 @@ class Component extends DCLogic {
       h('label', { style: { fontSize: 13, fontWeight: 600, color: '#c8c2b6', display: 'flex', flexDirection: 'column', gap: 6 } }, 'Gallery code', h('input', { name: 'code', required: true, defaultValue: this.state.deliveryCode, placeholder: 'e.g. smith-wedding', style: inp })),
       h('label', { style: { fontSize: 13, fontWeight: 600, color: '#c8c2b6', display: 'flex', flexDirection: 'column', gap: 6 } }, 'Access code (if provided)', h('input', { name: 'pin', placeholder: 'optional', style: inp })),
       this.state.galleryErr ? h('div', { style: { color: '#b23b2e', fontSize: 13 } }, this.state.galleryErr) : null,
-      h('button', { type: 'submit', disabled: this.state.galleryBusy, style: { marginTop: 4, padding: 14, background: '#b89a6a', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 700, letterSpacing: '.05em', cursor: 'pointer' } }, this.state.galleryBusy ? 'Opening…' : 'View My Gallery'));
+      h('button', { type: 'submit', disabled: this.state.galleryBusy, style: { marginTop: 4, padding: 14, background: '#5b7d92', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 700, letterSpacing: '.05em', cursor: 'pointer' } }, this.state.galleryBusy ? 'Opening…' : 'View My Gallery'));
   }
 
   renderViewer(g) {
@@ -1210,9 +1211,9 @@ class Component extends DCLogic {
         h('span', null, (i + 1) + ' of ' + g.items.length),
         h('span', { style: { opacity: .7, wordBreak: 'break-all' } }, it.filename),
         (!it.download) ? null : h('a', { href: it.download, download: it.filename,
-          style: { background: '#b89a6a', color: '#fff', padding: '9px 18px', borderRadius: 999, fontWeight: 700, textDecoration: 'none' } }, '\u2b07 Download full-res'),
+          style: { background: '#5b7d92', color: '#fff', padding: '9px 18px', borderRadius: 999, fontWeight: 700, textDecoration: 'none' } }, '\u2b07 Download full-res'),
         (this.canSharePhotos() && it.download) ? h('button', { onClick: (e) => { e.stopPropagation(); this.saveToPhotos([it]); },
-          style: { background: '#b89a6a', color: '#fff', padding: '9px 18px', borderRadius: 999, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 } }, 'Save to Photos') : null));
+          style: { background: '#5b7d92', color: '#fff', padding: '9px 18px', borderRadius: 999, fontWeight: 700, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13 } }, 'Save to Photos') : null));
   }
 
   renderLogin() {
@@ -1221,7 +1222,7 @@ class Component extends DCLogic {
     return h('form', { onSubmit: (e) => { e.preventDefault(); this.doLogin(e.target.slug.value.trim(), e.target.password.value); },
       style: { maxWidth: 420, margin: '26px auto 0', background: '#fff', border: '1px solid rgba(184,154,106,.3)', borderRadius: 18, padding: '36px 32px', boxShadow: '0 10px 34px rgba(232,226,214,.07)', display: 'flex', flexDirection: 'column', gap: 15, textAlign: 'left' } },
       h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, marginBottom: 6 } },
-        h('div', { style: { width: 62, height: 62, borderRadius: '50%', background: 'linear-gradient(145deg,#b89a6a,#c07a3e)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond',serif", fontSize: 26, fontWeight: 600, letterSpacing: '.04em', boxShadow: '0 6px 18px rgba(184,154,106,.28)' } }, 'E&O'),
+        h('div', { style: { width: 62, height: 62, borderRadius: '50%', background: 'linear-gradient(145deg,#5b7d92,#c07a3e)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond',serif", fontSize: 26, fontWeight: 600, letterSpacing: '.04em', boxShadow: '0 6px 18px rgba(184,154,106,.28)' } }, 'E&O'),
         h('div', { style: { fontFamily: "'Cormorant Garamond',serif", fontSize: 25, fontWeight: 600 } }, 'Studio Sign In'),
         h('div', { style: { fontSize: 12.5, color: '#a39e94', textAlign: 'center', lineHeight: 1.5 } }, 'Manage your portfolio, covers, and client deliveries.')),
       h('label', { style: { fontSize: 13, fontWeight: 600, color: '#c8c2b6', display: 'flex', flexDirection: 'column', gap: 6 } }, 'Login name',
@@ -1229,7 +1230,7 @@ class Component extends DCLogic {
       h('label', { style: { fontSize: 13, fontWeight: 600, color: '#c8c2b6', display: 'flex', flexDirection: 'column', gap: 6 } }, 'Password',
         h('input', { name: 'password', type: 'password', required: true, autoComplete: 'current-password', style: inp })),
       this.state.loginErr ? h('div', { style: { color: '#b23b2e', fontSize: 13, background: 'rgba(178,59,46,.07)', border: '1px solid rgba(178,59,46,.2)', borderRadius: 9, padding: '9px 12px' } }, this.state.loginErr) : null,
-      h('button', { type: 'submit', disabled: this.state.busy === 'login', style: { marginTop: 4, padding: 14, background: '#b89a6a', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 700, letterSpacing: '.05em', cursor: 'pointer' } }, this.state.busy === 'login' ? 'Signing in…' : 'Sign In'));
+      h('button', { type: 'submit', disabled: this.state.busy === 'login', style: { marginTop: 4, padding: 14, background: '#5b7d92', color: '#fff', border: 'none', borderRadius: 999, fontSize: 14, fontWeight: 700, letterSpacing: '.05em', cursor: 'pointer' } }, this.state.busy === 'login' ? 'Signing in…' : 'Sign In'));
   }
 
   renderManager(cats, cloud) {
@@ -1249,7 +1250,7 @@ class Component extends DCLogic {
       h('div', { style: { fontSize: 11, color: '#a39e94', letterSpacing: '.06em', textTransform: 'uppercase', marginTop: 4 } }, l));
 
     const header = h('div', { style: { ...card, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap' } },
-      h('div', { style: { width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(145deg,#b89a6a,#c07a3e)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 600, flexShrink: 0, boxShadow: '0 6px 18px rgba(184,154,106,.25)' } }, initials),
+      h('div', { style: { width: 64, height: 64, borderRadius: '50%', background: 'linear-gradient(145deg,#5b7d92,#c07a3e)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'Cormorant Garamond',serif", fontSize: 24, fontWeight: 600, flexShrink: 0, boxShadow: '0 6px 18px rgba(184,154,106,.25)' } }, initials),
       h('div', { style: { flex: '1 1 180px', minWidth: 0 } },
         h('div', { style: { fontFamily: "'Cormorant Garamond',serif", fontSize: 26, fontWeight: 600, lineHeight: 1.15 } }, name),
         h('div', { style: { fontSize: 12.5, color: '#a39e94', marginTop: 3 } }, st.profile ? 'Signed in as ' + st.profile.slug : 'Signed in')),
@@ -1259,7 +1260,7 @@ class Component extends DCLogic {
     // ---- tabs ---------------------------------------------------------------
     const tab = (id, label) => h('button', { key: id, onClick: () => { this.setState({ adminTab: id }); if (id === 'deliveries') this.loadDeliveries(); if (id === 'inbox') this.loadInquiries(); },
       style: { padding: '10px 20px', borderRadius: 999, border: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 13, fontWeight: 700, letterSpacing: '.04em',
-        background: st.adminTab === id ? '#b89a6a' : 'transparent', color: st.adminTab === id ? '#fff' : '#5c5954' } }, label);
+        background: st.adminTab === id ? '#5b7d92' : 'transparent', color: st.adminTab === id ? '#fff' : '#5c5954' } }, label);
     const tabs = h('div', { style: { display: 'flex', gap: 6, background: '#fff', border: '1px solid rgba(184,154,106,.3)', borderRadius: 999, padding: 6, alignSelf: 'flex-start', flexWrap: 'wrap' } },
       tab('work', 'My Work'), tab('videos', 'Videos'), tab('deliveries', 'Client Deliveries'),
       tab('inbox', st.inqUnread ? 'Inbox (' + st.inqUnread + ')' : 'Inbox'), tab('account', 'Account'));
@@ -1268,7 +1269,7 @@ class Component extends DCLogic {
       h('div', { style: { fontSize: 12.5, color: '#5c5954', marginBottom: 5, fontWeight: 600 } },
         'Uploading ' + st.upDone + ' of ' + st.upTotal + '\u2026 (keep this tab open)'),
       h('div', { style: { height: 7, background: 'rgba(184,154,106,.25)', borderRadius: 999, overflow: 'hidden' } },
-        h('div', { style: { height: '100%', width: Math.round((st.upDone / st.upTotal) * 100) + '%', background: '#b89a6a', transition: 'width .2s' } }))) : null;
+        h('div', { style: { height: '100%', width: Math.round((st.upDone / st.upTotal) * 100) + '%', background: '#5b7d92', transition: 'width .2s' } }))) : null;
 
     const sectionOf = (key, label) => {
       const items = cloud[key] || [];
@@ -1278,16 +1279,16 @@ class Component extends DCLogic {
         h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: items.length ? 14 : 0, flexWrap: 'wrap' } },
           h('button', { onClick: () => this.toggleSec(key), title: openS ? 'Collapse' : 'Expand',
             style: { background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 10 } },
-            h('span', { style: { color: '#b89a6a', fontSize: 13, transform: openS ? 'rotate(90deg)' : 'none', transition: 'transform .15s', display: 'inline-block' } }, '\u25b6'),
+            h('span', { style: { color: '#5b7d92', fontSize: 13, transform: openS ? 'rotate(90deg)' : 'none', transition: 'transform .15s', display: 'inline-block' } }, '\u25b6'),
             h('span', null,
               h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 22, margin: 0 } }, label),
               h('div', { style: { fontSize: 12, color: '#a39e94' } }, items.length + ' live'))),
           this.backendMode()
-            ? h('label', { style: { padding: '10px 18px', background: busy ? '#c4a87a' : '#b89a6a', color: '#fff', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: busy ? 'default' : 'pointer', whiteSpace: 'nowrap' } },
+            ? h('label', { style: { padding: '10px 18px', background: busy ? '#c4a87a' : '#5b7d92', color: '#fff', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: busy ? 'default' : 'pointer', whiteSpace: 'nowrap' } },
                 busy ? 'Uploading…' : '+ Upload',
                 h('input', { type: 'file', multiple: true, accept: 'image/*,video/*', disabled: busy, style: { display: 'none' },
                   onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.backendUpload(key, fs); } }))
-            : h('button', { onClick: () => this.openUploader(key), style: { padding: '10px 18px', background: '#b89a6a', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', whiteSpace: 'nowrap' } }, '+ Upload')),
+            : h('button', { onClick: () => this.openUploader(key), style: { padding: '10px 18px', background: '#5b7d92', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: 'pointer', whiteSpace: 'nowrap' } }, '+ Upload')),
         progressEl(busy),
         !openS ? null : items.length ? h('div', { style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(124px,1fr))', gap: 10 } },
           items.map((it, i) => {
@@ -1330,7 +1331,7 @@ class Component extends DCLogic {
           h('input', { type: 'date', value: this.state.deliveryExpires || '',
             onChange: (e) => this.setState({ deliveryExpires: e.target.value }),
             style: { padding: '10px 13px', border: '1px solid rgba(184,154,106,.5)', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', background: '#fff' } })),
-        h('label', { style: { padding: '11px 20px', background: busyD ? '#c4a87a' : '#b89a6a', color: '#fff', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: busyD ? 'default' : 'pointer', whiteSpace: 'nowrap' } },
+        h('label', { style: { padding: '11px 20px', background: busyD ? '#c4a87a' : '#5b7d92', color: '#fff', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: busyD ? 'default' : 'pointer', whiteSpace: 'nowrap' } },
           busyD ? 'Uploading…' : '+ Upload full-res',
           h('input', { type: 'file', multiple: true, accept: 'image/*,video/*', disabled: busyD, style: { display: 'none' },
             onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.deliveryUpload(this.state.deliveryCode, fs, this.state.deliveryExpires).then(() => this.loadDeliveries()); } }))),
@@ -1363,7 +1364,7 @@ class Component extends DCLogic {
         st.pwErr ? h('div', { style: { color: '#b23b2e', fontSize: 13, background: 'rgba(178,59,46,.07)', border: '1px solid rgba(178,59,46,.2)', borderRadius: 9, padding: '9px 12px' } }, st.pwErr) : null,
         st.pwOk ? h('div', { style: { color: '#4b6b3a', fontSize: 13, background: 'rgba(184,154,106,.16)', border: '1px solid rgba(184,154,106,.5)', borderRadius: 9, padding: '9px 12px' } }, st.pwOk) : null,
         h('button', { type: 'submit', disabled: st.pwBusy || noStore,
-          style: { padding: 13, background: (st.pwBusy || noStore) ? '#c9b9a8' : '#b89a6a', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13.5, fontWeight: 700, letterSpacing: '.05em', cursor: (st.pwBusy || noStore) ? 'default' : 'pointer', fontFamily: 'inherit' } },
+          style: { padding: 13, background: (st.pwBusy || noStore) ? '#c9b9a8' : '#5b7d92', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13.5, fontWeight: 700, letterSpacing: '.05em', cursor: (st.pwBusy || noStore) ? 'default' : 'pointer', fontFamily: 'inherit' } },
           st.pwBusy ? 'Saving…' : 'Update password')));
 
     const retagBusy = st.busy === 'retag';
@@ -1380,7 +1381,7 @@ class Component extends DCLogic {
           h('select', { name: 'vcat', defaultValue: 'video', style: { padding: '11px 13px', border: '1px solid rgba(184,154,106,.5)', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', background: '#fff', width: '100%' } },
             vidCats.map(c => h('option', { key: c.key, value: c.key }, c.label)))),
         h('button', { type: 'submit', disabled: st.vidBusy,
-          style: { padding: '11px 20px', background: st.vidBusy ? '#c4a87a' : '#b89a6a', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: st.vidBusy ? 'default' : 'pointer', fontFamily: 'inherit' } },
+          style: { padding: '11px 20px', background: st.vidBusy ? '#c4a87a' : '#5b7d92', color: '#fff', border: 'none', borderRadius: 999, fontSize: 13, fontWeight: 700, letterSpacing: '.04em', cursor: st.vidBusy ? 'default' : 'pointer', fontFamily: 'inherit' } },
           st.vidBusy ? 'Adding\u2026' : '+ Add video')),
       (st.videos && st.videos.length) ? h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 14 } },
         st.videos.map(v => h('div', { key: v.id, style: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', padding: '8px 10px', border: '1px solid ' + (v.featured ? '#f0b429' : 'rgba(184,154,106,.3)'), borderRadius: 10, background: '#fff' } },
@@ -1405,7 +1406,7 @@ class Component extends DCLogic {
     const catMgr = h('div', { style: { ...card, background: '#1c1916' } },
       h('button', { onClick: () => this.toggleSec('__cats'),
         style: { background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 10, textAlign: 'left' } },
-        h('span', { style: { color: '#b89a6a', fontSize: 13, transform: st.openSec['__cats'] ? 'rotate(90deg)' : 'none', transition: 'transform .15s', display: 'inline-block' } }, '\u25b6'),
+        h('span', { style: { color: '#5b7d92', fontSize: 13, transform: st.openSec['__cats'] ? 'rotate(90deg)' : 'none', transition: 'transform .15s', display: 'inline-block' } }, '\u25b6'),
         h('span', null,
           h('h3', { style: { fontFamily: "'Cormorant Garamond',serif", fontWeight: 600, fontSize: 20, margin: 0 } }, 'Manage categories'),
           h('div', { style: { fontSize: 12, color: '#a39e94' } }, cats.length + ' categories'))),
@@ -1415,7 +1416,7 @@ class Component extends DCLogic {
           h('label', { style: { flex: '1 1 220px', fontSize: 12, fontWeight: 600, color: '#c8c2b6', display: 'flex', flexDirection: 'column', gap: 5 } }, 'New category',
             h('input', { name: 'cname', placeholder: 'e.g. Concerts', style: { padding: '10px 12px', border: '1px solid rgba(184,154,106,.5)', borderRadius: 8, fontSize: 15, fontFamily: 'inherit', background: '#fff', width: '100%' } })),
           h('button', { type: 'submit', disabled: st.catBusy,
-            style: { padding: '10px 18px', background: st.catBusy ? '#c4a87a' : '#b89a6a', color: '#fff', border: 'none', borderRadius: 999, fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: st.catBusy ? 'default' : 'pointer', fontFamily: 'inherit' } },
+            style: { padding: '10px 18px', background: st.catBusy ? '#c4a87a' : '#5b7d92', color: '#fff', border: 'none', borderRadius: 999, fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: st.catBusy ? 'default' : 'pointer', fontFamily: 'inherit' } },
             st.catBusy ? 'Adding\u2026' : '+ Add category')),
         h('div', { style: { display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 } },
           cats.map(c => {
@@ -1475,7 +1476,7 @@ class Component extends DCLogic {
             open_ ? h('div', { style: { flexBasis: '100%', borderTop: '1px solid rgba(184,154,106,.3)', marginTop: 4, paddingTop: 12 } },
               h('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap', marginBottom: 10 } },
                 h('div', { style: { fontSize: 12.5, color: '#5c5954' } }, items_ === undefined ? 'Loading…' : (items_.length + (items_.length === 1 ? ' file' : ' files') + ' in this gallery')),
-                h('label', { style: { padding: '9px 16px', background: addBusy ? '#c4a87a' : '#b89a6a', color: '#fff', borderRadius: 999, fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: addBusy ? 'default' : 'pointer', whiteSpace: 'nowrap' } },
+                h('label', { style: { padding: '9px 16px', background: addBusy ? '#c4a87a' : '#5b7d92', color: '#fff', borderRadius: 999, fontSize: 12.5, fontWeight: 700, letterSpacing: '.04em', cursor: addBusy ? 'default' : 'pointer', whiteSpace: 'nowrap' } },
                   addBusy ? 'Uploading…' : '+ Add photos',
                   h('input', { type: 'file', multiple: true, accept: 'image/*,video/*', disabled: addBusy, style: { display: 'none' },
                     onChange: (e) => { const fs = Array.from(e.target.files || []); e.target.value = ''; this.addToDelivery(g.code, fs); } }))),
@@ -1516,11 +1517,11 @@ class Component extends DCLogic {
 
     // ---- inbox: website inquiries ------------------------------------------
     const when = (iso) => { try { return new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }); } catch (_) { return iso; } };
-    const inqRow = (q) => h('div', { key: q.id, style: { background: '#fff', border: '1px solid ' + (q.read ? 'rgba(184,154,106,.3)' : '#b89a6a'),
+    const inqRow = (q) => h('div', { key: q.id, style: { background: '#fff', border: '1px solid ' + (q.read ? 'rgba(184,154,106,.3)' : '#5b7d92'),
         borderRadius: 12, padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 8 } },
       h('div', { style: { display: 'flex', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', alignItems: 'baseline' } },
         h('div', null,
-          !q.read ? h('span', { style: { display: 'inline-block', width: 8, height: 8, borderRadius: 999, background: '#b89a6a', marginRight: 8 } }) : null,
+          !q.read ? h('span', { style: { display: 'inline-block', width: 8, height: 8, borderRadius: 999, background: '#5b7d92', marginRight: 8 } }) : null,
           h('strong', { style: { fontSize: 15 } }, q.name),
           h('span', { style: { color: '#5c5954', fontSize: 13 } }, '  ' + q.sessionType)),
         h('span', { style: { fontSize: 12, color: '#a39e94' } }, when(q.at))),
@@ -1528,7 +1529,7 @@ class Component extends DCLogic {
       h('div', { style: { whiteSpace: 'pre-wrap', fontSize: 14, lineHeight: 1.6, color: '#e8e2d6' } }, q.message),
       h('div', { style: { display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center', marginTop: 2 } },
         h('a', { href: 'mailto:' + q.email + '?subject=' + encodeURIComponent('Re: your ' + q.sessionType + ' inquiry'),
-          style: { fontSize: 12.5, fontWeight: 700, color: '#b89a6a' } }, 'Reply to ' + q.email),
+          style: { fontSize: 12.5, fontWeight: 700, color: '#5b7d92' } }, 'Reply to ' + q.email),
         h('button', { onClick: () => this.inquiryAction('/api/inquiry/read', q.id, { read: !q.read }),
           style: { padding: '5px 12px', borderRadius: 999, border: '1px solid rgba(184,154,106,.6)', background: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: 12, color: '#c8c2b6' } },
           q.read ? 'Mark unread' : 'Mark read'),
@@ -1903,7 +1904,7 @@ class Component extends DCLogic {
     const filterTabs = [{ key: 'all', label: 'All' }].concat(cats).map(t => ({
       label: t.label, set: this.setCat(t.key),
       style: 'padding:9px 18px;border-radius:2px;font-size:13px;font-weight:600;letter-spacing:.03em;cursor:pointer;border:1px solid ' +
-        (cat === t.key ? '#b89a6a' : 'rgba(184,154,106,.5)') + ';background:' + (cat === t.key ? '#b89a6a' : '#fff') + ';color:' + (cat === t.key ? '#fff' : '#c8c2b6'),
+        (cat === t.key ? '#5b7d92' : 'rgba(184,154,106,.5)') + ';background:' + (cat === t.key ? '#5b7d92' : '#fff') + ';color:' + (cat === t.key ? '#fff' : '#c8c2b6'),
     }));
 
     const heightsC = [340, 260, 400, 300, 360, 280, 420, 320, 300, 380, 260, 340];
@@ -1994,7 +1995,7 @@ class Component extends DCLogic {
       uploadAbout: (e) => { if (e) e.preventDefault(); this.openUploader('about'); },
       uploadCats: cats.map(c => ({ label: c.label, count: (cloud[c.key] || []).length, upload: (e) => { if (e) e.preventDefault(); this.openUploader(c.key); } })),
       heroBrandEl: React.createElement(React.Fragment, null,
-        'Ember ', React.createElement('span', { style: { color: '#e8c9a0' } }, '&'), ' Oak'),
+        'Ember ', React.createElement('span', { style: { color: '#5b7d92' } }, '&'), ' Oak'),
       heroTitleEl: (() => {
         // SplitText: each word animates in on its own beat
         const lines = [['Photography,', 'film', '&', 'social', 'reels'], ['made', 'to', 'be', 'felt.']];
