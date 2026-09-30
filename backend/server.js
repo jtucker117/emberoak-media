@@ -1194,7 +1194,8 @@ app.post('/api/gallery/zip', async (req, res) => {
   }
 });
 
-// SPA fallback: any non-API route serves the site.
+// SPA fallback: non-API GETs (e.g. /services, /portfolio) serve the site so
+// History API routes work on hard refresh / direct link. Static files above win first.
 app.get(/^(?!\/api).+/, (_req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 // delete every asset (image + video) under a folder prefix

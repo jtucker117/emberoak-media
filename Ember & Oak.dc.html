@@ -146,12 +146,12 @@
   <!-- NAV -->
   <header style="position:sticky;top:0;z-index:40;background:rgba(20,18,16,.88);backdrop-filter:blur(14px);border-bottom:1px solid rgba(232,226,214,.12)">
     <nav style="max-width:1280px;margin:0 auto;padding:18px 32px;display:flex;align-items:center;justify-content:space-between;gap:20px">
-      <a href="#" onClick="{{ goHome }}" style="display:flex;align-items:center;gap:12px;border:0">
+      <a href="{{ homePath }}" onClick="{{ goHome }}" style="display:flex;align-items:center;gap:12px;border:0">
         <img src="assets/emberoak-icon.png" alt="Ember &amp; Oak" style="height:40px;width:40px;object-fit:contain;display:block">
         <span style="font-family:'Cormorant Garamond',serif;font-size:20px;letter-spacing:.2em;text-transform:uppercase;color:#e8e2d6;font-weight:500">Ember <span style="color:#5b7d92">&amp;</span> Oak</span>
       </a>
       <div style="display:flex;align-items:center;gap:18px">
-        <a href="#" onClick="{{ goClient }}" style="padding:10px 16px;border:1px solid rgba(232,226,214,.22);border-radius:0;color:#e8e2d6;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase" style-hover="background:#5b7d92;color:#e8e2d6;border-color:#5b7d92">Client Access</a>
+        <a href="{{ clientPath }}" onClick="{{ goClient }}" style="padding:10px 16px;border:1px solid rgba(232,226,214,.22);border-radius:0;color:#e8e2d6;font-size:11px;font-weight:600;letter-spacing:.14em;text-transform:uppercase" style-hover="background:#5b7d92;color:#e8e2d6;border-color:#5b7d92">Client Access</a>
         {{ navToggleEl }}
       </div>
     </nav>
@@ -171,8 +171,8 @@
           <h1 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(52px,9vw,104px);line-height:.92;margin:0 0 20px;letter-spacing:.14em;text-transform:uppercase;color:#e8e2d6;text-shadow:0 2px 28px rgba(12,11,10,.45)">{{ heroBrandEl }}</h1>
           <p style="font-family:'Cormorant Garamond',serif;font-weight:400;font-style:italic;font-size:clamp(20px,2.8vw,30px);line-height:1.35;max-width:520px;margin:0 0 36px;color:#e8e2d6;text-shadow:0 1px 18px rgba(12,11,10,.55)">{{ heroTitleEl }}</p>
           <div style="display:flex;gap:12px;flex-wrap:wrap">
-            <a href="#" onClick="{{ goPortfolio }}" style="padding:15px 28px;background:#e8e2d6;color:#141210;border:1px solid #e8e2d6;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:#5b7d92;border-color:#5b7d92;color:#e8e2d6">View Portfolio</a>
-            <a href="#" onClick="{{ goContact }}" style="padding:15px 28px;background:transparent;color:#e8e2d6;border:1px solid rgba(232,226,214,.55);border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="border-color:#e8e2d6;background:rgba(232,226,214,.08)">Inquire</a>
+            <a href="{{ portfolioPath }}" onClick="{{ goPortfolio }}" style="padding:15px 28px;background:#e8e2d6;color:#141210;border:1px solid #e8e2d6;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:#5b7d92;border-color:#5b7d92;color:#e8e2d6">View Portfolio</a>
+            <a href="{{ contactPath }}" onClick="{{ goContact }}" style="padding:15px 28px;background:transparent;color:#e8e2d6;border:1px solid rgba(232,226,214,.55);border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="border-color:#e8e2d6;background:rgba(232,226,214,.08)">Inquire</a>
           </div>
         </div>
       </section>
@@ -189,11 +189,11 @@
             <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#a39e94;margin-bottom:10px">Selected work</div>
             <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(28px,4vw,42px);margin:0;letter-spacing:.04em">Featured Galleries</h2>
           </div>
-          <a href="#" onClick="{{ goPortfolio }}" style="font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase;border:0">View all</a>
+          <a href="{{ portfolioPath }}" onClick="{{ goPortfolio }}" style="font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase;border:0">View all</a>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px">
           <sc-for list="{{ cats }}" as="c" hint-placeholder-count="6">
-            <a href="#" onClick="{{ c.go }}" style="position:relative;display:block;border-radius:3px;overflow:hidden;aspect-ratio:4/5;background:linear-gradient(150deg,#2a2622,#3a342e)" style-hover="filter:brightness(.97)">
+            <a href="{{ portfolioPath }}" onClick="{{ c.go }}" style="position:relative;display:block;border-radius:3px;overflow:hidden;aspect-ratio:4/5;background:linear-gradient(150deg,#2a2622,#3a342e)" style-hover="filter:brightness(.97)">
               <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:.5;color:#5b7d92">{{ camIcon }}</div>
               {{ c.coverEl }}
               <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(12,11,10,.72),transparent 55%)"></div>
@@ -220,7 +220,7 @@
       <section style="background:#1c1916;color:#e8e2d6;padding:78px 28px;text-align:center;border-top:1px solid rgba(232,226,214,.1);border-bottom:1px solid rgba(232,226,214,.1)">
         <h2 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(30px,4.5vw,46px);margin:0 0 14px">Let's tell your story.</h2>
         <p style="font-size:17px;color:#f3e2cf;max-width:520px;margin:0 auto 28px">Sessions book a few weeks out — reach out and let's find your date.</p>
-        <a href="#" onClick="{{ goContact }}" style="padding:15px 34px;background:#5b7d92;color:#e8e2d6;border:1px solid #5b7d92;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:#3e5a6c;border-color:#3e5a6c">Start Your Booking</a>
+        <a href="{{ contactPath }}" onClick="{{ goContact }}" style="padding:15px 34px;background:#5b7d92;color:#e8e2d6;border:1px solid #5b7d92;border-radius:0;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase" style-hover="background:#3e5a6c;border-color:#3e5a6c">Start Your Booking</a>
       </section>
     </div>
     </sc-if>
@@ -257,7 +257,7 @@
           <h1 style="font-family:'Cormorant Garamond',serif;font-weight:500;font-size:clamp(32px,4.5vw,52px);margin:4px 0 20px">Hi, I'm Jordan.</h1>
           <p style="font-size:16px;line-height:1.85;color:#5c5954;margin:0 0 16px">Ember &amp; Oak grew out of a simple love: the quiet, glowing moments that make up a life. I started with a camera and a fascination for light, and it turned into a studio built on warmth, patience, and real connection.</p>
           <p style="font-size:16px;line-height:1.85;color:#5c5954;margin:0 0 24px">From a newborn's first days to a live event at golden hour to sweeping drone film, I'm here to capture your story the way it actually feels — unhurried and true. Based in the Houston area, serving The Woodlands, Montgomery &amp; Magnolia.</p>
-          <a href="#" onClick="{{ goContact }}" style="font-weight:600;letter-spacing:.04em">Let's work together →</a>
+          <a href="{{ contactPath }}" onClick="{{ goContact }}" style="font-weight:600;letter-spacing:.04em">Let's work together →</a>
         </div>
       </section>
       <section style="background:#1c1916;padding:70px 28px">
@@ -408,7 +408,7 @@
           <p style="font-size:15px;color:#c8c2b6;line-height:1.7;margin:0">Private client galleries turn on once your delivery backend is connected. Deploy the backend and set <strong>USE_BACKEND</strong>, and this page becomes a full-resolution gallery with one-click downloads.</p>
         </div>
       </sc-if>
-      <p style="font-size:13px;color:#a39e94;margin-top:20px">Trouble getting in? <a href="#" onClick="{{ goContact }}">Message me</a> and I'll help.</p>
+      <p style="font-size:13px;color:#a39e94;margin-top:20px">Trouble getting in? <a href="{{ contactPath }}" onClick="{{ goContact }}">Message me</a> and I'll help.</p>
     </div>
     </sc-if>
 
@@ -427,7 +427,7 @@
       </sc-if>
       <sc-if value="{{ loggedIn }}" hint-placeholder-val="{{ false }}">
         {{ managerEl }}
-        <p style="text-align:center;margin-top:24px"><a href="#" onClick="{{ goPortfolio }}" style="font-weight:600">View the live portfolio →</a></p>
+        <p style="text-align:center;margin-top:24px"><a href="{{ portfolioPath }}" onClick="{{ goPortfolio }}" style="font-weight:600">View the live portfolio →</a></p>
       </sc-if>
 
       <sc-if value="{{ demoAdmin }}" hint-placeholder-val="{{ true }}">
@@ -435,7 +435,7 @@
           <strong>Preview of the admin.</strong> Upload works now via Cloudinary. Delete, featured covers, and Client Deliveries switch on once your backend is deployed and you sign in.
         </div>
         {{ managerEl }}
-        <p style="text-align:center;margin-top:24px"><a href="#" onClick="{{ goPortfolio }}" style="font-weight:600">View the live portfolio →</a></p>
+        <p style="text-align:center;margin-top:24px"><a href="{{ portfolioPath }}" onClick="{{ goPortfolio }}" style="font-weight:600">View the live portfolio →</a></p>
       </sc-if>
 
       <sc-if value="{{ cloudReady }}" hint-placeholder-val="{{ false }}">
@@ -473,7 +473,7 @@
         <p style="font-size:14px;line-height:1.7;color:#c8c2b6;margin:0 0 12px">To remove something, open your Cloudinary <strong>Media Library</strong>, find the file (they're in folders by category, e.g. <em>emberoak/video</em>), select it and hit delete. It disappears from the site on the next page load.</p>
         <a href="https://console.cloudinary.com/console/media_library" target="_blank" style="display:inline-block;padding:11px 22px;background:#5b7d92;color:#fff;border-radius:2px;font-size:13px;font-weight:700;letter-spacing:.04em" style-hover="background:#3e5a6c">Open Cloudinary Media Library →</a>
       </div>
-      <p style="text-align:center;margin-top:24px"><a href="#" onClick="{{ goPortfolio }}" style="font-weight:600">View the live portfolio →</a></p>
+      <p style="text-align:center;margin-top:24px"><a href="{{ portfolioPath }}" onClick="{{ goPortfolio }}" style="font-weight:600">View the live portfolio →</a></p>
       </sc-if>
       <sc-if value="{{ setupNeeded }}" hint-placeholder-val="{{ false }}">
       <div style="max-width:640px;margin:26px auto 0;background:#fff;border:1px solid rgba(184,154,106,.4);border-radius:4px;padding:30px">
@@ -501,7 +501,7 @@
         <div style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#5b7d92;font-weight:600;margin-bottom:14px">Explore</div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <sc-for list="{{ nav }}" as="item" hint-placeholder-count="5">
-            <a href="#" onClick="{{ item.go }}" style="color:#e8e2d6;font-size:14px;border:0" style-hover="color:#5b7d92">{{ item.label }}</a>
+            <a href="{{ item.href }}" onClick="{{ item.go }}" style="color:#e8e2d6;font-size:14px;border:0" style-hover="color:#5b7d92">{{ item.label }}</a>
           </sc-for>
         </div>
       </div>
@@ -519,7 +519,7 @@
         <p style="font-size:14px;line-height:1.8;color:#a39e94;margin:0">Houston<br>The Woodlands<br>Montgomery · Magnolia</p>
       </div>
     </div>
-    <div style="max-width:1200px;margin:34px auto 0;padding-top:20px;border-top:1px solid rgba(232,226,214,.12);font-size:12px;color:#8f8a82;text-align:center">© 2026 Ember &amp; Oak Media. All rights reserved. · <a href="#" onClick="{{ goAdmin }}" style="color:#8f8a82;border:0" style-hover="color:#e8e2d6">Studio Admin</a></div>
+    <div style="max-width:1200px;margin:34px auto 0;padding-top:20px;border-top:1px solid rgba(232,226,214,.12);font-size:12px;color:#8f8a82;text-align:center">© 2026 Ember &amp; Oak Media. All rights reserved. · <a href="{{ adminPath }}" onClick="{{ goAdmin }}" style="color:#8f8a82;border:0" style-hover="color:#e8e2d6">Studio Admin</a></div>
   </footer>
 
   <!-- LIGHTBOX -->
@@ -565,10 +565,58 @@ class Component extends DCLogic {
   //    one from Studio Admin → "About Photo".
   ABOUT_IMAGE = 'https://res.cloudinary.com/wrjc0nyq/image/upload/w_1200,c_fill,g_face,q_auto,f_auto/emberoak/about/bpd6letqej9bdn8nd973.jpg';
 
+  // Path ↔ page map so /services etc. are shareable (History API + Express SPA fallback).
+  PAGE_ROUTES = {
+    home: { path: '/', title: 'Ember & Oak — Photography & Film | Houston' },
+    portfolio: { path: '/portfolio', title: 'Portfolio — Ember & Oak' },
+    about: { path: '/about', title: 'About — Ember & Oak' },
+    services: { path: '/services', title: 'Services & Pricing — Ember & Oak' },
+    contact: { path: '/contact', title: 'Contact — Ember & Oak' },
+    client: { path: '/client', title: 'Client Gallery — Ember & Oak' },
+    admin: { path: '/admin', title: 'Studio Admin — Ember & Oak' },
+  };
+
   cloudReady() { return this.CLOUD_NAME && this.CLOUD_NAME !== 'YOUR_CLOUD_NAME'; }
   backendMode() { return this.USE_BACKEND || !!this.API_BASE; }
   apiBase() { return (this.API_BASE || '').replace(/\/$/, ''); }
   tagFor(k) { return this.SITE_SLUG ? this.SITE_SLUG + '__' + k : k; }
+
+  pageFromPath(pathname) {
+    const p = (pathname || '/').replace(/\/+$/, '') || '/';
+    if (p === '/' || p === '/home') return 'home';
+    const hit = Object.entries(this.PAGE_ROUTES).find(([, v]) => v.path === p);
+    return hit ? hit[0] : 'home';
+  }
+
+  pathForPage(page) { return (this.PAGE_ROUTES[page] || this.PAGE_ROUTES.home).path; }
+
+  applyPageTitle(page) {
+    const meta = this.PAGE_ROUTES[page] || this.PAGE_ROUTES.home;
+    try { document.title = meta.title; } catch (_) {}
+  }
+
+  syncUrl(page, replace) {
+    const path = this.pathForPage(page);
+    try {
+      const params = new URLSearchParams(location.search);
+      // Keep ?gallery= only on the client-delivery surface; drop it elsewhere.
+      if (page !== 'client') params.delete('gallery');
+      const q = params.toString();
+      const url = path + (q ? '?' + q : '') + location.hash;
+      if (replace) history.replaceState({ page }, '', url);
+      else history.pushState({ page }, '', url);
+      this.applyPageTitle(page);
+    } catch (_) {}
+  }
+
+  navigate(page, opts = {}) {
+    const { replace = false, lb = null, contactSent = false } = opts;
+    const patch = { page, lb, contactSent, navOpen: false };
+    if ('cat' in opts) patch.cat = opts.cat;
+    this.setState(patch);
+    this.syncUrl(page, replace);
+    try { window.scrollTo(0, 0); } catch (_) {}
+  }
 
   componentDidMount() {
     let tok = null;
@@ -579,10 +627,29 @@ class Component extends DCLogic {
     this.loadOrder();
     this.ensureFx();
     this.syncReveal();
+    this._onPop = (e) => {
+      const page = (e.state && e.state.page) || this.pageFromPath(location.pathname);
+      this.setState({ page, lb: null, navOpen: false });
+      this.applyPageTitle(page);
+      try { window.scrollTo(0, 0); } catch (_) {}
+    };
+    try { window.addEventListener('popstate', this._onPop); } catch (_) {}
     try {
       const q = new URLSearchParams(location.search).get('gallery');
-      if (q && this.backendMode()) { this.setState({ page: 'client', deliveryCode: q }); this.openGallery(q, ''); }
+      if (q && this.backendMode()) {
+        this.setState({ page: 'client', deliveryCode: q });
+        this.syncUrl('client', true);
+        this.openGallery(q, '');
+      } else {
+        const page = this.pageFromPath(location.pathname);
+        if (page !== this.state.page) this.setState({ page });
+        this.syncUrl(page, true);
+      }
     } catch (_) {}
+  }
+
+  componentWillUnmount() {
+    try { window.removeEventListener('popstate', this._onPop); } catch (_) {}
   }
 
   async doLogin(slug, password) {
@@ -1876,7 +1943,7 @@ class Component extends DCLogic {
   }
 
   go(page) {
-    return (e) => { if (e) e.preventDefault(); this.setState({ page, lb: null, contactSent: false }); try { window.scrollTo(0, 0); } catch (_) {} };
+    return (e) => { if (e) e.preventDefault(); this.navigate(page); };
   }
 
   // "Inquire" on a pricing card lands on the contact form with the package
@@ -1885,8 +1952,7 @@ class Component extends DCLogic {
   inquire(name) {
     return (e) => {
       if (e) e.preventDefault();
-      this.setState({ page: 'contact', lb: null, contactSent: false });
-      try { window.scrollTo(0, 0); } catch (_) {}
+      this.navigate('contact');
 
       // The contact form sits behind an sc-if, so it does not exist in the DOM at
       // the moment of the click. Poll briefly for it rather than guess a delay.
@@ -1957,7 +2023,7 @@ class Component extends DCLogic {
       return {
         label: c.label,
         coverEl: cover ? React.createElement('img', { src: cover, alt: c.label, style: { position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' } }) : null,
-        go: (e) => { if (e) e.preventDefault(); this.setState({ page: 'portfolio', cat: c.key }); try { window.scrollTo(0, 0); } catch (_) {} },
+        go: (e) => { if (e) e.preventDefault(); this.navigate('portfolio', { cat: c.key }); },
       };
     });
 
@@ -2061,6 +2127,9 @@ class Component extends DCLogic {
     return {
       goHome: this.go('home'), goPortfolio: this.go('portfolio'), goAbout: this.go('about'),
       goServices: this.go('services'), goContact: this.go('contact'), goClient: this.go('client'), goAdmin: this.go('admin'),
+      homePath: this.pathForPage('home'), portfolioPath: this.pathForPage('portfolio'), aboutPath: this.pathForPage('about'),
+      servicesPath: this.pathForPage('services'), contactPath: this.pathForPage('contact'), clientPath: this.pathForPage('client'),
+      adminPath: this.pathForPage('admin'),
       showHome: p === 'home', showPortfolio: p === 'portfolio', showAbout: p === 'about',
       showServices: p === 'services', showContact: p === 'contact', showClient: p === 'client', showAdmin: p === 'admin',
       cloudReady: false, setupNeeded: !this.cloudReady() && !this.backendMode(), listBlocked: !!this.state.listBlocked,
@@ -2133,7 +2202,7 @@ class Component extends DCLogic {
             React.createElement('ul', { className: 'eo-sm-list' },
               navPages.map((pl, i) => React.createElement('li', { key: pl[0], style: { '--i': i } },
                 React.createElement('a', {
-                  href: '#', className: p === pl[0] ? 'eo-on' : null,
+                  href: this.pathForPage(pl[0]), className: p === pl[0] ? 'eo-on' : null,
                   'aria-current': p === pl[0] ? 'page' : null,
                   onClick: (e) => { this.setMenu(false); this.go(pl[0])(e); },
                 },
@@ -2146,14 +2215,14 @@ class Component extends DCLogic {
                 React.createElement('a', { href: 'https://www.facebook.com/emberandoakmedia/', target: '_blank', rel: 'noopener' }, 'Facebook'),
                 React.createElement('a', { href: 'https://www.youtube.com/@EmberandOak', target: '_blank', rel: 'noopener' }, 'YouTube')),
               React.createElement('a', {
-                href: '#', className: 'eo-sm-cta',
+                href: this.pathForPage('contact'), className: 'eo-sm-cta',
                 onClick: (e) => { this.setMenu(false); this.go('contact')(e); },
               }, 'Book a Session')))),
         document.body)),
       // Always the photo wall — All + category filters feed the same mosaic.
       // Accordion remains for the home featured strip; portfolio is image-first.
       portfolioEl: this.renderGrid(filtered),
-      nav: navPages.map(([key, label]) => ({ label, go: this.go(key) })),
+      nav: navPages.map(([key, label]) => ({ label, go: this.go(key), href: this.pathForPage(key) })),
       cats: catCards, filterTabs, filtered, testimonials, hasTestimonials: testimonials.length > 0, values,
       showPortfolioNote: !useCloud,
       personalPackages: withInquire(personalPackages),
