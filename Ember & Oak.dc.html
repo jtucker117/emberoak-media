@@ -288,15 +288,15 @@
           <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(28px,3.5vw,36px);margin:0 0 12px;letter-spacing:.03em;color:#e8e2d6">Families &amp; life moments</h2>
           <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0">Unhurried sessions for the people and seasons that matter most.</p>
         </div>
-        <div style="display:flex;flex-direction:column">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;align-items:stretch">
           <sc-for list="{{ personalPackages }}" as="p" hint-placeholder-count="4">
             <div style="{{ p.card }}">
-              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(24px,2.8vw,30px);margin:0 0 10px;color:#e8e2d6;letter-spacing:.04em">{{ p.name }}</h3>
-              <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0 0 8px;max-width:640px">{{ p.audience }}</p>
-              <p style="font-size:15px;line-height:1.75;color:#c8c2b6;margin:0 0 18px;max-width:640px">{{ p.desc }}</p>
-              <ul style="list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 24px">
+              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(22px,2.6vw,28px);margin:0 0 10px;color:#e8e2d6;letter-spacing:.04em">{{ p.name }}</h3>
+              <p style="font-size:13px;line-height:1.65;color:#a39e94;margin:0 0 10px">{{ p.audience }}</p>
+              <p style="font-size:14px;line-height:1.7;color:#c8c2b6;margin:0 0 18px;flex:1">{{ p.desc }}</p>
+              <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:8px">
                 <sc-for list="{{ p.items }}" as="li" hint-placeholder-count="4">
-                  <li style="font-size:13px;color:#c8c2b6;display:flex;gap:10px;align-items:flex-start"><span style="color:#a39e94">—</span>{{ li }}</li>
+                  <li style="font-size:13px;line-height:1.55;color:#c8c2b6;display:flex;gap:10px;align-items:flex-start"><span style="color:#a39e94;flex-shrink:0">—</span>{{ li }}</li>
                 </sc-for>
               </ul>
               <a href="#" onClick="{{ p.inquire }}" style="{{ p.btn }}">Inquire</a>
@@ -311,15 +311,15 @@
           <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(28px,3.5vw,36px);margin:0 0 12px;letter-spacing:.03em;color:#e8e2d6">Professional &amp; brand</h2>
           <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0">Headshots, stock imagery, and commercial work that makes your team and brand feel human on the web and in social.</p>
         </div>
-        <div style="display:flex;flex-direction:column">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;align-items:stretch">
           <sc-for list="{{ companyPackages }}" as="p" hint-placeholder-count="4">
             <div style="{{ p.card }}">
-              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(24px,2.8vw,30px);margin:0 0 10px;color:#e8e2d6;letter-spacing:.04em">{{ p.name }}</h3>
-              <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0 0 8px;max-width:640px">{{ p.audience }}</p>
-              <p style="font-size:15px;line-height:1.75;color:#c8c2b6;margin:0 0 18px;max-width:640px">{{ p.desc }}</p>
-              <ul style="list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 24px">
+              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(22px,2.6vw,28px);margin:0 0 10px;color:#e8e2d6;letter-spacing:.04em">{{ p.name }}</h3>
+              <p style="font-size:13px;line-height:1.65;color:#a39e94;margin:0 0 10px">{{ p.audience }}</p>
+              <p style="font-size:14px;line-height:1.7;color:#c8c2b6;margin:0 0 18px;flex:1">{{ p.desc }}</p>
+              <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:8px">
                 <sc-for list="{{ p.items }}" as="li" hint-placeholder-count="4">
-                  <li style="font-size:13px;color:#c8c2b6;display:flex;gap:10px;align-items:flex-start"><span style="color:#a39e94">—</span>{{ li }}</li>
+                  <li style="font-size:13px;line-height:1.55;color:#c8c2b6;display:flex;gap:10px;align-items:flex-start"><span style="color:#a39e94;flex-shrink:0">—</span>{{ li }}</li>
                 </sc-for>
               </ul>
               <a href="#" onClick="{{ p.inquire }}" style="{{ p.btn }}">Inquire</a>
@@ -334,15 +334,15 @@
           <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(28px,3.5vw,36px);margin:0 0 12px;letter-spacing:.03em;color:#e8e2d6">Drone, video &amp; reels</h2>
           <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0">Motion and altitude — on their own or layered onto any stills session.</p>
         </div>
-        <div style="display:flex;flex-direction:column">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;align-items:stretch">
           <sc-for list="{{ craftPackages }}" as="p" hint-placeholder-count="2">
             <div style="{{ p.card }}">
-              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(24px,2.8vw,30px);margin:0 0 10px;color:#e8e2d6;letter-spacing:.04em">{{ p.name }}</h3>
-              <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0 0 8px;max-width:640px">{{ p.audience }}</p>
-              <p style="font-size:15px;line-height:1.75;color:#c8c2b6;margin:0 0 18px;max-width:640px">{{ p.desc }}</p>
-              <ul style="list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 24px">
+              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(22px,2.6vw,28px);margin:0 0 10px;color:#e8e2d6;letter-spacing:.04em">{{ p.name }}</h3>
+              <p style="font-size:13px;line-height:1.65;color:#a39e94;margin:0 0 10px">{{ p.audience }}</p>
+              <p style="font-size:14px;line-height:1.7;color:#c8c2b6;margin:0 0 18px;flex:1">{{ p.desc }}</p>
+              <ul style="list-style:none;padding:0;margin:0 0 22px;display:flex;flex-direction:column;gap:8px">
                 <sc-for list="{{ p.items }}" as="li" hint-placeholder-count="4">
-                  <li style="font-size:13px;color:#c8c2b6;display:flex;gap:10px;align-items:flex-start"><span style="color:#a39e94">—</span>{{ li }}</li>
+                  <li style="font-size:13px;line-height:1.55;color:#c8c2b6;display:flex;gap:10px;align-items:flex-start"><span style="color:#a39e94;flex-shrink:0">—</span>{{ li }}</li>
                 </sc-for>
               </ul>
               <a href="#" onClick="{{ p.inquire }}" style="{{ p.btn }}">Inquire</a>
@@ -2010,8 +2010,8 @@ class Component extends DCLogic {
       { title: 'Heirloom Quality', desc: 'Images and films made to be printed, shared, and treasured for decades.' },
     ];
 
-    const cardBase = 'position:relative;padding:36px 0;border-top:1px solid rgba(232,226,214,.12);display:flex;flex-direction:column';
-    const btnBase = 'align-self:flex-start;padding:0 0 6px;border:0;border-bottom:1px solid #e8e2d6;color:#e8e2d6;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase';
+    const cardBase = 'background:#1c1916;border:1px solid rgba(232,226,214,.14);border-radius:4px;padding:28px 26px;display:flex;flex-direction:column;height:100%;box-sizing:border-box';
+    const btnBase = 'align-self:flex-start;margin-top:auto;padding:12px 20px;background:transparent;color:#e8e2d6;border:1px solid rgba(232,226,214,.4);font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase';
     // Package names must match contact-form session <option>s (and the chat tool enum).
     const mk = (name, audience, desc, items) =>
       ({ name, audience, desc, items, card: cardBase, btn: btnBase });
