@@ -273,35 +273,83 @@
     </div>
     </sc-if>
 
-    <!-- ===================== SERVICES & PRICING ===================== -->
+    <!-- ===================== SERVICES ===================== -->
     <sc-if value="{{ showServices }}" hint-placeholder-val="{{ false }}">
     <div style="max-width:1080px;margin:0 auto;padding:88px 32px 72px">
-      <div style="margin-bottom:56px;max-width:560px">
-        <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#a39e94;margin-bottom:16px">Investment</div>
-        <h1 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(36px,5vw,56px);margin:0 0 16px;letter-spacing:.03em">Services &amp; Pricing</h1>
-        <p style="font-size:15px;line-height:1.8;color:#a39e94;margin:0">Starting points only. Every session is tailored — reach out for a quote for your day.</p>
+      <div style="margin-bottom:64px;max-width:560px">
+        <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#a39e94;margin-bottom:16px">Services</div>
+        <h1 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(36px,5vw,56px);margin:0 0 16px;letter-spacing:.03em">How we work together</h1>
+        <p style="font-size:15px;line-height:1.8;color:#a39e94;margin:0">Photography and film for families and companies across the Houston area. Every session is tailored — tell us what you need and we'll shape the day with you.</p>
       </div>
-      <div style="display:flex;flex-direction:column">
-        <sc-for list="{{ packages }}" as="p" hint-placeholder-count="4">
-          <div style="{{ p.card }}">
-            <div style="display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:10px">
-              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(26px,3vw,34px);margin:0;color:#e8e2d6;letter-spacing:.04em">{{ p.name }}</h3>
-              <div style="font-size:12px;color:#5b7d92;font-weight:600;letter-spacing:.12em;text-transform:uppercase">{{ p.from }}</div>
+
+      <section style="margin-bottom:72px">
+        <div style="margin-bottom:28px;max-width:520px">
+          <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#5b7d92;margin-bottom:12px">Personal</div>
+          <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(28px,3.5vw,36px);margin:0 0 12px;letter-spacing:.03em;color:#e8e2d6">Families &amp; life moments</h2>
+          <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0">Unhurried sessions for the people and seasons that matter most.</p>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ personalPackages }}" as="p" hint-placeholder-count="4">
+            <div style="{{ p.card }}">
+              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(24px,2.8vw,30px);margin:0 0 10px;color:#e8e2d6;letter-spacing:.04em">{{ p.name }}</h3>
+              <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0 0 8px;max-width:640px">{{ p.audience }}</p>
+              <p style="font-size:15px;line-height:1.75;color:#c8c2b6;margin:0 0 18px;max-width:640px">{{ p.desc }}</p>
+              <ul style="list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 24px">
+                <sc-for list="{{ p.items }}" as="li" hint-placeholder-count="4">
+                  <li style="font-size:13px;color:#c8c2b6;display:flex;gap:10px;align-items:flex-start"><span style="color:#a39e94">—</span>{{ li }}</li>
+                </sc-for>
+              </ul>
+              <a href="#" onClick="{{ p.inquire }}" style="{{ p.btn }}">Inquire</a>
             </div>
-            <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0 0 18px;max-width:640px">{{ p.desc }}</p>
-            <ul style="list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px 24px">
-              <sc-for list="{{ p.items }}" as="li" hint-placeholder-count="4">
-                <li style="font-size:13px;color:#c8c2b6;display:flex;gap:10px;align-items:flex-start"><span style="color:#a39e94">—</span>{{ li }}</li>
-              </sc-for>
-            </ul>
-            <a href="#" onClick="{{ p.inquire }}" style="{{ p.btn }}">Inquire</a>
-          </div>
-        </sc-for>
-      </div>
-      <div style="margin-top:48px;padding-top:36px;border-top:1px solid rgba(232,226,214,.1)">
-        <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:28px;margin:0 0 10px;letter-spacing:.03em">Video &amp; Social Reels</h3>
-        <p style="font-size:15px;line-height:1.75;color:#a39e94;max-width:640px;margin:0">Cinematic films, highlight reels, and custom social content — add-ons to any session or booked on their own.</p>
-      </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section style="margin-bottom:72px">
+        <div style="margin-bottom:28px;max-width:560px">
+          <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#5b7d92;margin-bottom:12px">Company</div>
+          <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(28px,3.5vw,36px);margin:0 0 12px;letter-spacing:.03em;color:#e8e2d6">Professional &amp; brand</h2>
+          <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0">Headshots, stock imagery, and commercial work that makes your team and brand feel human on the web and in social.</p>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ companyPackages }}" as="p" hint-placeholder-count="4">
+            <div style="{{ p.card }}">
+              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(24px,2.8vw,30px);margin:0 0 10px;color:#e8e2d6;letter-spacing:.04em">{{ p.name }}</h3>
+              <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0 0 8px;max-width:640px">{{ p.audience }}</p>
+              <p style="font-size:15px;line-height:1.75;color:#c8c2b6;margin:0 0 18px;max-width:640px">{{ p.desc }}</p>
+              <ul style="list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 24px">
+                <sc-for list="{{ p.items }}" as="li" hint-placeholder-count="4">
+                  <li style="font-size:13px;color:#c8c2b6;display:flex;gap:10px;align-items:flex-start"><span style="color:#a39e94">—</span>{{ li }}</li>
+                </sc-for>
+              </ul>
+              <a href="#" onClick="{{ p.inquire }}" style="{{ p.btn }}">Inquire</a>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+
+      <section>
+        <div style="margin-bottom:28px;max-width:520px">
+          <div style="font-family:'Mulish',sans-serif;font-size:10px;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:#5b7d92;margin-bottom:12px">Aerial &amp; film</div>
+          <h2 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(28px,3.5vw,36px);margin:0 0 12px;letter-spacing:.03em;color:#e8e2d6">Drone, video &amp; reels</h2>
+          <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0">Motion and altitude — on their own or layered onto any stills session.</p>
+        </div>
+        <div style="display:flex;flex-direction:column">
+          <sc-for list="{{ craftPackages }}" as="p" hint-placeholder-count="2">
+            <div style="{{ p.card }}">
+              <h3 style="font-family:'Cormorant Garamond',serif;font-weight:400;font-size:clamp(24px,2.8vw,30px);margin:0 0 10px;color:#e8e2d6;letter-spacing:.04em">{{ p.name }}</h3>
+              <p style="font-size:15px;line-height:1.75;color:#a39e94;margin:0 0 8px;max-width:640px">{{ p.audience }}</p>
+              <p style="font-size:15px;line-height:1.75;color:#c8c2b6;margin:0 0 18px;max-width:640px">{{ p.desc }}</p>
+              <ul style="list-style:none;padding:0;margin:0 0 22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px 24px">
+                <sc-for list="{{ p.items }}" as="li" hint-placeholder-count="4">
+                  <li style="font-size:13px;color:#c8c2b6;display:flex;gap:10px;align-items:flex-start"><span style="color:#a39e94">—</span>{{ li }}</li>
+                </sc-for>
+              </ul>
+              <a href="#" onClick="{{ p.inquire }}" style="{{ p.btn }}">Inquire</a>
+            </div>
+          </sc-for>
+        </div>
+      </section>
     </div>
     </sc-if>
 
@@ -331,7 +379,7 @@
         <form onSubmit="{{ submitContact }}" data-contact-form="" style="display:flex;flex-direction:column;gap:18px">
           <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c8c2b6;display:flex;flex-direction:column;gap:8px">Your name<input data-field="name" required="" type="text" style="padding:14px 0;border:0;border-bottom:1px solid rgba(232,226,214,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"></label>
           <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c8c2b6;display:flex;flex-direction:column;gap:8px">Email<input data-field="email" required="" type="email" style="padding:14px 0;border:0;border-bottom:1px solid rgba(232,226,214,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"></label>
-          <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c8c2b6;display:flex;flex-direction:column;gap:8px">Session type<select data-field="session" style="padding:14px 0;border:0;border-bottom:1px solid rgba(232,226,214,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"><option>Newborn</option><option>Family</option><option>Events</option><option>Commercial</option><option>Cinematic</option><option>Drone</option><option>Video / Reels</option><option>Social media reels</option><option>Something else</option></select></label>
+          <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c8c2b6;display:flex;flex-direction:column;gap:8px">Session type<select data-field="session" style="padding:14px 0;border:0;border-bottom:1px solid rgba(232,226,214,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"><option>Newborn</option><option>Family</option><option>Events</option><option>Cinematic</option><option>Professional Headshots</option><option>Company Stock</option><option>Commercial</option><option>Real Estate</option><option>Drone</option><option>Video / Reels</option><option>Something else</option></select></label>
           <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c8c2b6;display:flex;flex-direction:column;gap:8px">Ideal date<input data-field="date" type="date" style="padding:14px 0;border:0;border-bottom:1px solid rgba(232,226,214,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent"></label>
           <input data-field="website" type="text" tabindex="-1" autocomplete="off" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;opacity:0">
           <label style="font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#c8c2b6;display:flex;flex-direction:column;gap:8px">Tell me about it<textarea data-field="message" rows="4" style="padding:14px 0;border:0;border-bottom:1px solid rgba(232,226,214,.18);border-radius:0;font-size:15px;font-family:inherit;background:transparent;resize:vertical"></textarea></label>
@@ -1963,19 +2011,47 @@ class Component extends DCLogic {
     ];
 
     const cardBase = 'position:relative;padding:36px 0;border-top:1px solid rgba(232,226,214,.12);display:flex;flex-direction:column';
-    const cardFeat = cardBase;
     const btnBase = 'align-self:flex-start;padding:0 0 6px;border:0;border-bottom:1px solid #e8e2d6;color:#e8e2d6;font-weight:600;font-size:11px;letter-spacing:.16em;text-transform:uppercase';
-    const btnFeat = btnBase;
-    const packages = [
-      { name: 'Newborn', from: 'from $450', featured: false, card: cardBase, btn: btnBase,
-        desc: 'Gentle, posed & lifestyle sessions in your home or the studio.', items: ['Up to 2 hours', 'Baby-led & unhurried pace', '30+ edited images', 'Print & download rights'] },
-      { name: 'Family', from: 'from $375', featured: true, card: cardFeat, btn: btnFeat,
-        desc: 'Golden-hour sessions that feel like your family, not a catalog.', items: ['Up to 90 minutes', 'One location', '40+ edited images', 'Sneak peeks within 48 hrs'] },
-      { name: 'Cinematic', from: 'from $550', featured: false, card: cardBase, btn: btnBase,
-        desc: 'Editorial, moody portraiture with dramatic light & styling.', items: ['Up to 2 hours', 'Styling guidance', '35+ finely edited images', 'Optional short film add-on'] },
-      { name: 'Drone', from: 'from $400', featured: false, card: cardBase, btn: btnBase,
-        desc: 'Aerial photo & film for property, events, and landscapes.', items: ['Licensed & insured pilot', 'Photo + 4K video', 'Aerial highlight clip', 'Delivered in 1 week'] },
+    // Package names must match contact-form session <option>s (and the chat tool enum).
+    const mk = (name, audience, desc, items) =>
+      ({ name, audience, desc, items, card: cardBase, btn: btnBase });
+    const personalPackages = [
+      mk('Newborn', 'For parents in those first quiet weeks.',
+        'Gentle posed and lifestyle sessions at home or in studio — baby-led, unhurried, and warm.',
+        ['Up to 2 hours on location or in studio', 'Baby-led pacing with room for feeding & rest', 'Curated gallery of finely edited images', 'Print and personal-use download rights']),
+      mk('Family', 'For families who want portraits that feel like them.',
+        'Golden-hour sessions outdoors or at home — real connection over stiff posing.',
+        ['Up to 90 minutes, one primary location', 'Guided but natural direction for all ages', 'Full edited gallery with sneak peeks soon after', 'Print and personal-use download rights']),
+      mk('Events', 'For gatherings you want remembered without a stiff lineup.',
+        'Coverage for celebrations, milestone parties, and intimate gatherings — documentary style with a few intentional portraits.',
+        ['Hourly coverage tailored to your timeline', 'Candid storytelling plus a few group frames', 'Highlight gallery of edited selects', 'Optional short highlight reel add-on']),
+      mk('Cinematic', 'For individuals who want editorial, story-driven portraits.',
+        'Moody, light-led portraiture with room for styling and a short film if you want motion.',
+        ['Up to 2 hours with styling guidance', 'Editorial color and grade', 'Finely edited stills gallery', 'Optional short cinematic film add-on']),
     ];
+    const companyPackages = [
+      mk('Professional Headshots', 'For individuals and teams who need a consistent, current look.',
+        'Clean, approachable headshots for LinkedIn, websites, and press — solo sessions or full team days with a shared style.',
+        ['Individual or on-site team sessions', 'Consistent lighting and backdrop across the group', 'Multiple wardrobe looks as needed', 'Web-ready and print-ready edits for each person', 'Usage rights for company website, social, and press']),
+      mk('Company Stock', 'For brands that need original imagery for web and social — not stock libraries.',
+        'A day of brand photography: people at work, spaces, products in context, and lifestyle frames you can reuse across the site and feeds.',
+        ['Half- or full-day brand shoot on location', 'People, place, and product-in-use coverage', 'A library of web- and social-ready stills', 'Vertical and square crops for feeds when useful', 'Commercial usage for website and owned social channels']),
+      mk('Commercial', 'For campaigns, products, and brand stories that need a directed set.',
+        'Art-directed commercial photography — product, lifestyle, and campaign frames built around your brief.',
+        ['Creative brief and shot planning up front', 'On-set direction for talent, product, and light', 'Retouched selects for campaign and web use', 'Commercial licensing scoped to your channels']),
+      mk('Real Estate', 'For agents and owners who need property that reads well online.',
+        'Interior and exterior photography that sells the space — clear, inviting, and ready for MLS and listing sites.',
+        ['Interior and exterior stills', 'Twilight and detail options when useful', 'Listing-ready edits and web sizes', 'Optional drone add-on for aerial context']),
+    ];
+    const craftPackages = [
+      mk('Drone', 'For property, events, and landscapes that need altitude.',
+        'Licensed aerial photo and 4K film — clean frames from above for listings, events, and brand stories.',
+        ['FAA-licensed and insured pilot', 'Still photo plus 4K aerial video', 'Short aerial highlight clip on request', 'Delivered ready for web and listing use']),
+      mk('Video / Reels', 'For studios, brands, and families who want motion.',
+        'Cinematic films, event highlights, and short-form social reels — booked alone or layered onto any stills session.',
+        ['Highlight films and social-length reels', 'Can stand alone or add onto a photo day', 'Vertical and horizontal cuts for feeds', 'Color-graded delivery for web and social']),
+    ];
+    const withInquire = (list) => list.map((pk) => ({ ...pk, inquire: this.inquire(pk.name) }));
 
     const lb = this.state.lb;
     const lightboxOpen = lb !== null && lb >= 0 && lb < filteredRaw.length;
@@ -2080,7 +2156,9 @@ class Component extends DCLogic {
       nav: navPages.map(([key, label]) => ({ label, go: this.go(key) })),
       cats: catCards, filterTabs, filtered, testimonials, hasTestimonials: testimonials.length > 0, values,
       showPortfolioNote: !useCloud,
-      packages: packages.map((pk) => ({ ...pk, inquire: this.inquire(pk.name) })),
+      personalPackages: withInquire(personalPackages),
+      companyPackages: withInquire(companyPackages),
+      craftPackages: withInquire(craftPackages),
       camIcon: this.cam(44),
       contactSent: this.state.contactSent, showForm: !this.state.contactSent,
       hasContactErr: !!this.state.contactErr,
